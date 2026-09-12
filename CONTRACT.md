@@ -38,8 +38,31 @@ One pass over the whole city.
 - `ground`: the exact disjoint cover of all street land, each owner with its polygon, surface role, bottom and top. This is the sole render and collision authority for street surfaces.
 - `construction`: the resolved selections, so a reviewer can read what was chosen where: per corridor side the band layout, per region the layout, frame and finish family, per junction the corner treatment.
 - `textures`: mode and reason, as Exterior reports it.
+- `capabilities`: which optional architecture surfaces the source blueprint carried, so an absent turn arrow has a recorded cause.
 
 One pass emits many pieces. A 10 km city cannot be one model, and Engine needs bounded loads.
+
+## Levels
+
+Street heights live here, not in Atlas. Road surface is y 0, as Atlas's ground levels already read it.
+
+| Surface | Y |
+| --- | --- |
+| roadway | 0 |
+| gutter, at the roadway edge | 0 |
+| gutter, at the curb face | 0.06 |
+| curb riser | 0.06 to 0.20 |
+| curb top, sidewalk slabs | 0.20 |
+| sidewalk joint bed | 0.193 |
+
+The gutter slopes up to the curb face across its 0.30 m. Markings and artifacts stack above the roadway from 0.005 m, 1 mm per decal order.
+
+## Capabilities
+
+Two architecture surfaces are not in every blueprint, and Streets reports them rather than guessing:
+
+- Without turn movements, no turn arrow is painted. An arrow not declared legal is a traffic instruction that does not exist.
+- Without walking lanes, a crossing field covers the roadway Atlas names and carries no terminal strip onto the walking band.
 
 ## What Streets decides
 

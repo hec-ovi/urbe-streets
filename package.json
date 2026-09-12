@@ -1,0 +1,33 @@
+{
+  "name": "urbe-streets",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Builds a city's street construction from an Atlas architecture blueprint: paving, curbs, gutters, corner returns, markings, crossing fields, parking bays, guardrails and surface wear, as streamable model assets plus the exact ground partition.",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "node --experimental-strip-types src/cli/main.ts",
+    "preview": "vite --config src/preview/vite.config.ts",
+    "preview:build": "vite build --config src/preview/vite.config.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "4.5.0",
+    "@gltf-transform/extensions": "4.5.0",
+    "clipper2-ts": "2.0.1-18",
+    "earcut": "3.2.3"
+  },
+  "devDependencies": {
+    "@types/earcut": "3.0.0",
+    "@types/node": "22.20.2",
+    "@types/three": "0.185.4",
+    "three": "0.185.1",
+    "typescript": "7.0.2",
+    "vite": "8.2.2",
+    "vitest": "4.1.11"
+  }
+}
