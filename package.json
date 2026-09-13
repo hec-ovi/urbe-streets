@@ -3,17 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Builds a city's street construction from an Atlas architecture blueprint: paving, curbs, gutters, corner returns, markings, crossing fields, parking bays, guardrails and surface wear, as streamable model assets plus the exact ground partition.",
+  "description": "Builds streamable GLB street assets from saved Atlas construction with retained ground ownership and seeded Materials bindings.",
   "engines": {
     "node": ">=22.13.0"
   },
   "main": "src/index.ts",
   "scripts": {
-    "build": "node --experimental-strip-types src/cli/main.ts",
-    "preview": "vite --config src/preview/vite.config.ts",
-    "preview:build": "vite build --config src/preview/vite.config.ts",
+    "build": "tsc --noEmit",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate": "node --experimental-strip-types src/cli/main.ts"
   },
   "dependencies": {
     "@gltf-transform/core": "4.5.0",

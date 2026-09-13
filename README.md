@@ -1,13 +1,16 @@
-# urbe streets
+# Urbe Streets
 
-Builds a city's street surfaces from an Atlas city blueprint: paving, curbs, gutters, corner returns, lane markings, crossing fields, parking bays, guardrails and surface wear, as model assets plus a manifest.
+Version 0.1.0. Builds bounded GLB street assets from saved Atlas 0.21.0 construction, with retained ground ownership and seeded Materials bindings.
 
-Atlas decides where a corridor runs, how wide it is reserved, how many lanes it carries and where people walk and cross. This box decides every physical surface inside that reservation: the band layout, the panel rows, the finishes per district and tier, the gutter profile and its hardware, the corner treatment, and the markings that match the turns Atlas declares legal.
+```sh
+npm ci
+npm run build
+npm test
+npm run generate -- --request examples/request.json --materials examples/catalog.json --out out-example
+```
 
-One pass over the whole city emits many streamable pieces, because a 10 km city cannot be one model.
+The example is synthetic geometry with a catalog-reference fixture. It exercises export; its map paths are placeholders. Supply a real Materials theme catalog and matching design keys for rendering.
 
-[Contract](CONTRACT.md) is the coupling surface. [Box map](docs/INDEX.md) lists the internal boxes.
+The supported build imports at-grade ground and physical modules, preserving panels, joints, curbs, gutters, module hardware and published crossing paint. It emits 128 m spatial pieces. Consumers bind the referenced catalog maps. Highways, subway stations and hydrology are rejected explicitly.
 
-## Status
-
-Contract draft. No implementation yet.
+[API skill](SKILL.md) explains library calls and defaults. [Contract](CONTRACT.md) links the schemas. [Box map](docs/INDEX.md) lists responsibilities. [Issues](docs/ISSUES.md) lists the district-construction and integration work requiring coordination.

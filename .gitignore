@@ -8,6 +8,8 @@ session
 # Local authoring data; public technical docs are listed explicitly.
 /docs/*
 !/docs/INDEX.md
+!/docs/ISSUES.md
+!/docs/PORT.md
 inbox/
 .research/
 
@@ -15,7 +17,6 @@ inbox/
 [Ss]creenshots/
 [Ss]creenshot*.png
 [Ss]creenshot*.jpg
-[Ss]creenshot*.jpeg
 [Ss]creenshot*.jpeg
 [Ss]creenshot*.webp
 preview-captures/

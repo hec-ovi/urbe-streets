@@ -1,31 +1,9 @@
-# CONTRACT: cli
+# cli
 
-Purpose: takes a saved Atlas blueprint on the command line and writes a build to a directory.
+Builds a saved request and catalog into a new directory.
 
-## In
+`npm run generate -- --request request.json --materials theme.json --out new-directory [--mode glb|manifest]`
 
-    npm run build -- --blueprint <city.json> --out <dir> [options]
+All paths are caller supplied. Default mode: `glb`. Input: [request](../schema/request.ts). Output: [manifest](../schema/result.ts) at `manifest.json` and any referenced files under `pieces/`. Success prints counts and elapsed milliseconds. Failure prints a JSON StreetsError to stderr and exits 1.
 
-| Option | Meaning |
-| --- | --- |
-| `--blueprint <file>` | a saved Atlas blueprint, required |
-| `--out <dir>` | the output directory, required |
-| `--design <file>` | a design document; the default design is used when omitted |
-| `--seed <int>` | the seed Streets owns, default 1 |
-| `--materials <dir>` | the materials catalog, default the sibling materials box |
-| `--mode <glb\|manifest>` | asset mode, default `glb` |
-| `--quiet` | no progress output |
-
-## Out
-
-The build in `--out`: `manifest.json` plus one model per piece under `pieces/`. On success it prints one line with the piece count, the ground owner count, the covered area and the elapsed time. On failure it prints the error code and message and exits non-zero.
-
-## Invariants
-
-- No path from a user's home directory is hardcoded. The materials default is resolved relative to this repo.
-- The same arguments give the same output bytes.
-- Exit code 0 only when the manifest and every piece it names were written.
-
-## Dependencies
-
-- [pipeline](../pipeline/CONTRACT.md).
+Depends on the root `build` library entry. No implicit sibling paths.

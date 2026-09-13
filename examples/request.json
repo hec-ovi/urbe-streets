@@ -1,0 +1,817 @@
+{
+  "blueprint": {
+    "meta": {
+      "version": "0.21.0",
+      "seed": "example",
+      "units": "meters",
+      "bounds": {
+        "min": [
+          0,
+          -2.5
+        ],
+        "max": [
+          260,
+          9.5
+        ]
+      },
+      "boundary": [
+        [
+          0,
+          -2.5
+        ],
+        [
+          260,
+          -2.5
+        ],
+        [
+          260,
+          9.5
+        ],
+        [
+          0,
+          9.5
+        ]
+      ],
+      "gridAngle": 0,
+      "buildingGrid": {
+        "origin": [
+          0,
+          0
+        ],
+        "angle": 0,
+        "spacing": 0.5
+      },
+      "params": {}
+    },
+    "districts": [
+      {
+        "id": "d0",
+        "kind": "residential",
+        "tier": "mid",
+        "boundary": [
+          [
+            0,
+            -2.5
+          ],
+          [
+            260,
+            -2.5
+          ],
+          [
+            260,
+            9.5
+          ],
+          [
+            0,
+            9.5
+          ]
+        ],
+        "center": [
+          130,
+          3.5
+        ],
+        "maxFloors": 12
+      }
+    ],
+    "streets": {
+      "nodes": [
+        {
+          "id": "n0",
+          "position": [
+            0,
+            3.5
+          ],
+          "edgeIds": [
+            "e0"
+          ],
+          "connections": [
+            {
+              "level": 0,
+              "edgeIds": [
+                "e0"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "n1",
+          "position": [
+            260,
+            3.5
+          ],
+          "edgeIds": [
+            "e0"
+          ],
+          "connections": [
+            {
+              "level": 0,
+              "edgeIds": [
+                "e0"
+              ]
+            }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "e0",
+          "class": "street",
+          "from": "n0",
+          "to": "n1",
+          "path": [
+            [
+              0,
+              3.5
+            ],
+            [
+              260,
+              3.5
+            ]
+          ],
+          "width": 7,
+          "sidewalk": {
+            "left": 2.5,
+            "right": 2.5
+          },
+          "districtIds": [
+            "d0"
+          ],
+          "level": 0,
+          "elevationProfile": [
+            {
+              "distance": 0,
+              "level": 0
+            },
+            {
+              "distance": 260,
+              "level": 0
+            }
+          ],
+          "crossSection": {
+            "runId": "sr0",
+            "profileId": "two",
+            "lanes": [
+              {
+                "width": 3.5,
+                "offset": 1.75,
+                "direction": "backward"
+              },
+              {
+                "width": 3.5,
+                "offset": -1.75,
+                "direction": "forward"
+              }
+            ],
+            "shoulders": {
+              "left": 0,
+              "right": 0
+            },
+            "sidewalks": {
+              "left": {
+                "profileId": "paved-2",
+                "bands": {
+                  "curb": 0.5,
+                  "border": 0,
+                  "furnishing": 0,
+                  "walking": 2,
+                  "frontage": 0
+                }
+              },
+              "right": {
+                "profileId": "paved-2",
+                "bands": {
+                  "curb": 0.5,
+                  "border": 0,
+                  "furnishing": 0,
+                  "walking": 2,
+                  "frontage": 0
+                }
+              }
+            }
+          }
+        }
+      ],
+      "crossings": [
+        {
+          "nodeId": "n0",
+          "segments": [
+            {
+              "edgeId": "e0",
+              "from": [
+                12,
+                -1.5
+              ],
+              "to": [
+                12,
+                8.5
+              ],
+              "roadway": {
+                "from": [
+                  12,
+                  0.05
+                ],
+                "to": [
+                  12,
+                  6.95
+                ]
+              },
+              "width": 3,
+              "markings": [
+                [
+                  [
+                    10.5,
+                    0.5
+                  ],
+                  [
+                    13.5,
+                    0.5
+                  ],
+                  [
+                    13.5,
+                    1.0
+                  ],
+                  [
+                    10.5,
+                    1.0
+                  ]
+                ],
+                [
+                  [
+                    10.5,
+                    1.5
+                  ],
+                  [
+                    13.5,
+                    1.5
+                  ],
+                  [
+                    13.5,
+                    2.0
+                  ],
+                  [
+                    10.5,
+                    2.0
+                  ]
+                ],
+                [
+                  [
+                    10.5,
+                    2.5
+                  ],
+                  [
+                    13.5,
+                    2.5
+                  ],
+                  [
+                    13.5,
+                    3.0
+                  ],
+                  [
+                    10.5,
+                    3.0
+                  ]
+                ],
+                [
+                  [
+                    10.5,
+                    3.5
+                  ],
+                  [
+                    13.5,
+                    3.5
+                  ],
+                  [
+                    13.5,
+                    4.0
+                  ],
+                  [
+                    10.5,
+                    4.0
+                  ]
+                ],
+                [
+                  [
+                    10.5,
+                    4.5
+                  ],
+                  [
+                    13.5,
+                    4.5
+                  ],
+                  [
+                    13.5,
+                    5.0
+                  ],
+                  [
+                    10.5,
+                    5.0
+                  ]
+                ],
+                [
+                  [
+                    10.5,
+                    5.5
+                  ],
+                  [
+                    13.5,
+                    5.5
+                  ],
+                  [
+                    13.5,
+                    6.0
+                  ],
+                  [
+                    10.5,
+                    6.0
+                  ]
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "signals": [],
+      "planting": [],
+      "highwayStructures": [],
+      "construction": {
+        "version": "1.0.0",
+        "runs": [
+          {
+            "id": "sr0",
+            "profileId": "two",
+            "edges": [
+              {
+                "edgeId": "e0",
+                "forward": true,
+                "start": 0,
+                "end": 260
+              }
+            ],
+            "path": [
+              [
+                0,
+                3.5
+              ],
+              [
+                260,
+                3.5
+              ]
+            ],
+            "length": 260
+          }
+        ],
+        "modules": {
+          "version": "1.0.0",
+          "definitions": [
+            {
+              "id": "strip",
+              "parts": [
+                {
+                  "role": "gutter",
+                  "polygon": [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      2,
+                      0
+                    ],
+                    [
+                      2,
+                      0.3
+                    ],
+                    [
+                      0,
+                      0.3
+                    ]
+                  ],
+                  "bottom": -0.03,
+                  "top": 0
+                },
+                {
+                  "role": "curb",
+                  "polygon": [
+                    [
+                      0,
+                      0.3
+                    ],
+                    [
+                      2,
+                      0.3
+                    ],
+                    [
+                      2,
+                      0.5
+                    ],
+                    [
+                      0,
+                      0.5
+                    ]
+                  ],
+                  "bottom": -0.03,
+                  "top": 0.2
+                },
+                {
+                  "role": "joint",
+                  "polygon": [
+                    [
+                      0,
+                      0.5
+                    ],
+                    [
+                      2,
+                      0.5
+                    ],
+                    [
+                      2,
+                      2.5
+                    ],
+                    [
+                      0,
+                      2.5
+                    ]
+                  ],
+                  "bottom": 0,
+                  "top": 0.193
+                },
+                {
+                  "role": "panel",
+                  "polygon": [
+                    [
+                      0.003,
+                      0.503
+                    ],
+                    [
+                      0.997,
+                      0.503
+                    ],
+                    [
+                      0.997,
+                      1.4969999999999999
+                    ],
+                    [
+                      0.003,
+                      1.4969999999999999
+                    ]
+                  ],
+                  "bottom": 0.193,
+                  "top": 0.2
+                },
+                {
+                  "role": "panel",
+                  "polygon": [
+                    [
+                      0.003,
+                      1.503
+                    ],
+                    [
+                      0.997,
+                      1.503
+                    ],
+                    [
+                      0.997,
+                      2.497
+                    ],
+                    [
+                      0.003,
+                      2.497
+                    ]
+                  ],
+                  "bottom": 0.193,
+                  "top": 0.2
+                },
+                {
+                  "role": "panel",
+                  "polygon": [
+                    [
+                      1.003,
+                      0.503
+                    ],
+                    [
+                      1.9969999999999999,
+                      0.503
+                    ],
+                    [
+                      1.9969999999999999,
+                      1.4969999999999999
+                    ],
+                    [
+                      1.003,
+                      1.4969999999999999
+                    ]
+                  ],
+                  "bottom": 0.193,
+                  "top": 0.2
+                },
+                {
+                  "role": "panel",
+                  "polygon": [
+                    [
+                      1.003,
+                      1.503
+                    ],
+                    [
+                      1.9969999999999999,
+                      1.503
+                    ],
+                    [
+                      1.9969999999999999,
+                      2.497
+                    ],
+                    [
+                      1.003,
+                      2.497
+                    ]
+                  ],
+                  "bottom": 0.193,
+                  "top": 0.2
+                }
+              ]
+            }
+          ],
+          "placements": [
+            {
+              "moduleId": "strip",
+              "blockId": "b0",
+              "origin": [
+                0,
+                7
+              ],
+              "turn": 0,
+              "count": 130,
+              "step": 2,
+              "finish": "fixture"
+            },
+            {
+              "moduleId": "strip",
+              "blockId": "b1",
+              "origin": [
+                260,
+                0
+              ],
+              "turn": 2,
+              "count": 130,
+              "step": 2,
+              "finish": "fixture"
+            }
+          ]
+        }
+      }
+    },
+    "blocks": [
+      {
+        "id": "b0",
+        "districtId": "d0",
+        "boundary": [
+          [
+            0,
+            7
+          ],
+          [
+            260,
+            7
+          ],
+          [
+            260,
+            9.5
+          ],
+          [
+            0,
+            9.5
+          ]
+        ],
+        "curb": [],
+        "sidewalk": [],
+        "parcelIds": [],
+        "openAreas": []
+      },
+      {
+        "id": "b1",
+        "districtId": "d0",
+        "boundary": [
+          [
+            0,
+            -2.5
+          ],
+          [
+            260,
+            -2.5
+          ],
+          [
+            260,
+            0.0
+          ],
+          [
+            0,
+            0.0
+          ]
+        ],
+        "curb": [],
+        "sidewalk": [],
+        "parcelIds": [],
+        "openAreas": []
+      }
+    ],
+    "parcels": [],
+    "transit": {
+      "busStops": [],
+      "busRoutes": [],
+      "trainStations": [],
+      "trainLines": [],
+      "subwayStations": [],
+      "subwayLines": []
+    },
+    "volumetric": {
+      "buildings": [],
+      "ground": [
+        {
+          "surface": "roadway",
+          "polygon": [
+            [
+              0,
+              0
+            ],
+            [
+              260,
+              0
+            ],
+            [
+              260,
+              7
+            ],
+            [
+              0,
+              7
+            ]
+          ],
+          "bottom": -0.2,
+          "top": 0
+        },
+        {
+          "moduleBlockId": "b0",
+          "surface": "gutter",
+          "polygon": [
+            [
+              0,
+              7
+            ],
+            [
+              260,
+              7
+            ],
+            [
+              260,
+              7.3
+            ],
+            [
+              0,
+              7.3
+            ]
+          ],
+          "bottom": -0.03,
+          "top": 0
+        },
+        {
+          "moduleBlockId": "b0",
+          "surface": "curb",
+          "polygon": [
+            [
+              0,
+              7.3
+            ],
+            [
+              260,
+              7.3
+            ],
+            [
+              260,
+              7.5
+            ],
+            [
+              0,
+              7.5
+            ]
+          ],
+          "bottom": -0.03,
+          "top": 0.2
+        },
+        {
+          "moduleBlockId": "b0",
+          "surface": "sidewalk",
+          "polygon": [
+            [
+              0,
+              7.5
+            ],
+            [
+              260,
+              7.5
+            ],
+            [
+              260,
+              9.5
+            ],
+            [
+              0,
+              9.5
+            ]
+          ],
+          "bottom": 0,
+          "top": 0.2
+        },
+        {
+          "moduleBlockId": "b1",
+          "surface": "gutter",
+          "polygon": [
+            [
+              0,
+              -0.3
+            ],
+            [
+              260,
+              -0.3
+            ],
+            [
+              260,
+              0.0
+            ],
+            [
+              0,
+              0.0
+            ]
+          ],
+          "bottom": -0.03,
+          "top": 0
+        },
+        {
+          "moduleBlockId": "b1",
+          "surface": "curb",
+          "polygon": [
+            [
+              0,
+              -0.5
+            ],
+            [
+              260,
+              -0.5
+            ],
+            [
+              260,
+              -0.3
+            ],
+            [
+              0,
+              -0.3
+            ]
+          ],
+          "bottom": -0.03,
+          "top": 0.2
+        },
+        {
+          "moduleBlockId": "b1",
+          "surface": "sidewalk",
+          "polygon": [
+            [
+              0,
+              -2.5
+            ],
+            [
+              260,
+              -2.5
+            ],
+            [
+              260,
+              -0.5
+            ],
+            [
+              0,
+              -0.5
+            ]
+          ],
+          "bottom": 0,
+          "top": 0.2
+        }
+      ]
+    },
+    "stats": {
+      "population": 0,
+      "parcelsByType": {},
+      "districts": []
+    }
+  },
+  "design": {
+    "version": "example-1",
+    "finishes": {
+      "roadway": "cyberpunk/roadway/mid",
+      "panel": "cyberpunk/panel/mid",
+      "joint": "cyberpunk/joint/mid",
+      "curb": "cyberpunk/curb/mid",
+      "gutter": "cyberpunk/gutter/mid",
+      "gutter-lip": "cyberpunk/gutter-lip/mid",
+      "guardrail": "cyberpunk/guardrail/mid",
+      "marking": "cyberpunk/marking/mid"
+    }
+  },
+  "seed": 42
+}

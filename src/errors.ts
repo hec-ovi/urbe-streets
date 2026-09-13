@@ -30,12 +30,3 @@ export const unsatisfiable = (message: string, details?: Record<string, unknown>
 
 export const invariant = (message: string, details?: Record<string, unknown>): StreetsError =>
   new StreetsError('E_INVARIANT', message, details);
-
-/** Throws `E_INVARIANT` when a coherence check this box owns fails. */
-export function check(
-  condition: boolean,
-  message: string,
-  details?: Record<string, unknown>,
-): asserts condition {
-  if (!condition) throw invariant(message, details);
-}
