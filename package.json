@@ -16,17 +16,13 @@
   },
   "dependencies": {
     "@gltf-transform/core": "4.5.0",
-    "@gltf-transform/extensions": "4.5.0",
     "clipper2-ts": "2.0.1-18",
     "earcut": "3.2.3"
   },
   "devDependencies": {
     "@types/earcut": "3.0.0",
     "@types/node": "22.20.2",
-    "@types/three": "0.185.4",
-    "three": "0.185.1",
     "typescript": "7.0.2",
-    "vite": "8.2.2",
     "vitest": "4.1.11"
   }
 }
