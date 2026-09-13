@@ -93,6 +93,23 @@ export function readAtlas(input: unknown): Architecture {
         return [offset - w / 2, offset + w / 2];
       }).sort((a, b) => a[0]! - b[0]!);
       if (spans.some((s, i) => i > 0 && s[0]! < spans[i - 1]![1]! - 1e-8)) throw unsatisfiable('Lanes overlap', { edgeId: id });
+      const sides = object(section.sidewalks, `${path}.crossSection.sidewalks`);
+      for (const side of ['left', 'right']) {
+        const record = object(sides[side], `${path}.crossSection.sidewalks.${side}`);
+        const bands = object(record.bands, `${path}.crossSection.sidewalks.${side}.bands`);
+        let total = 0;
+        for (const role of ['curb', 'border', 'furnishing', 'walking', 'frontage']) {
+          const value = number(bands[role], `${path}.sidewalks.${side}.bands.${role}`);
+          if (value < 0) fail(`${path}.sidewalks.${side}`, 'negative band');
+          total += value;
+        }
+        if (record.geometry !== undefined) {
+          const geometry = object(record.geometry, `${path}.sidewalks.${side}.geometry`);
+          total = number(geometry.totalWidth, `${path}.sidewalks.${side}.geometry.totalWidth`);
+        }
+        if (Math.abs(total - Number(sidewalk[side])) > 1e-8)
+          throw unsatisfiable('Side bands differ from the reserved width', { edgeId: id, side, total, reserved: sidewalk[side] });
+      }
     }
   }
   if (array(streets.highwayStructures, 'streets.highwayStructures').length) fail('streets.highwayStructures', 'highway construction is not supported');

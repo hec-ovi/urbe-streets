@@ -28,7 +28,9 @@ export function buildGround(a: Architecture): StreetManifest['ground'] {
   const cover = union(owners.filter(o => o.role !== 'support').map(o => o.ring)), reserved = union(a.reserved);
   const missing = totalArea(difference(reserved, cover)), escaped = totalArea(difference(cover, reserved));
   if (missing > 1e-7 || escaped > 1e-7) throw invariant('Physical construction does not cover its planning land', { missingArea: missing, escapedArea: escaped });
-  const blocked = totalArea(intersection(cover, a.exclusions));
+  const physical = union(owners.map(o => o.ring));
+  if (totalArea(difference(physical, reserved)) > 1e-7) throw unsatisfiable('Hardware escapes street land');
+  const blocked = totalArea(intersection(physical, a.exclusions));
   if (blocked > 1e-7) throw unsatisfiable('Street construction enters excluded parcel land', { area: blocked });
   return { owners, cover: { reservedArea: totalArea(reserved), coveredArea: totalArea(cover), difference: missing + escaped } };
 }
