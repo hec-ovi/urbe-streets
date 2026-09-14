@@ -12,4 +12,6 @@ Buffers retain world-coordinate doubles until bounded export. Every vertex has p
 
 `parking` emits the source 3 by 2.5 m panels inside each exact bay, 1 mm above the road, without painted dividers. `asphalt` samples the shared wear field on a 16 m world grid before export; its road domain excludes those parking panels and station shafts.
 
+`Frame` exports shared Vec2 arithmetic and `along(frontage,station,depth)`, mapping authored stations and inward depth into world XZ. Feature and marking consumers use these same frames.
+
 Depends on [geometry](../../geometry/CONTRACT.md), [native architecture](../../architecture/CONTRACT.md), source style data and Three.js geometry types. No renderer, materials, district generation or source-data mutation.
