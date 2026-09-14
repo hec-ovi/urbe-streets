@@ -1,0 +1,12 @@
+[
+  {
+    "lanes": 2,
+    "vertices": 24,
+    "sha256": "8bdceff15e0bc1402bee8a8b33dadf859a3b8f3e49a93a0aa52fc09dab0cf7e1"
+  },
+  {
+    "lanes": 4,
+    "vertices": 372,
+    "sha256": "442be8ec96003e5d6de1a28fe019d1fc928acf7b934bd48021ebba08ae8f0c3f"
+  }
+]

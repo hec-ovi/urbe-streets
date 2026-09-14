@@ -1,0 +1,11 @@
+{
+  "revision": "ac7c2fc02095b47d0a8fd7fda535e4ea7ce6452e",
+  "files": {
+    "scene/street/district/RoadPaint.ts": "63e1e3b16da748329604c3af1c9326fcc34076c3f0989fba8eaafca582c8a053",
+    "scene/street/district/Crosswalk.ts": "19f7583f1e730a50380e19f5f0679177ae5deed4602dccb6f60f65b14f6f3b0f",
+    "scene/street/district/LaneArrows.ts": "ff0286adf87ddd7487e8d9ee025d7f79707402bcb6b840acf132998390382f45",
+    "scene/street/district/RoadDetails.ts": "4d9d1403e6cc75973fea7ace981915fac1ac86303f7e3f13cf1161c0e3f0bd57",
+    "scene/street/district/RoadMarkings.ts": "6f9a2e0d9eae5cc7409c53bd86e92acb375c9bffeeb2e618ede828815dfcb8da"
+  },
+  "fixture": "Crosswalk and RoadPaint source entries, seed 42, straight 100 m frame, start 10 m, junction 0, 2 and 4 lanes; sorted unique position/UV vertices rounded to 8 decimals."
+}
