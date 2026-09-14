@@ -3,7 +3,7 @@ import type { NativeArchitecture, NativeOwner } from '../../architecture/native-
 import type { Ring, Vec2 } from '../../geometry/schema.ts';
 import { bounds, intersects } from '../../geometry/polygons.ts';
 import { difference, intersection, totalArea, area } from './Regions.ts';
-import { BoundaryIndex, type BoundarySegment } from './BoundaryIndex.ts';
+import { BoundaryIndex, segment, type BoundarySegment } from './BoundaryIndex.ts';
 import { SurfaceBatch } from './SurfaceBatch.ts';
 import type { SurfaceCut } from './schema.ts';
 
@@ -17,6 +17,7 @@ export class EdgeRing {
   private readonly curb: BoundaryIndex;
   private readonly gutter: BoundaryIndex;
   private readonly edges: Edge[];
+  private readonly joins = new Map<string, Vec2>();
   constructor(architecture: Pick<NativeArchitecture, 'owners'>) {
     const fields = architecture.owners.flatMap(owner => owner.ground);
     this.road = new BoundaryIndex(fields.filter(field => field.surface === 'roadway').map(field => field.ring));
@@ -24,7 +25,10 @@ export class EdgeRing {
     this.gutter = new BoundaryIndex(fields.filter(field => field.surface === 'gutter').map(field => field.ring));
     const unique = new Map<string, BoundarySegment>();
     for (const field of fields.filter(field => field.surface === 'gutter')) for (const edge of this.road.contacts(field.ring)) unique.set(`${key(edge.a)}:${key(edge.b)}`, edge);
-    const values = [...unique.values()], starts = new Map<string, BoundarySegment>(), ends = new Map<string, BoundarySegment>();
+    const points = new Map<string, Vec2>();
+    const canonical = (p: Vec2): Vec2 => { const id = key(p), previous = points.get(id); if (previous) return previous; points.set(id, p); return p; };
+    const values = [...unique.values()].map(edge => segment(canonical(edge.a), canonical(edge.b)));
+    const starts = new Map<string, BoundarySegment>(), ends = new Map<string, BoundarySegment>();
     for (const edge of values) { starts.set(key(edge.a), edge); ends.set(key(edge.b), edge); }
     this.edges = values.map(edge => ({ ...edge, ...(ends.has(key(edge.a)) ? { previous: ends.get(key(edge.a))! } : {}),
       ...(starts.has(key(edge.b)) ? { next: starts.get(key(edge.b))! } : {}) }));
@@ -37,6 +41,8 @@ export class EdgeRing {
     if (!curb.length && !gutter.length) return 0;
     const datum = owner.frontages[0]; if (!datum) throw invariant('Street edge owner has no authored datum', { ownerId: owner.id });
     const top = datum.pavedTop, road = datum.roadTop, crown = road + 0.06;
+    batch.polygon('joint', curb, top - 0.007, p => p, true, true);
+    batch.polygon('joint', gutter, road - 0.02, p => p, true, true);
     let remainingCurb = curb, remainingGutter = gutter, groups = 0;
     const box = bounds([...curb, ...gutter].flat());
     for (const edge of this.edges) {
@@ -60,7 +66,7 @@ export class EdgeRing {
             return r / width;
           };
           batch.polygon('gutter', channel, p => road + transverse(p) * 0.06,
-            p => [((p[0] - edge.a[0]) * edge.d[0] + (p[1] - edge.a[1]) * edge.d[1] - start) / 2, transverse(p)], true, true);
+            p => [((p[0] - edge.a[0]) * edge.d[0] + (p[1] - edge.a[1]) * edge.d[1] - start) / 2, transverse(p)]);
           remainingGutter = difference(remainingGutter, [mask]);
         }
         const claim = intersection(remainingCurb, [mask]);
@@ -68,11 +74,10 @@ export class EdgeRing {
           const bodyMask = end - start > 0.006 ? [this.mask(edge, start, end, 0.003)] : [];
           const body = intersection(claim, bodyMask);
           const joints = difference(claim, bodyMask);
-          batch.polygon('joint', joints, top - 0.007, p => p, true, true);
           for (const ring of joints) this.walls(batch, 'joint', ring, crown, top - 0.007, true);
           const origin = start === 0 ? this.join(edge, false, 0.3) : move(move(edge.a, edge.d, start), edge.n, 0.3);
           batch.polygon('curb', body, top, p => [((p[0] - origin[0]) * edge.d[0] + (p[1] - origin[1]) * edge.d[1]) / 2,
-            ((p[0] - origin[0]) * edge.n[0] + (p[1] - origin[1]) * edge.n[1]) / 0.2], true, true);
+            ((p[0] - origin[0]) * edge.n[0] + (p[1] - origin[1]) * edge.n[1]) / 0.2]);
           for (const ring of body) this.walls(batch, 'curb', ring, crown, top);
           remainingCurb = difference(remainingCurb, [mask]); groups++;
         }
@@ -97,10 +102,12 @@ export class EdgeRing {
 
   private join(edge: Edge, end: boolean, depth: number): Vec2 {
     const p = end ? edge.b : edge.a, other = end ? edge.next : edge.previous;
-    if (!other) return move(p, edge.n, depth);
+    const id = `${key(p)}:${depth}`, existing = this.joins.get(id); if (existing) return existing;
+    if (!other) { const result = move(p, edge.n, depth); this.joins.set(id, result); return result; }
     const denominator = 1 + edge.n[0] * other.n[0] + edge.n[1] * other.n[1];
     if (denominator < 1e-9) throw invariant('Street edge contact reverses direction', { point: p });
-    return [p[0] + (edge.n[0] + other.n[0]) * depth / denominator, p[1] + (edge.n[1] + other.n[1]) * depth / denominator];
+    const result: Vec2 = [p[0] + (edge.n[0] + other.n[0]) * depth / denominator, p[1] + (edge.n[1] + other.n[1]) * depth / denominator];
+    this.joins.set(id, result); return result;
   }
   private mask(edge: Edge, start: number, end: number, gap: number): Ring {
     const at = (station: number, depth: number, first: boolean): Vec2 => {

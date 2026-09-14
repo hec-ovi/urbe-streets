@@ -13,6 +13,26 @@
     {
       "path": "scene/street/district/FittedPerimeter.ts",
       "sha256": "59031bb9d466217331b39827d736bf1b38131d2ad4c07af12bc1e0c1758d4014"
+    },
+    {
+      "path": "scene/street/district/BlockSurface.ts",
+      "sha256": "f29ec2a3b31f44302e20cc597acccf84d7d55896a9536c783e80785dc426197d"
+    },
+    {
+      "path": "scene/street/district/PanelLayout.ts",
+      "sha256": "e804efc474c06775a13989d86111d3dc5bd4305dd8f6986a1198d15941d56ec5"
+    },
+    {
+      "path": "scene/street/district/CornerCut.ts",
+      "sha256": "ff47e78fe7d8780b58e63950445be0fd3a95ed3cbb31b3035a3626650b22b871"
+    },
+    {
+      "path": "scene/street/district/CornerPaving.ts",
+      "sha256": "cc7a5474c8d9c666e876a078f859bde0a9e3d117a836a7566141f298efaf6ec8"
+    },
+    {
+      "path": "scene/street/district/FaceZone.ts",
+      "sha256": "a8b3ff026afe9d8cca93262f6ce7833e25c76c0cac7b2ee20559f768df7569ea"
     }
   ]
 }
