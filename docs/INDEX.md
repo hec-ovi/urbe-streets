@@ -15,4 +15,6 @@ Builds bounded street models from a saved Atlas blueprint.
 | [assets](../src/assets/CONTRACT.md) | Encodes bounded GLBs and writes bundles. | geometry, glTF Transform | [result](../src/schema/result.ts) |
 | [cli](../src/cli/CONTRACT.md) | Builds from saved request JSON. | Streets | [request](../src/schema/request.ts) |
 
+[Native bundle schema](../src/schema/native-result.ts): exact input identity, bounded assets, physical collision flags, ground replacement, native material snapshot and constructed feature bounds. [Native request](../src/schema/native-request.ts).
+
 [API skill](../SKILL.md): calling example. [Issues](ISSUES.md): boundary proposals and open decisions. [Port](PORT.md): adopted construction and verification.
