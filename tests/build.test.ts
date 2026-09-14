@@ -3,7 +3,7 @@ import {createHash} from 'node:crypto';
 import {mkdtemp,readFile,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {buildNative as build} from '../src/native.ts';
+import {build} from '../src/index.ts';
 import {nativeBlueprint} from '../src/architecture/fixtures/native.ts';
 import catalog from './fixtures/native-materials.json' with {type:'json'};
 import type {NativeMaterialCatalog} from '../src/schema/native-materials.ts';
