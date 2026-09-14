@@ -38,4 +38,5 @@ it('keeps exact inlet openings and closes the gutter ends above the sunk pan', (
   expect(Math.min(...gutter.heights)).toBe(-0.02);
   expect(gutter.normals.some((n, i) => i % 3 === 0 && n === 1)).toBe(true);
   expect(gutter.normals.some((n, i) => i % 3 === 0 && n === -1)).toBe(true);
+  expect(gutter.normals.some((n, i) => i % 3 === 2 && n === 1)).toBe(true);
 });

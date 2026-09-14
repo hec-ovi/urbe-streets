@@ -89,6 +89,9 @@ export class EdgeRing {
       const frontage = owner.frontages.find(frontage => frontage.id === cut.frontageId);
       if (!frontage) throw invariant('Inlet has no source frontage', { featureId: cut.id });
       const n = frontage.inward, d: Vec2 = [n[1], -n[0]];
+      const first = cut.ring[0]!, last = cut.ring[1]!, pan = road - 0.02, length = cut.end - cut.start;
+      batch.face('gutter', [[last[0], pan, last[1]], [last[0], road, last[1]], [first[0], road, first[1]], [first[0], pan, first[1]]],
+        [[0, 0], [0, 0.1], [length / 2, 0.1], [length / 2, 0]]);
       for (const [station, reverse] of [[cut.start, false], [cut.end, true]] as const) {
         const a = move(frontage.start, d, station), b = move(a, n, 0.3), pan = road - 0.02;
         const vertices: [number, number, number][] = [[a[0], pan, a[1]], [a[0], road, a[1]], [b[0], crown, b[1]], [b[0], pan, b[1]]];
