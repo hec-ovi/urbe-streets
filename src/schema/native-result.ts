@@ -39,6 +39,12 @@ export interface NativeStreetFeature {
   /** Complete reserved plan footprint, independent of resident asset cells. */
   footprint: Ring;
 }
+/**
+ * Catalog and delegated hashes use SHA-256 over UTF-8 JSON.stringify of the exact parsed
+ * binding/infrastructure value, retaining property and array order, with no indentation or newline.
+ * GLB SHA-256 uses exact file bytes. Native GLB nodes and primitives carry streetCollision:boolean;
+ * materials carry streetNativeSurface:string. Node translation restores piece.origin.
+ */
 export interface NativeStreetManifest {
   meta: {
     version: '0.2.0'; generatorVersion: string; architectureVersion: '0.22.0'; reservationVersion: '1.0.0';
