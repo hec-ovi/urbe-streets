@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "Builds streamable GLB street assets from saved Atlas construction with retained ground ownership and seeded Materials bindings.",
+  "description": "Builds source-native street GLBs from saved Atlas reservations with exact ground replacement and native scan bindings.",
   "engines": {
     "node": ">=22.13.0"
   },
@@ -12,7 +12,8 @@
     "build": "tsc --noEmit",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "generate": "node --experimental-strip-types src/cli/main.ts"
+    "generate": "node --experimental-strip-types src/cli/main.ts",
+    "test:city": "node --experimental-strip-types tests/city.ts"
   },
   "dependencies": {
     "@gltf-transform/core": "4.5.0",
