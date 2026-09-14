@@ -1,0 +1,254 @@
+{
+  "bounds": {
+    "min": [
+      -36,
+      -36
+    ],
+    "max": [
+      924,
+      612
+    ]
+  },
+  "zones": [
+    {
+      "center": [
+        389.6207965314388,
+        346.1049453970045
+      ],
+      "radius": 133.59403235604987,
+      "strength": 0.7741851875674911
+    },
+    {
+      "center": [
+        454.0245498865843,
+        361.90674019418657
+      ],
+      "radius": 134.5835485472344,
+      "strength": 0.9110529216006398
+    },
+    {
+      "center": [
+        841.8725928068161,
+        191.53615252487361
+      ],
+      "radius": 94.28659975761548,
+      "strength": 0.7086160257458687
+    }
+  ],
+  "samples": [
+    {
+      "point": [
+        -36,
+        -36
+      ],
+      "value": 0.025
+    },
+    {
+      "point": [
+        389.6207965314388,
+        346.1049453970045
+      ],
+      "value": 0.7741851875674911
+    },
+    {
+      "point": [
+        419.6207965314388,
+        326.1049453970045
+      ],
+      "value": 0.6354493964996821
+    },
+    {
+      "point": [
+        454.0245498865843,
+        361.90674019418657
+      ],
+      "value": 0.9110529216006398
+    },
+    {
+      "point": [
+        484.0245498865843,
+        341.90674019418657
+      ],
+      "value": 0.7499225379350607
+    },
+    {
+      "point": [
+        841.8725928068161,
+        191.53615252487361
+      ],
+      "value": 0.7086160257458687
+    },
+    {
+      "point": [
+        871.8725928068161,
+        171.53615252487361
+      ],
+      "value": 0.47699954622913476
+    },
+    {
+      "point": [
+        0,
+        0
+      ],
+      "value": 0.025
+    }
+  ],
+  "rows": [
+    {
+      "width": 2,
+      "key": "frontage:a",
+      "value": [
+        {
+          "length": 2,
+          "width": 1,
+          "band": "edge",
+          "finish": "light",
+          "depth": 0.5
+        },
+        {
+          "length": 2,
+          "width": 1,
+          "band": "field",
+          "finish": "dark",
+          "depth": 1.5
+        }
+      ]
+    },
+    {
+      "width": 4,
+      "key": "frontage:a",
+      "value": [
+        {
+          "length": 2,
+          "width": 1,
+          "band": "edge",
+          "finish": "light",
+          "depth": 0.5
+        },
+        {
+          "length": 2,
+          "width": 2,
+          "band": "field",
+          "finish": "dark",
+          "depth": 1.5
+        },
+        {
+          "length": 1,
+          "width": 1,
+          "band": "service",
+          "finish": "base",
+          "depth": 3.5
+        }
+      ]
+    },
+    {
+      "width": 6,
+      "key": "frontage:a",
+      "value": [
+        {
+          "length": 2,
+          "width": 1,
+          "band": "edge",
+          "finish": "light",
+          "depth": 0.5
+        },
+        {
+          "length": 2,
+          "width": 2,
+          "band": "field",
+          "finish": "dark",
+          "depth": 1.5
+        },
+        {
+          "length": 1,
+          "width": 1,
+          "band": "service",
+          "finish": "base",
+          "depth": 3.5
+        },
+        {
+          "length": 1,
+          "width": 1,
+          "band": "trim",
+          "finish": "light",
+          "depth": 4.5
+        },
+        {
+          "length": 4,
+          "width": 1,
+          "band": "field",
+          "finish": "accent",
+          "depth": 5.5
+        }
+      ]
+    }
+  ],
+  "palettes": [
+    {
+      "id": "owner:0",
+      "wear": 0,
+      "value": {
+        "base": "polished",
+        "accent": "terracotta",
+        "light": "aggregate",
+        "dark": "basalt",
+        "metal": "tread"
+      }
+    },
+    {
+      "id": "owner:1",
+      "wear": 0.2,
+      "value": {
+        "base": "polished",
+        "accent": "oxblood",
+        "light": "aggregate",
+        "dark": "basalt",
+        "metal": "treadOchre"
+      }
+    },
+    {
+      "id": "owner:2",
+      "wear": 0.4,
+      "value": {
+        "base": "ordinary",
+        "accent": "oxblood",
+        "light": "aggregate",
+        "dark": "basalt",
+        "metal": "tread"
+      }
+    },
+    {
+      "id": "owner:3",
+      "wear": 0.6,
+      "value": {
+        "base": "ordinary",
+        "accent": "terracotta",
+        "light": "aggregate",
+        "dark": "basalt",
+        "metal": "tread"
+      }
+    },
+    {
+      "id": "owner:4",
+      "wear": 0.8,
+      "value": {
+        "base": "ordinary",
+        "accent": "terracotta",
+        "light": "aggregate",
+        "dark": "basalt",
+        "metal": "tread"
+      }
+    },
+    {
+      "id": "owner:5",
+      "wear": 1,
+      "value": {
+        "base": "worn-c",
+        "accent": "oxblood",
+        "light": "aggregate",
+        "dark": "basalt",
+        "metal": "tread"
+      }
+    }
+  ]
+}

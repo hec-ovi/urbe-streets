@@ -1,0 +1,34 @@
+{
+  "project": "threejsscene",
+  "revision": "ac7c2fc02095b47d0a8fd7fda535e4ea7ce6452e",
+  "files": [
+    {
+      "path": "scene/street/generation/random.ts",
+      "sha256": "6549bd8c2c282d42b535ae4fbbce26899208df7fb959cad8da738acf8a9d8f35"
+    },
+    {
+      "path": "scene/street/generation/zones.ts",
+      "sha256": "2ad638ee7914b94828cc7684daad3a96f6db62290aaacf234d0a5c5a0ce1ce6d"
+    },
+    {
+      "path": "scene/street/generation/PanelRows.ts",
+      "sha256": "655ad4fe3298a389d38cfcd816021821b29406c0ebbb0fe3dff3034bc0d5e20e"
+    },
+    {
+      "path": "scene/street/generation/panel-rows.json",
+      "sha256": "4bffa592ff9150bd7e4555a0f1fc9992fcc008b0c087f001229b9d3ce4bfc07e"
+    },
+    {
+      "path": "scene/street/generation/index.ts",
+      "sha256": "f2c2f16200fc2e8eb7a2c71595883bca48d6756a7c329cf24d057eccf25c3afc"
+    },
+    {
+      "path": "scene/street/generation/Blocks.ts",
+      "sha256": "2194145d9d96501389b4102cbd2580962a5159a58b65a65375bb9044873dca3e"
+    },
+    {
+      "path": "scene/street/district/PanelPalette.ts",
+      "sha256": "33faba8f5b97ad85aaf7c118e9a0a40992808a053c7133bb4b646bfa2348c5de"
+    }
+  ]
+}

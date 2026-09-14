@@ -1,0 +1,31 @@
+[
+  [
+    { "length": 1, "width": 1, "band": "edge", "finish": "base" },
+    { "length": 1, "width": 1, "band": "service", "finish": "dark" },
+    { "length": 4, "width": 2, "band": "field", "finish": "accent" },
+    { "length": 1, "width": 1, "band": "trim", "finish": "light" },
+    { "length": 2, "width": 2, "band": "field", "finish": "base" },
+    { "length": 1, "width": 1, "band": "trim", "finish": "dark" }
+  ],
+  [
+    { "length": 2, "width": 1, "band": "edge", "finish": "light" },
+    { "length": 2, "width": 2, "band": "field", "finish": "dark" },
+    { "length": 1, "width": 1, "band": "service", "finish": "base" },
+    { "length": 1, "width": 1, "band": "trim", "finish": "light" },
+    { "length": 4, "width": 2, "band": "field", "finish": "accent" }
+  ],
+  [
+    { "length": 1, "width": 0.5, "band": "edge", "finish": "base" },
+    { "length": 2, "width": 1, "band": "service", "finish": "metal" },
+    { "length": 2, "width": 2, "band": "field", "finish": "dark" },
+    { "length": 1, "width": 1, "band": "trim", "finish": "light" },
+    { "length": 4, "width": 2, "band": "field", "finish": "accent" }
+  ],
+  [
+    { "length": 1, "width": 1, "band": "edge", "finish": "light" },
+    { "length": 2, "width": 1, "band": "service", "finish": "metal" },
+    { "length": 1, "width": 2, "band": "field", "finish": "base" },
+    { "length": 2, "width": 2, "band": "field", "finish": "accent" },
+    { "length": 1, "width": 1, "band": "trim", "finish": "dark" }
+  ]
+]
