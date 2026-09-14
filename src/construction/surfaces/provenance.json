@@ -1,0 +1,18 @@
+{
+  "project": "threejsscene",
+  "revision": "ac7c2fc02095b47d0a8fd7fda535e4ea7ce6452e",
+  "files": [
+    {
+      "path": "scene/street/district/EdgeRing.ts",
+      "sha256": "38b280fa0d3ddfa495f2ac51727ad3f87b2ae95028bbb3468f7fc40af71e440a"
+    },
+    {
+      "path": "scene/street/district/SurfaceBatch.ts",
+      "sha256": "5998a33b1c662f753cf7ac19259429a1f31ab888e2a28daf6471bf59d7931720"
+    },
+    {
+      "path": "scene/street/district/FittedPerimeter.ts",
+      "sha256": "59031bb9d466217331b39827d736bf1b38131d2ad4c07af12bc1e0c1758d4014"
+    }
+  ]
+}

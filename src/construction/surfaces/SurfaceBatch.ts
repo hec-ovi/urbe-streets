@@ -8,7 +8,9 @@ import type { GeometryPlacement, HeightMap, NativeMesh, SurfaceContext, SurfaceO
 export class SurfaceBatch {
   private readonly meshes = new Map<string, NativeMesh>();
   private readonly coverage: SurfaceOutput['coverage'] = [];
-  constructor(private readonly context: SurfaceContext) {
+  private readonly context: SurfaceContext;
+  constructor(context: SurfaceContext) {
+    this.context = context;
     if (!context.ownerId || !context.groundIds.length || context.groundIds.some(id => !id)
       || !Number.isFinite(context.roadTop) || typeof context.wear !== 'function') throw invariant('Native surfaces require an explicit source context');
   }
