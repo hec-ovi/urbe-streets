@@ -46,3 +46,15 @@ it('fails a retained guard whose source geometry conflicts with a protected shaf
   try { expect(() => builder.plan()).toThrowError(expect.objectContaining({ code: 'E_INVARIANT' })); }
   finally { builder.dispose(); }
 });
+
+it('publishes a whole transverse source access plate with road identity',async()=>{
+  const source=await readNativeAtlas(nativeBlueprint()),road=source.roads[0]!;
+  road.width=14;road.path=[[0,0],[100,0]];road.lanes=Array.from({length:4},()=>road.lanes[0]!);
+  source.owners[0]!.ground[0]!.ring=rectangle(0,-10,100,20);
+  source.approaches=[{id:'approach',edgeId:road.id,nodeId:road.from,distance:21.5,station:[20,23],field:rectangle(20,-7,3,14),landings:[]}];
+  const builder=new FeatureBuilder(source,2,()=>0);
+  try{const plan=builder.plan();expect(plan).toHaveLength(1);expect(plan[0]!.descriptor).toMatchObject({kind:'access',frontageId:null,roadId:road.id,length:14.6,depth:0.6});
+    expect(builder.draw(source.owners[0]!,plan).coverage).toEqual([]);
+    expect(plan[0]!.descriptor.bounds.min[1]).toBeLessThan(0);
+  }finally{builder.dispose();}
+});

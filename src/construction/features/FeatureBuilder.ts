@@ -7,6 +7,7 @@ import { along, dot, sub } from '../surfaces/Frame.ts';
 import { SurfaceBatch } from '../surfaces/SurfaceBatch.ts';
 import type { SurfaceOutput } from '../surfaces/schema.ts';
 import { Models } from './Models.ts';
+import { accessPlan } from './AccessPlan.ts';
 import { Fitting } from './Fitting.ts';
 import type { PlacedFeature } from './schema.ts';
 
@@ -58,6 +59,7 @@ export class FeatureBuilder {
         }
       }
     }
+    result.push(...accessPlan(this.architecture, this.seed, this.wear, this.models));
     return result;
   }
 

@@ -17,7 +17,7 @@ export class Models {
         min[axis] = Math.min(min[axis]!, value); max[axis] = Math.max(max[axis]!, value);
       }
     }
-    const footprint: Ring = options.kind === 'guard' ? [[min[0]!, min[2]!], [max[0]!, min[2]!], [max[0]!, max[2]!], [min[0]!, max[2]!]]
+    const footprint: Ring = (options.kind === 'guard' || options.kind === 'access') ? [[min[0]!, min[2]!], [max[0]!, min[2]!], [max[0]!, max[2]!], [min[0]!, max[2]!]]
       : [[-options.length / 2, 0], [options.length / 2, 0], [options.length / 2, options.depth], [-options.length / 2, options.depth]];
     if (options.kind === 'inlet' || options.kind === 'channel') {
       const projected: Ring[] = [];
