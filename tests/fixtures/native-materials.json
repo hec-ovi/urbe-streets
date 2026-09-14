@@ -1,0 +1,209 @@
+{
+  "version": 1,
+  "source": {
+    "project": "threejsscene",
+    "revision": "ac7c2fc02095b47d0a8fd7fda535e4ea7ce6452e",
+    "manifest": "sources/streets/scene-native/manifest.json"
+  },
+  "sampling": {
+    "asphalt": {
+      "scale": [
+        2,
+        2
+      ],
+      "noise": "materialx-perlin-3d",
+      "regionScale": 0.19,
+      "regionGain": 3.5,
+      "regionBias": 4,
+      "offsetFrequency": [
+        12.71,
+        37.19
+      ],
+      "offsetGain": 7,
+      "blendRange": [
+        0.12,
+        0.88
+      ],
+      "gradients": "unshifted"
+    }
+  },
+  "textures": {
+    "asphalt-ao": {
+      "path": "themes/cyberpunk/assets/street-native/asphalt-ao.png",
+      "resolution": [
+        1024,
+        1024
+      ],
+      "sha256": "e2401f8c4c196ac474e537602d18db935c647dd67b568026f8781afb1075d2ec",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "asphalt-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/asphalt-basecolor.png",
+      "resolution": [
+        1024,
+        1024
+      ],
+      "sha256": "f29a075b89427839e82edf4be5dfc27616d14753046844c54515546d89fbf578",
+      "colorSpace": "srgb",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "asphalt-clean-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/asphalt-clean-basecolor.png",
+      "resolution": [
+        1024,
+        1024
+      ],
+      "sha256": "f37daadd92befaa060b1c72c405496045ee339cd82ce52a1cf8364cf99ea8d2a",
+      "colorSpace": "srgb",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "asphalt-clean-normal": {
+      "path": "themes/cyberpunk/assets/street-native/asphalt-clean-normal.png",
+      "resolution": [
+        1024,
+        1024
+      ],
+      "sha256": "1be64ee0280ea59b307ead596b8d69466e5f5cb164727dc2ee1bd6f0ee74d59a",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "asphalt-normal": {
+      "path": "themes/cyberpunk/assets/street-native/asphalt-normal.png",
+      "resolution": [
+        1024,
+        1024
+      ],
+      "sha256": "51f75dda1fac30748246011ad8292a8833d6cc1f1babe7db643c9488a55e0f6e",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "asphalt-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/asphalt-roughness.png",
+      "resolution": [
+        1024,
+        1024
+      ],
+      "sha256": "6d3c6d5ad7fd56084bc7d58b5d5b45749b103347a15665593a989288a60035b8",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "paint-mask": {
+      "path": "themes/cyberpunk/assets/street-native/paint-mask.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "2504a9da900e809bd8db0da2b7ae0f0f20b22afd1f4b652635cd6ef5e952b9a0",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "clamp"
+      ]
+    }
+  },
+  "surfaces": {
+    "asphalt": {
+      "effect": "asphalt",
+      "maps": {
+        "basecolor": "asphalt-basecolor",
+        "normal": "asphalt-normal",
+        "roughness": "asphalt-roughness",
+        "ao": "asphalt-ao",
+        "cleanBasecolor": "asphalt-clean-basecolor",
+        "cleanNormal": "asphalt-clean-normal"
+      },
+      "uv": {
+        "mode": "world-xz",
+        "scale": [
+          2,
+          2
+        ]
+      },
+      "parameters": {
+        "colorGain": 0.42,
+        "normalScale": 0.55,
+        "roughnessDefault": 0.8,
+        "roughnessRange": [
+          0.45,
+          1
+        ],
+        "aoWear": 0.55
+      }
+    },
+    "whitePaint": {
+      "effect": "road-paint",
+      "maps": {
+        "mask": "paint-mask",
+        "grain": "asphalt-basecolor",
+        "normal": "asphalt-normal"
+      },
+      "uv": {
+        "mode": "paint"
+      },
+      "parameters": {
+        "tint": "#e5e1ca",
+        "roughness": 0.68,
+        "normalScale": 0.35,
+        "maskUScale": 1.37,
+        "noiseScale": 0.055,
+        "noiseGain": 2,
+        "erosionRange": [
+          0.035,
+          0.19
+        ],
+        "grainGain": 1.2,
+        "grainBias": 0.7,
+        "opacity": 0.98,
+        "wearStrength": 0.8,
+        "depthWrite": false
+      }
+    },
+    "yellowPaint": {
+      "effect": "road-paint",
+      "maps": {
+        "mask": "paint-mask",
+        "grain": "asphalt-basecolor",
+        "normal": "asphalt-normal"
+      },
+      "uv": {
+        "mode": "paint"
+      },
+      "parameters": {
+        "tint": "#d7ad38",
+        "roughness": 0.68,
+        "normalScale": 0.35,
+        "maskUScale": 1.37,
+        "noiseScale": 0.055,
+        "noiseGain": 2,
+        "erosionRange": [
+          0.035,
+          0.19
+        ],
+        "grainGain": 1.2,
+        "grainBias": 0.7,
+        "opacity": 0.98,
+        "wearStrength": 0.8,
+        "depthWrite": false
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "urbe-streets",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Builds streamable GLB street assets from saved Atlas construction with retained ground ownership and seeded Materials bindings.",

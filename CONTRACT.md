@@ -1,36 +1,19 @@
-# Streets 0.1.0
+# Streets 0.2.0
 
-Builds bounded GLB street assets from saved Atlas construction with retained ground ownership and seeded material bindings.
+Builds bounded source-native street GLBs from saved Atlas reservations, with exact ground ownership and native material references.
 
-## Call
+`buildNative(request,options):Promise<NativeStreetBuild>` from [src/native.ts](src/native.ts). Inputs: [request](src/schema/native-request.ts), [native material binding](src/schema/native-materials.ts). Output: [native result](src/schema/native-result.ts). Required: blueprint, integer seed, design `{version:'native-1.0.0',wear:0..1}`, and options.nativeMaterials (binding object or JSON path). Blueprint0.22.0 and reservations1.0.0 are required. No source layout is generated downstream.
 
-`build(request, options): Promise<StreetBuild>` from `src/index.ts`.
+A blueprint string is a saved JSON path: read bytes once, hash SHA-256, parse the same UTF-8 content. Object input hashes UTF-8 JSON.stringify retaining property/array order, without indentation/newline. `blueprintEncoding` declares the rule. Native catalog and delegated infrastructure hashes use the same ordered JSON.stringify rule on their exact parsed values; assets hash exact GLB bytes. Archive indexes fail explicitly.
 
-Inputs: [StreetRequest and BuildOptions](src/schema/request.ts), [Materials catalog subset](src/schema/materials.ts). Output: [StreetBuild](src/schema/result.ts). CLI: [contract](src/cli/CONTRACT.md).
+Source panel rows, corner fans, parking panels, sloped gutters, curbs, inlets, guards, access plates and road markings fit the published owner frames. Whole panels keep their original UV domain; wear is one continuous saved world field sampled before splitting. Original source geometry, source revision and independent conformance fixtures are recorded in the construction boxes. Missing coverage, unsupported profiles or source identities fail with owner evidence. Optional source hardware candidates require their whole receiving footprint.
 
-Required: `blueprint`, `design.version`, `design.finishes`, integer `seed`, `options.materials`. `mode` defaults to `glb`; omitted `outDir` returns bytes in `assets`. A destination must be new and its parent must exist. `manifest` mode has no assets and sets every piece's `asset` to null.
+Pieces occupy128m XZ cells. Node translation restores each piece origin; vertex positions are local Float32. Nodes and primitives carry `streetCollision:boolean`; materials carry `streetNativeSurface`. Vertex attributes are position, normal, UV, `_STREET_WEAR` and `_STREET_HEIGHT`. Paint/decal primitives are noncolliding. No texture bytes are embedded. The native binding snapshot supplies safe package-relative texture paths and source scan hashes; Engine owns texture loading and effect implementation.
 
-## Supported construction
+`ground.replacements` names exact original ground indices and module owner IDs to suppress. Per-owner receiving cover excludes station shafts and cannot enter parcels/water. Features publish stable world bounds and source identities independently of cell residency. Elevated highways remain delegated to the highway renderer, and station stairs/interactions remain delegated to the station renderer. Their exact source hashes and non-owning protection references are retained; only delegated.remainingGroundIndices may be rendered alongside native ordinary ground.
 
-Atlas blueprint 0.21.0, flat at-grade streets. Reads published physical module prisms (modules 1.0.0), their placements, non-module ground, and crossing stripes. Module planning covers are replaced by their physical parts, once. No source coordinates, levels, lane offsets or widths change. Each source role needs a catalog key; arrays select a finish by seed and owner. Material variants use the same owner seed. Catalog identity is SHA-256 of the supplied catalog JSON.
+Mode defaults to `glb`. Without outDir, bytes are returned in assets. A disk destination must be new, with an existing parent; `<outDir>/manifest.json` is published after relative pieces and excludes assets. Manifest mode retains piece geometry metadata with null asset/hash and no bytes. The same input values produce identical geometry and manifests; paths and timing are excluded from identity.
 
-`pieces` are clipped to 128 m spatial cells with city-frame bounds and relative GLB paths. Piece kinds describe their content: `block-frontage` includes paving, `crossing` is paint only, `junction` is roadway. Mixed cells retain all source IDs. `ground.owners` retain source polygons and absolute bottom/top; vertically stacked solids have separate owners. Markings have no ground owner. The physical cover must equal the published street land; overlapping solids and excluded parcel land fail.
+Errors: [StreetsError](src/errors.ts), `E_INVALID_PARAMS` (request/material/IO), `E_UNSUPPORTED_ARCHITECTURE` (version/reference/profile), `E_UNSATISFIABLE` (excluded land), `E_INVARIANT` (coverage, source fit, triangulation or export). No fallback geometry or material is generated.
 
-`construction` records retained module frames and material selections. `textures` carries catalog-reference bindings; consumers supply the actual maps, including separate roughness and metallic maps. GLBs contain scalar material values and binding identities, with no embedded textures. Catalog map paths are validated as references, not read from disk. Tiled UVs use declared metre scale; exact maps require a matching panel aspect. Asset splitting preserves the source UV frame.
-
-`capabilities` reports absent legal turns and walking-lane identities; no new arrows or walking terminal strips are generated. Highways, stations and hydrology are unsupported. Source module hardware is retained; additional furniture is not generated. The [boundary proposals](docs/ISSUES.md) describe the complete stage target.
-
-The same request, catalog content and mode produce identical manifest data, piece order and GLB bytes. Output paths and CLI timings are excluded from identity. Returned snapshots have no shared mutable state with the input.
-
-## Errors
-
-Closed set: `StreetsError {code, message, details?}` in [errors.ts](src/errors.ts).
-
-- `E_INVALID_PARAMS`: malformed request/options, unavailable catalog keys/maps, invalid catalog entries, unreadable JSON or output IO failure.
-- `E_UNSUPPORTED_ARCHITECTURE`: unsupported version/feature or unreadable geometry/reference, with its field path.
-- `E_UNSATISFIABLE`: lane exceeds its reservation, exact material cannot fit, crossing paint leaves the roadway, or construction enters a parcel.
-- `E_INVARIANT`: constructed solids overlap, cover or triangulation fails, or construction/export fails unexpectedly. Details retain source identity where available.
-
-## Dependencies
-
-[Atlas contract](../atlas/CONTRACT.md) and [blueprint schema](../atlas/schema/blueprint.ts), read by [one adapter](src/architecture/atlas.ts). [Materials contract](../materials/CONTRACT.md), [theme schema](../materials/schema/theme-index.schema.json) and [entry schema](../materials/schema/material-entry.schema.json), consumed as saved catalog data. No sibling code imports or running services. Runtime packages: glTF Transform core, clipper2-ts, earcut and Three.js 0.185.1 geometry primitives. The pinned Three version matches the source street builders; Streets creates no renderer.
+Dependencies: [Atlas](../atlas/CONTRACT.md), [reservations](../atlas/src/streets/layout/reservations/CONTRACT.md), [native Materials](../materials/sources/streets/scene-native/CONTRACT.md), and the boxes in [INDEX](docs/INDEX.md). Runtime packages are glTF Transform, clipper2-ts, earcut and source-compatible Three0.185.1 geometry; no sibling runtime imports or renderer.

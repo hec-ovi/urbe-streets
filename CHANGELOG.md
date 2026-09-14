@@ -1,3 +1,3 @@
 # Changelog
 
-0.1.0: saved Atlas street construction as bounded GLBs, retained ground ownership, seeded catalog references, library and CLI export.
+0.2.0: source-native street geometry, scan bindings, bounded collision assets, exact ground replacement, continuous wear and delegated highway/station ownership.
