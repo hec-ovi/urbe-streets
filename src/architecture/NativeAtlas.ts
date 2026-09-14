@@ -77,8 +77,12 @@ export async function readNativeAtlas(input: unknown): Promise<NativeArchitectur
     || protections.filter(p => p.kind === 'station-bay').length !== stationBays.length
     || protections.filter(p => p.kind === 'station-shaft').length !== shafts.length) bad('reservations.protected', 'Incomplete infrastructure protection');
   const obstaclePoints: NativeArchitecture['obstaclePoints'] = [];
-  for (const [kind, clearance] of [['signals', 1], ['planting', 1]] as const) records(streets[kind], `streets.${kind}`).forEach((item, index) =>
-    obstaclePoints.push({ id: `${kind}:${index}`, position: point(item.position, `${kind}.position`), clearance }));
+  records(streets.signals, 'streets.signals').forEach((item, index) =>
+    obstaclePoints.push({ id: `signals:${index}`, position: point(item.position, 'signals.position'), clearance: 1 }));
+  records(streets.planting, 'streets.planting').forEach((item, index) => {
+    if (item.kind !== 'tree' && item.kind !== 'pole') bad(`planting[${index}].kind`, 'Unknown planting support kind');
+    obstaclePoints.push({ id: `planting:${index}`, position: point(item.position, 'planting.position'), clearance: item.kind === 'tree' ? 0.5 : 0.15 });
+  });
   const parcels = indexed(records(source.parcels, 'parcels'), 'parcels');
   const exclusions = [...parcels].map(([id, parcel]) => {
     const access = object(parcel.access, `parcels.${id}.access`);
