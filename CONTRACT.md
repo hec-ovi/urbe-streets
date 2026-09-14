@@ -33,4 +33,4 @@ Closed set: `StreetsError {code, message, details?}` in [errors.ts](src/errors.t
 
 ## Dependencies
 
-[Atlas contract](../atlas/CONTRACT.md) and [blueprint schema](../atlas/schema/blueprint.ts), read by [one adapter](src/architecture/atlas.ts). [Materials contract](../materials/CONTRACT.md), [theme schema](../materials/schema/theme-index.schema.json) and [entry schema](../materials/schema/material-entry.schema.json), consumed as saved catalog data. No sibling code imports or running services. Runtime packages: glTF Transform core, clipper2-ts and earcut.
+[Atlas contract](../atlas/CONTRACT.md) and [blueprint schema](../atlas/schema/blueprint.ts), read by [one adapter](src/architecture/atlas.ts). [Materials contract](../materials/CONTRACT.md), [theme schema](../materials/schema/theme-index.schema.json) and [entry schema](../materials/schema/material-entry.schema.json), consumed as saved catalog data. No sibling code imports or running services. Runtime packages: glTF Transform core, clipper2-ts, earcut and Three.js 0.185.1 geometry primitives. The pinned Three version matches the source street builders; Streets creates no renderer.
