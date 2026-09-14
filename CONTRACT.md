@@ -1,8 +1,8 @@
-# Streets 0.2.0
+# Streets 0.2.1
 
 Builds bounded source-native street GLBs from saved Atlas reservations, with exact ground ownership and native material references.
 
-`build(request,options):Promise<NativeStreetBuild>` from [src/index.ts](src/index.ts) (`buildNative` is the same entry). Inputs: [request](src/schema/native-request.ts), [native material binding](src/schema/native-materials.ts). Output: [native result](src/schema/native-result.ts). Required: blueprint, integer seed, design `{version:'native-1.0.0',wear:0..1}`, and options.nativeMaterials (binding object or JSON path). Blueprint 0.22.0 and reservations 1.0.0 are required. No source layout is generated downstream.
+`build(request,options):Promise<NativeStreetBuild>` from [src/index.ts](src/index.ts) (`buildNative` is the same entry). Inputs: [request](src/schema/native-request.ts), [native material binding](src/schema/native-materials.ts). Output: [native result](src/schema/native-result.ts). Required: blueprint, integer seed, design `{version:'native-1.0.0',wear:0..1}`, and options.nativeMaterials (binding object or JSON path). Blueprint 0.22.0 or 0.23.0 and reservations 1.0.0 are required. No source layout is generated downstream.
 
 A blueprint string is a saved JSON path: read bytes once, hash SHA-256, parse the same UTF-8 content. Object input hashes UTF-8 JSON.stringify retaining property/array order, without indentation/newline. `blueprintEncoding` declares the rule. Native catalog and delegated infrastructure hashes use the same ordered JSON.stringify rule on their exact parsed values; assets hash exact GLB bytes. Archive indexes fail explicitly.
 

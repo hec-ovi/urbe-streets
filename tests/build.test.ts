@@ -11,8 +11,8 @@ const nativeMaterials=catalog as unknown as NativeMaterialCatalog;
 const request=()=>({blueprint:nativeBlueprint(),seed:42,design:{version:'native-1.0.0' as const,wear:0}});
 const hash=(value:string|Uint8Array)=>createHash('sha256').update(value).digest('hex');
 it('publishes deterministic native geometry and exact source/collision ownership',async()=>{
-  const input=request(),a=await build(input,{nativeMaterials}),b=await build(input,{nativeMaterials});expect(a).toEqual(b);
-  expect(a.meta).toMatchObject({version:'0.2.0',blueprintEncoding:'json-stringify-utf8',blueprintHash:hash(JSON.stringify(input.blueprint)),nativeCatalogHash:hash(JSON.stringify(catalog))});
+  const input=request();input.blueprint.meta.version='0.23.0';const a=await build(input,{nativeMaterials}),b=await build(input,{nativeMaterials});expect(a).toEqual(b);
+  expect(a.meta).toMatchObject({version:'0.2.0',architectureVersion:'0.23.0',blueprintEncoding:'json-stringify-utf8',blueprintHash:hash(JSON.stringify(input.blueprint)),nativeCatalogHash:hash(JSON.stringify(catalog))});
   expect(a.ground.replacements).toEqual({groundIndices:[0],moduleOwnerIds:['roadway']});expect(a.ground.cover.missingArea).toBe(0);
   for(const piece of a.pieces){expect(piece.sha256).toBe(hash(a.assets[piece.asset!]!));expect(piece.hasCollision).toBe(true);}
   const manifest=await build(input,{nativeMaterials,mode:'manifest'});expect(manifest.assets).toEqual({});expect(manifest.pieces.every(piece=>piece.asset===null&&piece.sha256===null)).toBe(true);
