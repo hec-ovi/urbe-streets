@@ -26,11 +26,9 @@ export interface NativeStreetGround {
   bottom: number;
   top: number;
 }
-export interface NativeStreetFeature {
+export type NativeStreetFeature = {
   id: string;
-  kind: 'guard' | 'inlet' | 'channel' | 'access';
   ownerId: string;
-  frontageId: string;
   style: number;
   length: number;
   depth: number;
@@ -38,7 +36,10 @@ export interface NativeStreetFeature {
   bounds: Box3;
   /** Complete reserved plan footprint, independent of resident asset cells. */
   footprint: Ring;
-}
+} & (
+  | { kind: 'guard' | 'inlet' | 'channel'; frontageId: string; roadId?: never }
+  | { kind: 'access'; frontageId: null; /** References Atlas streets.edges[].id. */ roadId: string }
+);
 /**
  * Catalog and delegated hashes use SHA-256 over UTF-8 JSON.stringify of the exact parsed
  * binding/infrastructure value, retaining property and array order, with no indentation or newline.
