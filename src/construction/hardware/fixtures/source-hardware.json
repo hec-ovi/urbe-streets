@@ -1,0 +1,775 @@
+{
+  "revision": "ac7c2fc02095b47d0a8fd7fda535e4ea7ce6452e",
+  "cases": [
+    {
+      "options": {
+        "kind": "guard",
+        "length": 2,
+        "depth": 1,
+        "style": 0,
+        "damaged": false
+      },
+      "parts": [
+        {
+          "material": "green",
+          "attributes": {
+            "position": "679369727f1cbfeb27be65b81128781b5d3ab1407d569ecbae94568837bca74b",
+            "normal": "a90e2fd03f897f7cf1fff276eed4bfe3ca8b7d7a2d610dfe941c6eb6b20cb209",
+            "uv": "f3d684de8baf65b58e15e94bc70bb6b2938d522ea39e4782e8b56dba81c83e2f"
+          },
+          "index": "e1380f0119ab892753559877570d985c4bfd7d4cc2c3fd215c51ffbcfcd48343",
+          "vertices": 304,
+          "bounds": [
+            [
+              -0.9949918389320374,
+              0.23000001907348633,
+              0.6650000214576721
+            ],
+            [
+              0.9949918389320374,
+              1.2050000429153442,
+              0.7749999761581421
+            ]
+          ]
+        },
+        {
+          "material": "darkMetal",
+          "attributes": {
+            "position": "f8c8c098e6a8bc169262856a38b0ddfb1cecad012bd05659bb2404fd5022d31d",
+            "normal": "4343f400ff9d965cf7ff5eeb9f51f5ae3507a4997d6c99e2e4ddc4e1fffe624e",
+            "uv": "39ae632d63f9ac05f90c5daf0b77b3079094d6b81b8121c9721d53cfdae15729"
+          },
+          "index": "01df634a07d7d4b26838a584a5cf90a63e1b9dc4bae15bd181fe7e589e0bf1c9",
+          "vertices": 48,
+          "bounds": [
+            [
+              -0.75,
+              0.20000000298023224,
+              0.6000000238418579
+            ],
+            [
+              0.75,
+              0.23000000417232513,
+              0.8399999737739563
+            ]
+          ]
+        },
+        {
+          "material": "metal",
+          "attributes": {
+            "position": "05b5b1fc22385bba3f9392636fd2da6443210f2417ffc7602e47ce33b1c777cc",
+            "normal": "26198afab8a763aefa5f415f69a9e4d6a0d54b77b26f0b26936212570972a492",
+            "uv": "a2b66399bc6de57aafe526fab2c84f3ee39fa1643ff6e6707bcc04dbe3813f76"
+          },
+          "index": "1eb1b8aa95ce93b790548430479fc3b17794d4d0345960815fccbb8898b44afd",
+          "vertices": 96,
+          "bounds": [
+            [
+              -0.7275000214576721,
+              0.23000000417232513,
+              0.762499988079071
+            ],
+            [
+              0.7275000214576721,
+              0.24199999868869781,
+              0.7975000143051147
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "options": {
+        "kind": "guard",
+        "length": 2,
+        "depth": 1,
+        "style": 1,
+        "damaged": false
+      },
+      "parts": [
+        {
+          "material": "concrete",
+          "attributes": {
+            "position": "8e835109a3302d6a07c58c98450864afe0d8c85134c04b4bfcaff7472d1e1e5b",
+            "normal": "c1a78bfaf7f87445f06c45cb7dbfe8087d138f7803db2dabd5075b4b6d5ebf4a",
+            "uv": "71f10bc8f45e53eac1025a9f98544edff510d8509e6a9c3a001d6af63953220a"
+          },
+          "index": "845c75e12962e884d28ec204d4a0f357ad5c2520b271becca88d1176ea576d9d",
+          "vertices": 240,
+          "bounds": [
+            [
+              -0.9959999918937683,
+              0.20000000298023224,
+              0.477480411529541
+            ],
+            [
+              0.9959999918937683,
+              1.052356243133545,
+              1.0721309185028076
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "options": {
+        "kind": "guard",
+        "length": 2,
+        "depth": 1,
+        "style": 2,
+        "damaged": false
+      },
+      "parts": [
+        {
+          "material": "ochre",
+          "attributes": {
+            "position": "603aafc81008cac9e6ad538b58f95dd3e6fefdf7d5fd9c96ce527fd99473a754",
+            "normal": "bfc4a2658e8d76c7dde8607a6aebeb22fb001e76b1f58a28f5ce454585292109",
+            "uv": "e78527b4a8edacf1a212b42a3c280618ab9b145cbbd4f240a93681fc856c4728"
+          },
+          "index": "ba7429f3551f75cb8298cba42d78e41390b763aeb18fef7b2c80cae78355db4b",
+          "vertices": 180,
+          "bounds": [
+            [
+              -0.9599999785423279,
+              0.20000000298023224,
+              0.6399999856948853
+            ],
+            [
+              0.9599999785423279,
+              1.2999999523162842,
+              0.8399999737739563
+            ]
+          ]
+        },
+        {
+          "material": "metal",
+          "attributes": {
+            "position": "5c5ff1519d3a29b94c369719d5db92764be70a3a14722e1e11548f182bd25f4a",
+            "normal": "d9fad94fb2c45c5a5704290c1cdbcb2ab5dd5f22251de0adc615b9b507e19314",
+            "uv": "fca60176a07c54412c1752c3c5ddd93254ccce427500d49cc9d79143b4ccbc56"
+          },
+          "index": "bb57c879d4dd8e596d095d3ddac7eb5f767b56287a4f7caea5ebb18d61373b4c",
+          "vertices": 168,
+          "bounds": [
+            [
+              -0.8989999890327454,
+              0.25600001215934753,
+              0.6255000233650208
+            ],
+            [
+              0.8989999890327454,
+              1.2374999523162842,
+              0.6504999995231628
+            ]
+          ]
+        },
+        {
+          "material": "darkMetal",
+          "attributes": {
+            "position": "d26c88436776eb787a96318633f7a2343a2043ce0c7080b638f7f3c05fe8325e",
+            "normal": "4343f400ff9d965cf7ff5eeb9f51f5ae3507a4997d6c99e2e4ddc4e1fffe624e",
+            "uv": "dde5a3891c2479c5a382b42ceefe9c55c214a6820c23d265efa2d8ce9f9eff97"
+          },
+          "index": "01df634a07d7d4b26838a584a5cf90a63e1b9dc4bae15bd181fe7e589e0bf1c9",
+          "vertices": 48,
+          "bounds": [
+            [
+              -0.9750000238418579,
+              0.2004999965429306,
+              0.6050000190734863
+            ],
+            [
+              0.9750000238418579,
+              0.23549999296665192,
+              0.875
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "options": {
+        "kind": "guard",
+        "length": 2,
+        "depth": 1,
+        "style": 3,
+        "damaged": false
+      },
+      "parts": [
+        {
+          "material": "ochre",
+          "attributes": {
+            "position": "cd45959ef184a97f6d3f39afaea0020cc3592573376a4970a327237ec42ee6ad",
+            "normal": "3a2d9056b868a0b11d50ac0af099f11293b772bb7850a98d1702ab0551c18b66",
+            "uv": "9b26fa0383fb503e619c930af7c1d318690251166f616d1b307e364b3d1d7ad9"
+          },
+          "index": "ad29b1ca92a73273737dbd03b223f6bd4cb1872b33aae73d628e263b98746bec",
+          "vertices": 160,
+          "bounds": [
+            [
+              -0.9472243189811707,
+              0.20000000298023224,
+              0.550000011920929
+            ],
+            [
+              0.9472243189811707,
+              1.1299999952316284,
+              0.8899999856948853
+            ]
+          ]
+        },
+        {
+          "material": "darkMetal",
+          "attributes": {
+            "position": "3436348fa248507570a1d4bd23f651a7bbfbc2e60cb195dd05270fe532a7435d",
+            "normal": "3a2d9056b868a0b11d50ac0af099f11293b772bb7850a98d1702ab0551c18b66",
+            "uv": "9b26fa0383fb503e619c930af7c1d318690251166f616d1b307e364b3d1d7ad9"
+          },
+          "index": "ad29b1ca92a73273737dbd03b223f6bd4cb1872b33aae73d628e263b98746bec",
+          "vertices": 160,
+          "bounds": [
+            [
+              -0.899592936038971,
+              0.2600000202655792,
+              0.6050000190734863
+            ],
+            [
+              0.899592936038971,
+              1.190000057220459,
+              0.8349999785423279
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "options": {
+        "kind": "guard",
+        "length": 2,
+        "depth": 1,
+        "style": 4,
+        "damaged": false
+      },
+      "parts": [
+        {
+          "material": "ochre",
+          "attributes": {
+            "position": "9693b99325208ae7f74ae61b3b44c175a4ff34ac18086db6bed573a3344ff4d5",
+            "normal": "cd8bd2788e87a36c51363f30f2bd94f0284666a351bfdbec406cb1cafb846740",
+            "uv": "b4b2a6a34515d73f51fa698cc99b82a9b71dd41da48e488278338a6cb7dea167"
+          },
+          "index": "bd1f0444fcbbab34780669000f381b43e63380fd58f47df6914839012b73c96e",
+          "vertices": 560,
+          "bounds": [
+            [
+              -0.9580000042915344,
+              0.21524375677108765,
+              0.423095703125
+            ],
+            [
+              0.9580000042915344,
+              1.3479548692703247,
+              1.076904296875
+            ]
+          ]
+        },
+        {
+          "material": "darkMetal",
+          "attributes": {
+            "position": "33d22e08ae1737e05411369665dff4d3950767fc1499f5bf43985b7bdfe1115f",
+            "normal": "338f7f6d6a318dbcc03212cd54318622fec58446712293465607b736d6bc8569",
+            "uv": "729253628ead8a2c6cc1a550c53108dc939a6a85088daf90129c134cca2eec1e"
+          },
+          "index": "1f02bc6877f6b16801d6054aa8c7e681010396b548d4050378bd5d4c058f5b5c",
+          "vertices": 72,
+          "bounds": [
+            [
+              -0.8600000143051147,
+              0.6700000166893005,
+              0.6660000085830688
+            ],
+            [
+              0.5,
+              0.9300000071525574,
+              0.6740000247955322
+            ]
+          ]
+        },
+        {
+          "material": "metal",
+          "attributes": {
+            "position": "f6bc85da9c84dc3044b76d3789e753b3bb8723f9da4936b97d4d2c135eae1d5e",
+            "normal": "26198afab8a763aefa5f415f69a9e4d6a0d54b77b26f0b26936212570972a492",
+            "uv": "060a4218738bf05b5d16b20d406a7f935bde39b538c6586067ed1b9dd0bb576f"
+          },
+          "index": "1eb1b8aa95ce93b790548430479fc3b17794d4d0345960815fccbb8898b44afd",
+          "vertices": 96,
+          "bounds": [
+            [
+              -0.8199999928474426,
+              0.6899999976158142,
+              0.6570000052452087
+            ],
+            [
+              0.8199999928474426,
+              0.9100000262260437,
+              0.6690000295639038
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "options": {
+        "kind": "guard",
+        "length": 2,
+        "depth": 1,
+        "style": 5,
+        "damaged": false
+      },
+      "parts": [
+        {
+          "material": "concrete",
+          "attributes": {
+            "position": "ebfef5e4e8598982f540bd97da7ec2ba0e248c24b9d1c8218b71d0c7ccf4dd1e",
+            "normal": "839c6352691654cb8592ae1f55c9ed6245d000f482460810c3e2788d771d9a4e",
+            "uv": "621098d1b38ac114ac704c820062972e4d633d7dec6fb072bcd55a11c563980a"
+          },
+          "index": "9a661d3eb7ed5f21b17132000cd86a93140258f28a767a55ce79bb1462548339",
+          "vertices": 288,
+          "bounds": [
+            [
+              -0.9959999918937683,
+              0.20000000298023224,
+              0.49775633215904236
+            ],
+            [
+              0.9959999918937683,
+              1.2617846727371216,
+              1.1514256000518799
+            ]
+          ]
+        },
+        {
+          "material": "paintedConcrete",
+          "attributes": {
+            "position": "1b739f99df07b746edc1b47ce441f36380cc0af8568d4a5287d02c1ecd743dcc",
+            "normal": "d32fc6e60181c278834526c3baaa1d6fa0980d89a07046a740c91d4248e20be4",
+            "uv": "6fecc0b419309545e251757539a1d68aa1b8ede9b311c75dceee96575d36ad67"
+          },
+          "index": "36c07b19447fe7eafef3d06a981899c544df78fe3064cc8eeb883dde1f58c4f5",
+          "vertices": 144,
+          "bounds": [
+            [
+              -0.9210000038146973,
+              0.23999999463558197,
+              0.5311699509620667
+            ],
+            [
+              0.9210000038146973,
+              1.211862564086914,
+              0.7314709424972534
+            ]
+          ]
+        },
+        {
+          "material": "darkMetal",
+          "attributes": {
+            "position": "2cfdffc237a1b1558a6ed2d8cd7c4c607ded807a0761809d6388153bd8dfe964",
+            "normal": "cf38d80691f04d52b9686807b830aec77584c7ecdc0ceed56144923548dd5593",
+            "uv": "98b5ea00a53dd545ea00ef75d28e0b83b0f9bc635879fe42754a4d5f6ba17bcb"
+          },
+          "index": "7d2c65fffb490f18b89d5d949a36ac6fe37f052789bdc3ad49759abb3ecd0898",
+          "vertices": 24,
+          "bounds": [
+            [
+              -0.6474000215530396,
+              0.9699999690055847,
+              0.5350000262260437
+            ],
+            [
+              0.6474000215530396,
+              1.1699999570846558,
+              0.6650000214576721
+            ]
+          ]
+        },
+        {
+          "material": "perforated",
+          "attributes": {
+            "position": "6440d5acac36cd0bc62ff1fe2b722cb5d211f6ff96f9796bdc733a978d1abdba",
+            "normal": "cf38d80691f04d52b9686807b830aec77584c7ecdc0ceed56144923548dd5593",
+            "uv": "7864e62a5a21226a94d7e788d2b51173eaff473f2bfd41ec63b0637fc9fa5dff"
+          },
+          "index": "7d2c65fffb490f18b89d5d949a36ac6fe37f052789bdc3ad49759abb3ecd0898",
+          "vertices": 24,
+          "bounds": [
+            [
+              -0.5677199959754944,
+              1.0175000429153442,
+              0.5210000276565552
+            ],
+            [
+              0.5677199959754944,
+              1.122499942779541,
+              0.5350000262260437
+            ]
+          ]
+        },
+        {
+          "material": "metal",
+          "attributes": {
+            "position": "79819100f50edb8706b890e62cd24c5c1375645550958e2d6b717d489bbf7488",
+            "normal": "4343f400ff9d965cf7ff5eeb9f51f5ae3507a4997d6c99e2e4ddc4e1fffe624e",
+            "uv": "6683d27e46e360b9029b038c31a17c0576f851d14cf65c8188646d6a27ba0b40"
+          },
+          "index": "01df634a07d7d4b26838a584a5cf90a63e1b9dc4bae15bd181fe7e589e0bf1c9",
+          "vertices": 48,
+          "bounds": [
+            [
+              -0.47999998927116394,
+              0.7900000214576721,
+              0.5649999976158142
+            ],
+            [
+              0.47999998927116394,
+              0.9700000286102295,
+              0.6550000309944153
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "options": {
+        "kind": "guard",
+        "length": 4,
+        "depth": 1,
+        "style": 5,
+        "damaged": true
+      },
+      "parts": [
+        {
+          "material": "concrete",
+          "attributes": {
+            "position": "6fd1522859bd22ad05631b6e401f3a806aeac10f92ab4aa61509c9540fac46b5",
+            "normal": "1858ce61ff7a2a37fa7560eea3c22669e51cd6a46a5bd69f00dabbb135e069f5",
+            "uv": "a58ab734826dca2b475aba9a99139d708b2886e10f73e5c34bc85aefdac1afea"
+          },
+          "index": "44a78b73e8e4747250487f7d95e6959947b18d87152e54e83daf0c5b31627b7e",
+          "vertices": 576,
+          "bounds": [
+            [
+              -1.996000051498413,
+              0.20000000298023224,
+              0.49770763516426086
+            ],
+            [
+              1.996000051498413,
+              1.2620457410812378,
+              1.1520220041275024
+            ]
+          ]
+        },
+        {
+          "material": "paintedConcrete",
+          "attributes": {
+            "position": "5f85b2ceea526aeaf79da10d8a4c9c6c54051e61607ac53e482cdf18fabc064c",
+            "normal": "d45708839895c195ea76d376dda044c15494064cd372f6aaa38fd217f38a9d5e",
+            "uv": "2c401c191208589edf9c9c1aef0b78f94c25c6ab7f370eadb8789a8a67071baf"
+          },
+          "index": "1fa6f9c85ff51ac462d107411fff73863d9ca83f1e91c17c77125f04ec8fec20",
+          "vertices": 288,
+          "bounds": [
+            [
+              -1.9210000038146973,
+              0.23999999463558197,
+              0.5311699509620667
+            ],
+            [
+              1.9210000038146973,
+              1.211862564086914,
+              0.7315459847450256
+            ]
+          ]
+        },
+        {
+          "material": "darkMetal",
+          "attributes": {
+            "position": "cea03bf9df6c28dcda5631c7aba71fc98e64c44797426f131e591250238c192a",
+            "normal": "4343f400ff9d965cf7ff5eeb9f51f5ae3507a4997d6c99e2e4ddc4e1fffe624e",
+            "uv": "da2dccb204dd4efd6b3c8f4106adfaaed2ddb2baf8c1299766bc8da25676215d"
+          },
+          "index": "01df634a07d7d4b26838a584a5cf90a63e1b9dc4bae15bd181fe7e589e0bf1c9",
+          "vertices": 48,
+          "bounds": [
+            [
+              -1.6474000215530396,
+              0.9699999690055847,
+              0.5350000262260437
+            ],
+            [
+              1.6474000215530396,
+              1.1699999570846558,
+              0.6650000214576721
+            ]
+          ]
+        },
+        {
+          "material": "perforated",
+          "attributes": {
+            "position": "61fd7fd2acb0307d7a5b336edfd2386ebc9893d54b86436b6f67e938c25c1079",
+            "normal": "4343f400ff9d965cf7ff5eeb9f51f5ae3507a4997d6c99e2e4ddc4e1fffe624e",
+            "uv": "827a0ce4a780fb05045ea885f975b6b7431c25e145350b3d0f369908c6d4822d"
+          },
+          "index": "01df634a07d7d4b26838a584a5cf90a63e1b9dc4bae15bd181fe7e589e0bf1c9",
+          "vertices": 48,
+          "bounds": [
+            [
+              -1.5677199363708496,
+              1.0175000429153442,
+              0.5210000276565552
+            ],
+            [
+              1.5677199363708496,
+              1.122499942779541,
+              0.5350000262260437
+            ]
+          ]
+        },
+        {
+          "material": "metal",
+          "attributes": {
+            "position": "e4db7a5fa51dce0a0d854080aa091810123a75f18ad51ca09e8a05a67d97ccce",
+            "normal": "26198afab8a763aefa5f415f69a9e4d6a0d54b77b26f0b26936212570972a492",
+            "uv": "0b126929f8409c311a795ceb187bd018faa36242c8529bcb49380da7817eb812"
+          },
+          "index": "1eb1b8aa95ce93b790548430479fc3b17794d4d0345960815fccbb8898b44afd",
+          "vertices": 96,
+          "bounds": [
+            [
+              -1.4800000190734863,
+              0.7900000214576721,
+              0.5649999976158142
+            ],
+            [
+              1.4800000190734863,
+              0.9700000286102295,
+              0.6550000309944153
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "options": {
+        "kind": "inlet",
+        "length": 2,
+        "depth": 0.5,
+        "style": 0,
+        "damaged": false
+      },
+      "parts": [
+        {
+          "material": "metal",
+          "attributes": {
+            "position": "cd8500230bb77a5cd0f59595c1b9386efdbdb740c4976552752effe51afc5d4a",
+            "normal": "38fe777128d723b6f3230e1410b936ec53fbddb53263e8c96fede6a84fb87e3b",
+            "uv": "e88cea032575575b32e2080c05b524eaca2cfbce394bb941ac0dfca3973a6bfb"
+          },
+          "index": "0fe872ebc1ced7887123c79650d7e81dfe1b46a1da04320f0f4bbf31460f6b94",
+          "vertices": 1824,
+          "bounds": [
+            [
+              -1,
+              -0.05999999865889549,
+              -3.7252903539730653e-10
+            ],
+            [
+              1,
+              0.20000000298023224,
+              0.5
+            ]
+          ]
+        },
+        {
+          "material": "darkMetal",
+          "attributes": {
+            "position": "73c7d873f520c0afe4edb4499aeee283e0b38819d772a69358fcf94e9ef21f5c",
+            "normal": "d9fad94fb2c45c5a5704290c1cdbcb2ab5dd5f22251de0adc615b9b507e19314",
+            "uv": "c5eea7e71f918154aab0041d46761e5c150e61f373947e7174097aa6c94ab63a"
+          },
+          "index": "bb57c879d4dd8e596d095d3ddac7eb5f767b56287a4f7caea5ebb18d61373b4c",
+          "vertices": 168,
+          "bounds": [
+            [
+              -1,
+              -0.20000000298023224,
+              0.05000000074505806
+            ],
+            [
+              1,
+              0.12999999523162842,
+              0.5
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "options": {
+        "kind": "channel",
+        "length": 2,
+        "depth": 1,
+        "style": 0,
+        "damaged": false
+      },
+      "parts": [
+        {
+          "material": "darkMetal",
+          "attributes": {
+            "position": "d8340d4d61c81dd945d18ce0c87731822a8a9120aca5b0242f861f3bcc6df820",
+            "normal": "cf38d80691f04d52b9686807b830aec77584c7ecdc0ceed56144923548dd5593",
+            "uv": "2793b1c44de6aba88ecafcc89b4d0960683a67df523849c5fd22f7670dfea7e9"
+          },
+          "index": "7d2c65fffb490f18b89d5d949a36ac6fe37f052789bdc3ad49759abb3ecd0898",
+          "vertices": 24,
+          "bounds": [
+            [
+              -1,
+              0.06499999761581421,
+              0
+            ],
+            [
+              1,
+              0.13500000536441803,
+              1
+            ]
+          ]
+        },
+        {
+          "material": "metal",
+          "attributes": {
+            "position": "9e69dd4d3774b3275e5d32294186cd77922b990c269d08bbda892d421a3efd4e",
+            "normal": "03bf0e7ea61bc87a35379e4752610a52f2c6c12bcef6bc20bd9514eefe765b72",
+            "uv": "ce2df02e6aee4b83e01fc8fd562e4a9b1289b7f57e9cefb09a727a1588cf0520"
+          },
+          "index": "58328bb709c3b8288b5418524fe1fefd2454573d020510d93843438aa8344fbb",
+          "vertices": 600,
+          "bounds": [
+            [
+              -1,
+              0.14499999582767487,
+              0
+            ],
+            [
+              1,
+              0.20499999821186066,
+              1
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "options": {
+        "kind": "access",
+        "length": 6,
+        "depth": 0.6,
+        "style": 0,
+        "damaged": false
+      },
+      "parts": [
+        {
+          "material": "darkMetal",
+          "attributes": {
+            "position": "fa24ea0b73db30ff18d95e5d04fb6b11fffcc41dbaa1ccbbc80b598b38cec6ff",
+            "normal": "cf38d80691f04d52b9686807b830aec77584c7ecdc0ceed56144923548dd5593",
+            "uv": "03f35742e285a99e2cda441907b5abd392c6f99a0b12c5c5a327d4ee5af0c38c"
+          },
+          "index": "7d2c65fffb490f18b89d5d949a36ac6fe37f052789bdc3ad49759abb3ecd0898",
+          "vertices": 24,
+          "bounds": [
+            [
+              -3,
+              -0.019999999552965164,
+              -0.30000001192092896
+            ],
+            [
+              3,
+              0.05000000074505806,
+              0.30000001192092896
+            ]
+          ]
+        },
+        {
+          "material": "ochre",
+          "attributes": {
+            "position": "659834ed4e454bd9e738c18e33bc9e6e4420555d39a7b214c6c56a2663065e9d",
+            "normal": "4343f400ff9d965cf7ff5eeb9f51f5ae3507a4997d6c99e2e4ddc4e1fffe624e",
+            "uv": "cdfc4e8ec077cdaff39db0db131e7f2427bcfcfc7759b94c7c674873deb0d306"
+          },
+          "index": "01df634a07d7d4b26838a584a5cf90a63e1b9dc4bae15bd181fe7e589e0bf1c9",
+          "vertices": 48,
+          "bounds": [
+            [
+              -3,
+              0.032499998807907104,
+              -0.30000001192092896
+            ],
+            [
+              3,
+              0.07750000059604645,
+              0.30000001192092896
+            ]
+          ]
+        },
+        {
+          "material": "perforated",
+          "attributes": {
+            "position": "d879671f9689b84d883b425d44480fe1af141f26d70c298065984a108bb5aa2c",
+            "normal": "5f18bbbab70850373233a4b4463ada7a5d5099071f69d6b5d4fe0c3ea9b367b3",
+            "uv": "b89622bcb4c40d374618ac57e2dc36580ec512293e55a4ac36c26623163033b7"
+          },
+          "index": "6c5b8bc0c328f7d9c1d3c907d5964acc9f8eb475be87afb52bf983ab14ce9e8d",
+          "vertices": 288,
+          "bounds": [
+            [
+              -2.990000009536743,
+              0.042500000447034836,
+              -0.23999999463558197
+            ],
+            [
+              2.990000009536743,
+              0.06750000268220901,
+              0.23999999463558197
+            ]
+          ]
+        },
+        {
+          "material": "metal",
+          "attributes": {
+            "position": "938b1fc1e0e1ffa7765fca89493e625d98085dac59e46a6b371bdcf0d3a9292a",
+            "normal": "5f18bbbab70850373233a4b4463ada7a5d5099071f69d6b5d4fe0c3ea9b367b3",
+            "uv": "948f09bc480de8258f4b70a54e3c4d36cab54b70f9dc9dc6ae6d9dd774c8f436"
+          },
+          "index": "6c5b8bc0c328f7d9c1d3c907d5964acc9f8eb475be87afb52bf983ab14ce9e8d",
+          "vertices": 288,
+          "bounds": [
+            [
+              -2.997499942779541,
+              0.03750000149011612,
+              -0.25999999046325684
+            ],
+            [
+              2.5274999141693115,
+              0.07249999791383743,
+              0.25999999046325684
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

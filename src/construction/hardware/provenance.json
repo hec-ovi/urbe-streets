@@ -1,0 +1,58 @@
+{
+  "project": "threejsscene",
+  "revision": "ac7c2fc02095b47d0a8fd7fda535e4ea7ce6452e",
+  "files": [
+    {
+      "path": "scene/street/furniture/Parts.ts",
+      "sha256": "a3abeb45c709c02cb670e9496fd34c6215786f2fb81c1034b38b99a29ff87809"
+    },
+    {
+      "path": "scene/street/furniture/Guard.ts",
+      "sha256": "c3170467aaba7b84c0334c72d240456525fbd99ee84509a76802143639dbc4a3"
+    },
+    {
+      "path": "scene/street/furniture/ConcreteGuard.ts",
+      "sha256": "6a024e7c1893a50d25adf8b93661134ff8fece5d93631887af663c404b65b525"
+    },
+    {
+      "path": "scene/street/furniture/IndustrialGuard.ts",
+      "sha256": "bac657794f43917e16953f9d3349ec9cdc74e17d971d060e5c9930aac276ce0f"
+    },
+    {
+      "path": "scene/street/furniture/PortableGuard.ts",
+      "sha256": "185aefa0e0cdc7f52c55580547a59b55e56bbf1ed728e64297b015000c24f3f2"
+    },
+    {
+      "path": "scene/street/furniture/Drainage.ts",
+      "sha256": "1108eeefde597da4666247ecfc8d0599f6aaaff47052771b58079dc6f22527c4"
+    },
+    {
+      "path": "scene/street/furniture/Inlet.ts",
+      "sha256": "6115f6eb55a97e39ed79b114574efec84f2105ab2bb521252b9827964048c45e"
+    },
+    {
+      "path": "scene/street/furniture/CastPrism.ts",
+      "sha256": "cf6b1cf5e57ab4b5a1e991f42afb1aef2439a7e716af1b5f6541adb294bb276f"
+    },
+    {
+      "path": "scene/street/furniture/Loft.ts",
+      "sha256": "d7bac9a30163da90535f703a60ef237762a70993d40f774bf9747907111bf6c4"
+    },
+    {
+      "path": "scene/street/furniture/Prism.ts",
+      "sha256": "c680c8a8e88cc9d13e9cdfb906358a4ebfadde5f6aecfe7ee2716264f3046761"
+    },
+    {
+      "path": "scene/street/furniture/Tube.ts",
+      "sha256": "303a65661ca41765837f3c6588a246b52b5d5f7bb72b9ae8ae1f52f1dd632571"
+    },
+    {
+      "path": "scene/street/furniture/index.ts",
+      "sha256": "8999a7bfc2ce8cd02f367af849fbad369c7127e8b05f694b4c651a4ecb5f9fd4"
+    },
+    {
+      "path": "scene/street/furniture/schema.ts",
+      "sha256": "8a39797e0f874b9240afbb6d5a237033ffb00cba72e36010b631c5f247decf6f"
+    }
+  ]
+}
