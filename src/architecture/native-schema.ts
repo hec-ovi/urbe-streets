@@ -31,7 +31,7 @@ export interface NativeStationBay { id: string; stationId: string; edgeId: strin
 export interface NativeShaft { id: string; stationId: string; ring: Ring }
 export interface NativeProtection { kind: 'highway' | 'underpass' | 'station-bay' | 'station-shaft'; source: Record<string, unknown> }
 export interface NativeArchitecture {
-  version: '0.22.0'; reservationVersion: '1.0.0'; identity: NativeIdentity; bounds: Box2; boundary: Ring;
+  version: '0.22.0' | '0.23.0'; reservationVersion: '1.0.0'; identity: NativeIdentity; bounds: Box2; boundary: Ring;
   groundArrayCount: number; owners: NativeOwner[]; roads: NativeRoad[]; approaches: NativeApproach[]; turns: NativeTurn[];
   shafts: NativeShaft[]; stationBays: NativeStationBay[]; protections: NativeProtection[];
   obstaclePoints: { id: string; position: Vec2; clearance: number }[]; exclusions: Ring[];

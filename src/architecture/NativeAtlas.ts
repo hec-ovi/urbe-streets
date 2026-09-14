@@ -23,7 +23,7 @@ export async function readNativeAtlas(input: unknown): Promise<NativeArchitectur
   const source = object(parsed, 'blueprint');
   if (!source.meta) bad('meta', 'Expected a saved blueprint; archive indexes require a separate adapter');
   const meta = object(source.meta, 'meta');
-  if (meta.version !== '0.22.0' || meta.units !== 'meters') bad('meta.version', 'Expected saved Atlas blueprint 0.22.0 in metres; archive indexes require a separate adapter');
+  if ((meta.version !== '0.22.0' && meta.version !== '0.23.0') || meta.units !== 'meters') bad('meta.version', 'Expected saved Atlas blueprint 0.22.0 or 0.23.0 in metres; archive indexes require a separate adapter');
   const box = object(meta.bounds, 'meta.bounds'), boundary = ring(meta.boundary, 'meta.boundary');
   const bounds = { min: point(box.min, 'meta.bounds.min'), max: point(box.max, 'meta.bounds.max') };
   if (bounds.min.some((n, i) => n >= bounds.max[i]!)) bad('meta.bounds', 'Invalid city bounds');
@@ -93,7 +93,7 @@ export async function readNativeAtlas(input: unknown): Promise<NativeArchitectur
   if (source.hydrology !== undefined) for (const body of records(object(source.hydrology, 'hydrology').bodies, 'hydrology.bodies')) {
     exclusions.push(...array(body.surfaces, 'water.surfaces').map((r, i) => ring(r, `water.surfaces[${i}]`)));
   }
-  return { version: '0.22.0', reservationVersion: '1.0.0', identity, bounds, boundary, groundArrayCount: count, owners, ...movement,
+  return { version: meta.version, reservationVersion: '1.0.0', identity, bounds, boundary, groundArrayCount: count, owners, ...movement,
     shafts, stationBays, protections, obstaclePoints, exclusions, highwayHash: digest(JSON.stringify(streets.highwayStructures)),
     stationHash: digest(JSON.stringify(transit.subwayStations)), remainingGroundIndices: remaining };
 }

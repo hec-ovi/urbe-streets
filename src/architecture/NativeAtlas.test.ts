@@ -39,3 +39,11 @@ it('retains every published planting kind with its planning support clearance', 
   const result = await readNativeAtlas(source);
   expect(result.obstaclePoints.map(point => point.clearance)).toEqual([0.5, 0.15, 0.15]);
 });
+
+it('retains the explicit compatible version without interpreting diagonal proposals',async()=>{
+  const source={...nativeBlueprint(),streets:{...nativeBlueprint().streets,diagonalCandidates:{version:'1.0.0',items:[]}}};
+  source.meta.version='0.23.0';
+  const current=await readNativeAtlas(source);expect(current.version).toBe('0.23.0');
+  expect(current.reservationVersion).toBe('1.0.0');
+  expect(current.owners).toEqual((await readNativeAtlas(nativeBlueprint())).owners);
+});
