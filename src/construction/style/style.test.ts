@@ -24,7 +24,7 @@ it('matches original generated district zones, source samples, rows and palettes
 });
 
 it('rejects unsupported style dimensions and invalid field parameters', () => {
-  expect(() => PanelStyle.rows(3, 42, 'face')).toThrowError(expect.objectContaining({ code: 'E_INVALID_PARAMS' }));
+  expect(() => PanelStyle.rows(3.25, 42, 'face')).toThrowError(expect.objectContaining({ code: 'E_INVALID_PARAMS' }));
   expect(() => new WearField({ seed: 42, streets: 0, amount: 1, bounds: bounds }))
     .toThrowError(expect.objectContaining({ code: 'E_INVALID_PARAMS' }));
   expect(() => PanelStyle.palette(42, 'owner', 2)).toThrowError(expect.objectContaining({ code: 'E_INVALID_PARAMS' }));

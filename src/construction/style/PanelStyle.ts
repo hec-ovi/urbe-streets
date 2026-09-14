@@ -6,7 +6,7 @@ const profiles = definitions as Omit<PanelRow, 'depth'>[][];
 
 export class PanelStyle {
   static rows(width: number, seed: number, key: string): PanelRow[] {
-    if (![2, 4, 6].includes(width) || !Number.isSafeInteger(seed) || !key) throw invalidParams('Invalid native panel row input');
+    if (!Number.isFinite(width) || width <= 0 || !Number.isInteger(width * 2) || !Number.isSafeInteger(seed) || !key) throw invalidParams('Invalid native panel row input');
     const profile = profiles[Math.floor(random(seed, `${key}:rows`) * profiles.length)]!;
     const rows: PanelRow[] = [];
     let depth = 0.5;
