@@ -1,7 +1,6 @@
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { invalidParams } from '../errors.ts';
-import type { StreetManifest } from '../schema/result.ts';
 import type { NativeStreetManifest } from '../schema/native-result.ts';
 
 /** Owns one newly created directory. The manifest is written after all its assets. */
@@ -17,7 +16,7 @@ export class Output {
     try { await mkdir(join(this.directory, 'pieces'), { recursive: true }); await writeFile(join(this.directory, path), data, { flag: 'wx' }); }
     catch { throw invalidParams('outDir: cannot write model asset'); }
   }
-  async finish(manifest: StreetManifest | NativeStreetManifest): Promise<void> {
+  async finish(manifest: NativeStreetManifest): Promise<void> {
     try { await writeFile(join(this.directory, 'manifest.json'), JSON.stringify(manifest), { flag: 'wx' }); }
     catch { throw invalidParams('outDir: cannot write manifest'); }
   }
