@@ -32,3 +32,10 @@ it('fails closed on missing reservations, conflicting ground ownership and unsup
   await expect(readNativeAtlas({ version: 'archive-index', parts: [] })).rejects.toMatchObject({ code: 'E_UNSUPPORTED_ARCHITECTURE' });
   await expect(readNativeAtlas('/missing/blueprint.json')).rejects.toMatchObject({ code: 'E_INVALID_PARAMS' });
 });
+
+it('retains every published planting kind with its planning support clearance', async () => {
+  const source = nativeBlueprint();
+  source.streets.planting = (['tree', 'pole', 'bin'] as const).map((kind, index) => ({ kind, position: [index, 5], edgeId: 'e0', spacing: 8 }));
+  const result = await readNativeAtlas(source);
+  expect(result.obstaclePoints.map(point => point.clearance)).toEqual([0.5, 0.15, 0.15]);
+});

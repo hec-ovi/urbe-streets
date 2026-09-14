@@ -6,7 +6,7 @@ export function nativeBlueprint() {
       nodes: [{ id: 'n0', position: [0, 10] }, { id: 'n1', position: [20, 10] }],
       edges: [{ id: 'e0', from: 'n0', to: 'n1', class: 'street', path: [[0, 10], [20, 10]], width: 7, level: 0,
         elevationProfile: [{ distance: 0, level: 0 }, { distance: 20, level: 0 }] }],
-      highwayStructures: [], crossings: [], signals: [], planting: [],
+      highwayStructures: [], crossings: [], signals: [], planting: [] as { kind: 'tree' | 'pole' | 'bin'; position: number[]; edgeId: string; spacing: number }[],
       construction: { modules: { version: '1.0.0', definitions: [], placements: [] },
         runs: [{ id: 'r0', edges: [{ edgeId: 'e0', start: 0, end: 20, forward: true }] }], junctions: [],
         reservations: { version: '1.0.0', groundArray: { path: 'volumetric.ground', count: 1 },

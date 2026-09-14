@@ -80,7 +80,7 @@ export async function readNativeAtlas(input: unknown): Promise<NativeArchitectur
   records(streets.signals, 'streets.signals').forEach((item, index) =>
     obstaclePoints.push({ id: `signals:${index}`, position: point(item.position, 'signals.position'), clearance: 1 }));
   records(streets.planting, 'streets.planting').forEach((item, index) => {
-    if (item.kind !== 'tree' && item.kind !== 'pole') bad(`planting[${index}].kind`, 'Unknown planting support kind');
+    if (item.kind !== 'tree' && item.kind !== 'pole' && item.kind !== 'bin') bad(`planting[${index}].kind`, 'Unknown planting support kind');
     obstaclePoints.push({ id: `planting:${index}`, position: point(item.position, 'planting.position'), clearance: item.kind === 'tree' ? 0.5 : 0.15 });
   });
   const parcels = indexed(records(source.parcels, 'parcels'), 'parcels');
