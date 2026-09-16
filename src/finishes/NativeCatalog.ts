@@ -5,7 +5,7 @@ import type {NativeMaterialCatalog} from '../schema/native-materials.ts';
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const pair=(v:unknown)=>Array.isArray(v)&&v.length===2&&v.every(n=>typeof n==='number'&&Number.isFinite(n));
 const revision='ac7c2fc02095b47d0a8fd7fda535e4ea7ce6452e';
-const effects=new Set(['asphalt','photographed','polished','mineral','metal-panel','hardware','cast-concrete','parking','road-paint','decal','solid']);
+const effects=new Set(['asphalt','photographed','polished','mineral','metal-panel','hardware','cast-concrete','parking','road-paint','decal','solid','display']);
 
 /** Retains a renderer-neutral snapshot and validates every geometry-facing reference. */
 export class NativeCatalog {
@@ -18,7 +18,7 @@ export class NativeCatalog {
     if(!record(input)||input.version!==1||!record(input.source)||input.source.project!=='threejsscene'||input.source.revision!==revision||input.source.manifest!=='sources/streets/scene-native/manifest.json'
       ||!record(input.sampling)||!record(input.sampling.asphalt)||!record(input.textures)||!record(input.surfaces))throw invalidParams('nativeMaterials: source-native version 1 binding is required');
     for(const [id,texture] of Object.entries(input.textures)){
-      if(!record(texture)||typeof texture.path!=='string'||!/^themes\/[a-z0-9_-]+\/assets\/street-native\/[a-z0-9_-]+\.png$/.test(texture.path)
+      if(!record(texture)||typeof texture.path!=='string'||!/^themes\/[a-z0-9_-]+\/assets\/(?:[a-z0-9_-]+\/)*[a-z0-9_-]+\.png$/.test(texture.path)
         ||typeof texture.sha256!=='string'||!/^[a-f0-9]{64}$/.test(texture.sha256)||!pair(texture.resolution)||(texture.resolution as number[]).some(n=>!Number.isInteger(n)||n<=0)
         ||!['srgb','linear'].includes(String(texture.colorSpace))||!Array.isArray(texture.wrap)||texture.wrap.length!==2||texture.wrap.some(v=>!['repeat','clamp'].includes(String(v))))throw invalidParams('nativeMaterials: invalid published texture',{textureId:id});
     }

@@ -10,6 +10,7 @@ export interface NativeSurface {
 export interface NativeMaterialCatalog {
   version: 1;
   source: { project: 'threejsscene'; revision: string; manifest: string };
+  authored?: { manifest: string; recipes: string };
   sampling: { asphalt: Record<string, string | number | number[]> };
   textures: Record<string, NativeTexture>;
   surfaces: Record<string, NativeSurface>;
