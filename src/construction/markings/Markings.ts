@@ -34,9 +34,14 @@ export class Markings {
       const a = approaches.find(item => item.first), b = approaches.find(item => !item.first);
       const laneStart = a ? a.max + 1.4 : 0, laneEnd = b ? b.min - 1.4 : length;
       for (const side of [-1,1]) {
-        paint.strip(frame,laneStart,laneEnd,side*(road.width/2-0.65),0.12,'whitePaint');
-        if (road.lanes.length > 1) paint.strip(frame,laneStart,laneEnd,side*0.11,0.1,'yellowPaint');
-        if (road.lanes.length === 4) for(let s=Math.ceil(laneStart/6)*6;s+3<=laneEnd;s+=6) paint.strip(frame,s,s+3,side*3.5,0.12,'whitePaint');
+        paint.strip(frame,laneStart,laneEnd,side*(road.width/2-(this.architecture.format==='district'?0.16:0.65)),0.12,'whitePaint');
+        if (road.lanes.length > 1) paint.strip(frame,laneStart,laneEnd,side*((road.medianWidth??0)/2+0.11),0.1,'yellowPaint');
+      }
+      const lanes=[...road.lanes].sort((a,b)=>b.offset-a.offset);
+      for(let i=0;i<lanes.length-1;i++){
+        if(lanes[i]!.direction!==lanes[i+1]!.direction)continue;
+        const offset=(lanes[i]!.offset-lanes[i]!.width/2+lanes[i+1]!.offset+lanes[i+1]!.width/2)/2;
+        for(let s=Math.ceil(laneStart/6)*6;s+3<=laneEnd;s+=6)paint.strip(frame,s,s+3,offset,0.12,'whitePaint');
       }
       for (const item of approaches) {
         if (item.max-item.min < 2.8-1e-7) throw invariant('Crossing field cannot receive source markings',{approachId:item.approach.id});

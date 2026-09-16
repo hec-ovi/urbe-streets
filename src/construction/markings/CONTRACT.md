@@ -7,3 +7,5 @@ Atlas road frames, approach stations and legal turn IDs determine placement. Sou
 `Crosswalk(Paint,seed).build(frame,start,junction)` is the source crossing entry; `Paint` retains original coordinates and UVs for wholly received source polygons, clipping actual boundary cuts to supplied receiving rings. [Provenance](provenance.json) records the source revision and independent position/UV fixture.
 
 Dependencies: [architecture](../../architecture/CONTRACT.md), [surfaces](../surfaces/CONTRACT.md), [style](../style/CONTRACT.md). No layout generation or renderer.
+
+Divided avenues use published lane offsets and median width for lane boundaries. District street edge lines begin 0.10 m inside the carriageway; their 0.12 m coating width remains independent of gutter geometry.
