@@ -30,7 +30,21 @@ export function nativeMovement(source: RecordValue): { roads: NativeRoad[]; appr
       return { id: laneId, width: laneWidth, offset, direction: lane.direction as NativeLane['direction'], path: path(lane.path, 'lane.path') };
     });
     if (kind !== 'alley' && ![1, 2, 4].includes(lanes.length)) bad(`architecture.edges.${id}.lanes`, 'Native profiles require one, two or four declared lanes');
-    return { id, from, to, kind, width, lanes, path: path(e.path, `edges.${id}.path`), runId: run.id, runStart: run.start, runForward: run.forward };
+    const districtStyle = e.districtStyle;
+    if (districtStyle !== undefined && districtStyle !== 'luxury' && districtStyle !== 'industrial' && districtStyle !== 'ordinary') bad(`edges.${id}.districtStyle`, 'Unknown district road style');
+    const median = e.crossSection === undefined ? undefined : object(e.crossSection, `edges.${id}.crossSection`).median;
+    const medianWidth = median === undefined ? undefined : number(object(median, `edges.${id}.median`).width, `edges.${id}.median.width`);
+    if (medianWidth !== undefined) {
+      const ordered = [...lanes].sort((a, b) => b.offset - a.offset);
+      if (medianWidth <= 0 || kind !== 'road' || ordered.length !== 4
+        || ordered[0]!.direction !== ordered[1]!.direction || ordered[2]!.direction !== ordered[3]!.direction
+        || ordered[0]!.direction === ordered[2]!.direction
+        || ordered.some((lane, index) => index < 2 ? lane.offset - lane.width / 2 < medianWidth / 2 - 1e-8
+          : lane.offset + lane.width / 2 > -medianWidth / 2 + 1e-8)) bad(`edges.${id}.median`, 'Median reservation conflicts with its avenue lanes');
+    }
+    return { id, from, to, kind, width, lanes, path: path(e.path, `edges.${id}.path`), runId: run.id, runStart: run.start, runForward: run.forward,
+      ...(districtStyle === undefined ? {} : { districtStyle }),
+      ...(medianWidth === undefined ? {} : { medianWidth }) };
   });
   const turns: NativeTurn[] = [];
   for (const n of records(architecture.nodes, 'architecture.nodes')) {

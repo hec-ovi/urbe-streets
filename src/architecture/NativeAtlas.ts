@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { invalidParams } from '../errors.ts';
 import { nativeGround } from './NativeGround.ts';
 import { nativeMovement } from './NativeMovement.ts';
+import { nativeMedians } from './NativeMedians.ts';
 import { bad, array, integer, number, object, path, point, records, ring, string, strings, indexed } from './values.ts';
 import type { NativeArchitecture, NativeIdentity, NativeProtection, NativeShaft, NativeStationBay } from './native-schema.ts';
 
@@ -33,6 +34,7 @@ export async function readNativeAtlas(input: unknown): Promise<NativeArchitectur
   const ownerIds = new Set(owners.map(owner => owner.id)), roadIds = new Set(movement.roads.map(road => road.id));
   for (const owner of owners) for (const frontage of owner.frontages) if (frontage.edgeIds.some(id => !roadIds.has(id))) bad(`frontages.${frontage.id}`, 'Unknown frontage road');
   const modules = object(construction.modules, 'construction.modules');
+  const format = modules.format === 'district' ? 'district' : 'source';
   if (modules.version !== '1.0.0') bad('construction.modules.version', 'Source module identities require version 1.0.0');
   const definitions = indexed(records(modules.definitions, 'modules.definitions'), 'modules.definitions');
   for (const p of records(modules.placements, 'modules.placements')) {
@@ -93,7 +95,8 @@ export async function readNativeAtlas(input: unknown): Promise<NativeArchitectur
   if (source.hydrology !== undefined) for (const body of records(object(source.hydrology, 'hydrology').bodies, 'hydrology.bodies')) {
     exclusions.push(...array(body.surfaces, 'water.surfaces').map((r, i) => ring(r, `water.surfaces[${i}]`)));
   }
-  return { version: meta.version, reservationVersion: '1.0.0', identity, bounds, boundary, groundArrayCount: count, owners, ...movement,
+  const medians = nativeMedians(construction.medians, owners, movement.roads);
+  return { version: meta.version, reservationVersion: '1.0.0', format, medians, identity, bounds, boundary, groundArrayCount: count, owners, ...movement,
     shafts, stationBays, protections, obstaclePoints, exclusions, highwayHash: digest(JSON.stringify(streets.highwayStructures)),
     stationHash: digest(JSON.stringify(transit.subwayStations)), remainingGroundIndices: remaining };
 }

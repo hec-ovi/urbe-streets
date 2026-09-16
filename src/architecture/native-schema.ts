@@ -16,7 +16,7 @@ export interface NativeParking {
 }
 export interface NativeGuard { moduleId: string; ownerId: string; origin: Vec2; turn: number; count: number; step: number }
 export interface NativeOwner {
-  id: string; kind: 'block' | 'perimeter' | 'underpass' | 'roadway' | 'station'; finish: string | null;
+  id: string; kind: 'block' | 'perimeter' | 'underpass' | 'roadway' | 'station' | 'median'; finish: string | null;
   ground: NativeGround[]; interiors: Ring[]; excludedParcelIds: string[];
   frontages: NativeFrontage[]; corners: NativeCorner[]; parking: NativeParking[]; guards: NativeGuard[];
 }
@@ -24,6 +24,12 @@ export interface NativeLane { id: string; offset: number; width: number; directi
 export interface NativeRoad {
   id: string; from: string; to: string; kind: 'street' | 'road' | 'highway' | 'alley'; path: Ring; width: number;
   lanes: NativeLane[]; runId: string; runStart: number; runForward: boolean;
+  districtStyle?: 'luxury' | 'industrial' | 'ordinary';
+  medianWidth?: number;
+}
+export interface NativeMedian {
+  id: string; edgeId: string; footprint: Ring; paving: Ring; start: number; end: number;
+  ornaments: { kind: 'tree' | 'pole'; position: Vec2 }[];
 }
 export interface NativeApproach { id: string; nodeId: string; edgeId: string; distance: number; station: Vec2; field: Ring; landings: Ring[] }
 export interface NativeTurn { nodeId: string; fromLaneId: string; toLaneId: string; kind: 'through' | 'left' | 'right' | 'u-turn'; level: number }
@@ -31,6 +37,8 @@ export interface NativeStationBay { id: string; stationId: string; edgeId: strin
 export interface NativeShaft { id: string; stationId: string; ring: Ring }
 export interface NativeProtection { kind: 'highway' | 'underpass' | 'station-bay' | 'station-shaft'; source: Record<string, unknown> }
 export interface NativeArchitecture {
+  format?: 'source' | 'district';
+  medians?: NativeMedian[];
   version: '0.22.0' | '0.23.0'; reservationVersion: '1.0.0'; identity: NativeIdentity; bounds: Box2; boundary: Ring;
   groundArrayCount: number; owners: NativeOwner[]; roads: NativeRoad[]; approaches: NativeApproach[]; turns: NativeTurn[];
   shafts: NativeShaft[]; stationBays: NativeStationBay[]; protections: NativeProtection[];

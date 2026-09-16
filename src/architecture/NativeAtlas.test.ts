@@ -19,6 +19,8 @@ it('retains source ownership and distinguishes exact file bytes from object seri
     expect({ ...saved, identity: object.identity }).toEqual(object);
     expect(saved.owners[0]!.ground[0]).toMatchObject({ id: 'atlas-ground:0', sourceIndex: 0, ownerId: 'roadway', top: 0 });
     expect(saved.roads[0]!.lanes.map(lane => lane.id)).toEqual(['e0.v0', 'e0.v1']);
+    expect(saved.format).toBe('source');
+    expect(saved.medians).toEqual([]);
     source.volumetric.ground[0]!.polygon[0]![0] = 9;
     expect(saved.owners[0]!.ground[0]!.ring[0]).toEqual([0, 0]);
   } finally { await rm(folder, { recursive: true, force: true }); }
