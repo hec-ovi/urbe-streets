@@ -24,7 +24,7 @@ export async function readNativeAtlas(input: unknown): Promise<NativeArchitectur
   const source = object(parsed, 'blueprint');
   if (!source.meta) bad('meta', 'Expected a saved blueprint; archive indexes require a separate adapter');
   const meta = object(source.meta, 'meta');
-  if ((meta.version !== '0.22.0' && meta.version !== '0.23.0') || meta.units !== 'meters') bad('meta.version', 'Expected saved Atlas blueprint 0.22.0 or 0.23.0 in metres; archive indexes require a separate adapter');
+  if ((meta.version !== '0.22.0' && meta.version !== '0.23.0' && meta.version !== '0.24.0') || meta.units !== 'meters') bad('meta.version', 'Expected saved Atlas blueprint 0.22.0, 0.23.0 or 0.24.0 in metres; archive indexes require a separate adapter');
   const box = object(meta.bounds, 'meta.bounds'), boundary = ring(meta.boundary, 'meta.boundary');
   const bounds = { min: point(box.min, 'meta.bounds.min'), max: point(box.max, 'meta.bounds.max') };
   if (bounds.min.some((n, i) => n >= bounds.max[i]!)) bad('meta.bounds', 'Invalid city bounds');

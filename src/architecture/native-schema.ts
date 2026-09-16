@@ -39,7 +39,7 @@ export interface NativeProtection { kind: 'highway' | 'underpass' | 'station-bay
 export interface NativeArchitecture {
   format?: 'source' | 'district';
   medians?: NativeMedian[];
-  version: '0.22.0' | '0.23.0'; reservationVersion: '1.0.0'; identity: NativeIdentity; bounds: Box2; boundary: Ring;
+  version: '0.22.0' | '0.23.0' | '0.24.0'; reservationVersion: '1.0.0'; identity: NativeIdentity; bounds: Box2; boundary: Ring;
   groundArrayCount: number; owners: NativeOwner[]; roads: NativeRoad[]; approaches: NativeApproach[]; turns: NativeTurn[];
   shafts: NativeShaft[]; stationBays: NativeStationBay[]; protections: NativeProtection[];
   obstaclePoints: { id: string; position: Vec2; clearance: number }[]; exclusions: Ring[];
