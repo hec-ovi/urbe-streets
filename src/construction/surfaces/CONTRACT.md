@@ -15,3 +15,5 @@ Buffers retain world-coordinate doubles until bounded export. Every vertex has p
 `Frame` exports shared Vec2 arithmetic and `along(frontage,station,depth)`, mapping authored stations and inward depth into world XZ. Feature and marking consumers use these same frames.
 
 Depends on [geometry](../../geometry/CONTRACT.md), [native architecture](../../architecture/CONTRACT.md), source style data and Three.js geometry types. No renderer, materials, district generation or source-data mutation.
+
+District consumers retain 0.5 m gutter interfaces and may supply ramp cuts across curb/gutter bands. Their replacement consumer owns the sloped crossing surface and coverage.

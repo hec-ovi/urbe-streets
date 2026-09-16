@@ -5,7 +5,7 @@ export interface NativeMesh {
 }
 export interface CoverageClaim { ownerId: string; rings: Ring[] }
 export interface SurfaceContext { ownerId: string; groundIds: string[]; roadTop: number; wear: (point: Vec2) => number }
-export interface SurfaceCut { id: string; kind: 'inlet' | 'channel'; frontageId: string; start: number; end: number; setback: number; depth: number; ring: Ring }
+export interface SurfaceCut { id: string; kind: 'inlet' | 'channel' | 'ramp'; frontageId: string; start: number; end: number; setback: number; depth: number; ring: Ring }
 export interface SurfaceOutput { meshes: NativeMesh[]; coverage: CoverageClaim[] }
 export type HeightMap = number | ((point: Vec2) => number);
 export type UvMap = (point: Vec2) => Vec2;

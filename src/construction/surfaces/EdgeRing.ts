@@ -35,7 +35,7 @@ export class EdgeRing {
   }
 
   build(owner: NativeOwner, batch: SurfaceBatch, cuts: readonly SurfaceCut[], shafts: readonly Ring[]): number {
-    const openings = [...shafts, ...cuts.filter(cut => cut.kind === 'inlet').map(cut => cut.ring)];
+    const openings = [...shafts, ...cuts.filter(cut => cut.kind === 'inlet' || cut.kind === 'ramp').map(cut => cut.ring)];
     const curb = difference(owner.ground.filter(field => field.surface === 'curb').map(field => field.ring), openings);
     const gutter = difference(owner.ground.filter(field => field.surface === 'gutter').map(field => field.ring), openings);
     if (!curb.length && !gutter.length) return 0;
@@ -75,7 +75,7 @@ export class EdgeRing {
           const body = intersection(claim, bodyMask);
           const joints = difference(claim, bodyMask);
           for (const ring of joints) this.walls(batch, 'joint', ring, crown, top - 0.007, true);
-          const origin = start === 0 ? this.join(edge, false, 0.3) : move(move(edge.a, edge.d, start), edge.n, 0.3);
+          const origin = start === 0 ? this.join(edge, false, datum.gutterWidth) : move(move(edge.a, edge.d, start), edge.n, datum.gutterWidth);
           batch.polygon('curb', body, top, p => [((p[0] - origin[0]) * edge.d[0] + (p[1] - origin[1]) * edge.d[1]) / 2,
             ((p[0] - origin[0]) * edge.n[0] + (p[1] - origin[1]) * edge.n[1]) / 0.2]);
           for (const ring of body) this.walls(batch, 'curb', ring, crown, top);
@@ -93,7 +93,7 @@ export class EdgeRing {
       batch.face('gutter', [[last[0], pan, last[1]], [last[0], road, last[1]], [first[0], road, first[1]], [first[0], pan, first[1]]],
         [[0, 0], [0, 0.1], [length / 2, 0.1], [length / 2, 0]]);
       for (const [station, reverse] of [[cut.start, false], [cut.end, true]] as const) {
-        const a = move(frontage.start, d, station), b = move(a, n, 0.3), pan = road - 0.02;
+        const a = move(frontage.start, d, station), b = move(a, n, frontage.gutterWidth), pan = road - 0.02;
         const vertices: [number, number, number][] = [[a[0], pan, a[1]], [a[0], road, a[1]], [b[0], crown, b[1]], [b[0], pan, b[1]]];
         const uv: [number, number][] = [[0, 0], [0, 0.1], [0.15, 0.4], [0.15, 0]];
         if (reverse) { vertices.reverse(); uv.reverse(); }
