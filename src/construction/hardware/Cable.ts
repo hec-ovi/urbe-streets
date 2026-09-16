@@ -8,8 +8,8 @@ export function cable(p: Parts, o: FurnitureOptions): void {
   p.box('darkMetal', o.length, 0.025, rear, 0, 0.018, rear / 2);
   for (const z of [0.025, rear - 0.025]) p.box('metal', o.length, 0.035, 0.04, 0, 0.035, z);
   for (const x of [-half + 0.2, half - 0.2]) {
-    p.box('metal', 0.34, 0.16, 0.08, x, 0.115, rear + 0.04);
-    p.box('darkMetal', 0.28, 0.11, 0.035, x, 0.115, rear - 0.015);
+    p.box('metal', 0.34, 0.16, 0.08, x, 0.115, rear);
+    p.box('darkMetal', 0.28, 0.11, 0.035, x, 0.115, rear - 0.045);
   }
   for (let i = 0; i < 5; i++) {
     const lane = 0.08 + i * 0.045, end = 0.2 + (i - 2) * 0.045;
