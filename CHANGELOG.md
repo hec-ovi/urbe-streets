@@ -1,5 +1,7 @@
 # Changelog
 
+0.3.0: district panels, 2 m parking, junction transitions, crossing ramps, median grates, subtle hexagons and LED marquee geometry.
+
 0.2.1: explicit Atlas 0.22.0/0.23.0 input identity with reservation 1.0.0.
 
 0.2.0: source-native street geometry, scan bindings, bounded collision assets, exact ground replacement, continuous wear and delegated highway/station ownership.

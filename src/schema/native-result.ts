@@ -37,7 +37,7 @@ export type NativeStreetFeature = {
   /** Complete reserved plan footprint, independent of resident asset cells. */
   footprint: Ring;
 } & (
-  | { kind: 'guard' | 'inlet' | 'channel'; frontageId: string; roadId?: never }
+  | { kind: 'guard' | 'inlet' | 'channel' | 'cable' | 'marquee' | 'tree-grate'; frontageId: string; roadId?: never }
   | { kind: 'access'; frontageId: null; /** References Atlas streets.edges[].id. */ roadId: string }
 );
 /**
@@ -48,7 +48,7 @@ export type NativeStreetFeature = {
  */
 export interface NativeStreetManifest {
   meta: {
-    version: '0.2.0'; generatorVersion: string; architectureVersion: '0.22.0' | '0.23.0'; reservationVersion: '1.0.0';
+    version: '0.2.0'; generatorVersion: string; architectureVersion: '0.22.0' | '0.23.0' | '0.24.0'; reservationVersion: '1.0.0';
     designVersion: 'native-1.0.0'; blueprintHash: string; blueprintEncoding: 'json-file-bytes' | 'json-stringify-utf8';
     nativeCatalogHash: string; seed: number; identity: string; units: 'meters';
   };

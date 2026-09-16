@@ -1,6 +1,6 @@
 # Urbe Streets
 
-Version 0.2.1. Builds source-native street GLBs from saved Atlas 0.22.0/0.23.0 reservations, with exact ground replacement and native Materials bindings.
+Version 0.3.0. Builds district and source-native street GLBs from saved Atlas 0.22.0/0.23.0/0.24.0 reservations, with exact ground replacement and native Materials bindings.
 
 ```sh
 npm ci
@@ -16,6 +16,8 @@ const result = await build({
 }, { nativeMaterials: 'street-native.json', outDir: 'street-bundle' });
 console.log(result.statistics);
 ```
+
+District construction uses uniform panel bands, 2 m parking, fitted corners, junction transitions, LED marquees and occasional cable pieces. Luxury hexagons stay subtle; industrial roads use asphalt.
 
 The saved bundle contains 128 m pieces, original panel/paint UVs, physical collision flags, stable hardware bounds and a native material snapshot. Consumers bind the actual referenced scans. Highways and station interactions retain explicit delegated ownership.
 

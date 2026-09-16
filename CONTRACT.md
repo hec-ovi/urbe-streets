@@ -1,8 +1,8 @@
-# Streets 0.2.1
+# Streets 0.3.0
 
 Builds bounded source-native street GLBs from saved Atlas reservations, with exact ground ownership and native material references.
 
-`build(request,options):Promise<NativeStreetBuild>` from [src/index.ts](src/index.ts) (`buildNative` is the same entry). Inputs: [request](src/schema/native-request.ts), [native material binding](src/schema/native-materials.ts). Output: [native result](src/schema/native-result.ts). Required: blueprint, integer seed, design `{version:'native-1.0.0',wear:0..1}`, and options.nativeMaterials (binding object or JSON path). Blueprint 0.22.0 or 0.23.0 and reservations 1.0.0 are required. No source layout is generated downstream.
+`build(request,options):Promise<NativeStreetBuild>` from [src/index.ts](src/index.ts) (`buildNative` is the same entry). Inputs: [request](src/schema/native-request.ts), [native material binding](src/schema/native-materials.ts). Output: [native result](src/schema/native-result.ts). Required: blueprint, integer seed, design `{version:'native-1.0.0',wear:0..1}`, and options.nativeMaterials (binding object or JSON path). Blueprint 0.22.0, 0.23.0 or 0.24.0 and reservations 1.0.0 are required. No source layout is generated downstream.
 
 A blueprint string is a saved JSON path: read bytes once, hash SHA-256, parse the same UTF-8 content. Object input hashes UTF-8 JSON.stringify retaining property/array order, without indentation/newline. `blueprintEncoding` declares the rule. Native catalog and delegated infrastructure hashes use the same ordered JSON.stringify rule on their exact parsed values; assets hash exact GLB bytes. Archive indexes fail explicitly.
 
@@ -17,3 +17,5 @@ Mode defaults to `glb`. Without outDir, bytes are returned in assets. A disk des
 Errors: [StreetsError](src/errors.ts), `E_INVALID_PARAMS` (request/material/IO), `E_UNSUPPORTED_ARCHITECTURE` (version/reference/profile), `E_UNSATISFIABLE` (excluded land), `E_INVARIANT` (coverage, source fit, triangulation or export). No fallback geometry or material is generated.
 
 Dependencies: [Atlas](../atlas/CONTRACT.md), [reservations](../atlas/src/streets/layout/reservations/CONTRACT.md), [native Materials](../materials/sources/streets/scene-native/CONTRACT.md), and the boxes in [INDEX](docs/INDEX.md). Runtime packages are glTF Transform, clipper2-ts, earcut and source-compatible Three 0.185.1 geometry; no sibling runtime imports or renderer.
+
+District-format blueprints use uniform whole-block panel palettes, concentric corner bands, 2 m parking, subtle luxury hexagons, central junction transitions, crossing ramps and modeled inlet/cable/marquee/tree-grate details. Atlas owns their reservations and medians; the [district construction contract](src/construction/district/CONTRACT.md) owns fitted geometry. Solid emission and display materials follow the authored Materials binding.

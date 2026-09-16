@@ -3,9 +3,9 @@ name: streets
 description: Build source-native street GLBs from saved Atlas reservations and native Materials bindings.
 ---
 
-# Streets 0.2.1
+# Streets 0.3.0
 
-Call `build` from `src/index.ts` with [request/options](src/schema/native-request.ts). Required: saved blueprint JSON path or parsed blueprint 0.22.0 or 0.23.0, reservations 1.0.0, integer seed, design `{version:'native-1.0.0',wear:0..1}`, options.nativeMaterials binding object or path. No implicit sibling paths exist.
+Call `build` from `src/index.ts` with [request/options](src/schema/native-request.ts). Required: saved blueprint JSON path or parsed blueprint 0.22.0, 0.23.0 or 0.24.0, reservations 1.0.0, integer seed, design `{version:'native-1.0.0',wear:0..1}`, options.nativeMaterials binding object or path. No implicit sibling paths exist.
 
 Use a blueprint path to preserve original file-byte identity. Object input hashes ordered JSON.stringify. Supply a new outDir with an existing parent for persisted pieces and manifest.json, or omit it for in-memory assets. Mode defaults to glb; manifest mode emits metadata with null asset/hash. Preserve source errors and owner evidence.
 
