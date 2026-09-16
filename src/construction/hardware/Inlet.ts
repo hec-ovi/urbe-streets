@@ -7,6 +7,7 @@ import type { FurnitureMaterials, FurnitureOptions } from './schema.ts';
  */
 export function inlet(p: Parts, o: FurnitureOptions): void {
   const half = o.length / 2;
+  const gutter = o.depth - 0.2;
   const block = (
     material: keyof FurnitureMaterials,
     [x0, x1]: readonly [number, number],
@@ -26,17 +27,17 @@ export function inlet(p: Parts, o: FurnitureOptions): void {
   // Pan frame flush with the gutter floor; its sill rises to the ledge in front of the mouth.
   const grate = half - 0.05,
     front = 0.05,
-    back = 0.27,
+    back = gutter - 0.03,
     plate = [-0.048, -0.028] as const;
   block('metal', [-half, half], [-0.06, -0.02], [0, front]);
   for (const side of [-1, 1])
     block('metal', [side * grate, side * half], [-0.06, -0.02], [front, back]);
-  block('metal', [-half, half], [-0.06, 0.02], [back, 0.3]);
+  block('metal', [-half, half], [-0.06, 0.02], [back, gutter]);
 
   // Grate plate: solid borders and a centre rib around two rows of 3 cm slots.
   const rows: [number, number][] = [
-    [front + 0.025, 0.15],
-    [0.17, back - 0.025],
+    [front + 0.025, gutter / 2],
+    [gutter / 2 + 0.02, back - 0.025],
   ];
   for (const z of [
     [front, rows[0]![0]],
@@ -69,11 +70,11 @@ export function inlet(p: Parts, o: FurnitureOptions): void {
 
   // Housing in the curb band: cheeks, lintel and a barred mouth over a dark cavity.
   const cheek = half - 0.1;
-  block('darkMetal', [-half, half], [-0.06, 0.02], [0.3, 0.5]);
+  block('darkMetal', [-half, half], [-0.06, 0.02], [gutter, o.depth]);
   for (const side of [-1, 1])
-    block('metal', [side * cheek, side * half], [0.02, 0.2], [0.3, 0.5]);
-  block('metal', [-cheek, cheek], [0.13, 0.2], [0.3, 0.5]);
-  block('darkMetal', [-cheek, cheek], [0.02, 0.13], [0.47, 0.5]);
+    block('metal', [side * cheek, side * half], [0.02, 0.2], [gutter, o.depth]);
+  block('metal', [-cheek, cheek], [0.13, 0.2], [gutter, o.depth]);
+  block('darkMetal', [-cheek, cheek], [0.02, 0.13], [o.depth - 0.03, o.depth]);
   for (let x = -cheek + 0.16; x < cheek - 0.05; x += 0.16)
-    block('metal', [x - 0.015, x + 0.015], [0.02, 0.13], [0.3, 0.33]);
+    block('metal', [x - 0.015, x + 0.015], [0.02, 0.13], [gutter, gutter + 0.03]);
 }
