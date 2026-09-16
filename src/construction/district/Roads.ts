@@ -53,7 +53,7 @@ export class DistrictRoads {
     const colors = palette(owner, this.architecture);
     for (const bay of owner.parking) {
       const face = owner.frontages.find(value => value.id === bay.frontageId)!;
-      batch.polygon(colors.luxury ? 'district-hex' : 'parking', [bay.footprint], face.roadTop, p => p, true, true);
+      this.draw(batch, colors.luxury ? 'district-hex' : 'asphalt', [bay.footprint], face.roadTop);
       if (colors.blue) {
         const d: Vec2 = [face.inward[1], -face.inward[0]], a = bay.start + 0.12, b = bay.end - 0.12;
         const at = (station: number, depth: number): Vec2 => [face.start[0] + d[0] * station + face.inward[0] * depth,
