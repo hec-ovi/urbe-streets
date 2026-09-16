@@ -1,4 +1,4 @@
-# Streets 0.3.0
+# Streets 0.3.1
 
 Builds bounded source-native street GLBs from saved Atlas reservations, with exact ground ownership and native material references.
 
