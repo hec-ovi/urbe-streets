@@ -1,0 +1,9 @@
+{
+  "drainInterval": 24,
+  "marqueeInterval": 18,
+  "cableInterval": 48,
+  "endClearance": 6,
+  "joint": 0.006,
+  "messages": ["CITY PARKING", "URBE", "DISTRICT"],
+  "glyphs": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.,'!?:/&+ "
+}
