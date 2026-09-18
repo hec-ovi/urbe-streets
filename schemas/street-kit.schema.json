@@ -8,11 +8,12 @@
     "version",
     "units",
     "module",
-    "pieces"
+    "pieces",
+    "profiles"
   ],
   "properties": {
     "version": {
-      "const": "1.0.0"
+      "const": "1.1.0"
     },
     "units": {
       "const": "meters"
@@ -24,7 +25,15 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/piece"
-      }
+      },
+      "maxItems": 200
+    },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/profile"
+      },
+      "minItems": 1
     }
   },
   "$defs": {
@@ -79,8 +88,7 @@
             "segment",
             "junction-arm",
             "junction-center",
-            "prop",
-            "marking"
+            "prop"
           ]
         },
         "classes": {
@@ -164,6 +172,38 @@
         },
         "hasCollision": {
           "type": "boolean"
+        },
+        "profileId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "configurations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "footprint"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "footprint": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "minItems": 3,
+                  "items": {
+                    "$ref": "#/$defs/vector2"
+                  }
+                }
+              }
+            }
+          }
         }
       },
       "allOf": [
@@ -178,7 +218,11 @@
           "then": {
             "properties": {
               "length": {
-                "enum": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2, 4, 8]
+                "enum": [
+                  2,
+                  4,
+                  8
+                ]
               },
               "classes": {
                 "type": "array",
@@ -218,6 +262,74 @@
           }
         }
       ]
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "streetClass",
+        "zone",
+        "lanes",
+        "laneWidth",
+        "width",
+        "medianWidth",
+        "pavedWidth",
+        "curbWidth",
+        "gutterWidth"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "streetClass": {
+          "enum": [
+            "road",
+            "street",
+            "alley"
+          ]
+        },
+        "zone": {
+          "enum": [
+            "ordinary",
+            "luxury",
+            "industrial"
+          ]
+        },
+        "lanes": {
+          "enum": [
+            0,
+            1,
+            2,
+            4
+          ]
+        },
+        "laneWidth": {
+          "type": "number",
+          "minimum": 0
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0
+        },
+        "medianWidth": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pavedWidth": {
+          "type": "number",
+          "minimum": 0
+        },
+        "curbWidth": {
+          "type": "number",
+          "minimum": 0
+        },
+        "gutterWidth": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
     }
   }
 }

@@ -19,9 +19,12 @@ const report = {
   distinctPiecesPerClass: Object.fromEntries(classes.map(c => [c, result.kit.pieces.filter(p => p.classes.includes(c)).length])),
   pieceIds: Object.fromEntries([...classes, 'props'].map(c => [c, result.kit.pieces.filter(p => c === 'props' ? p.kind === 'prop' : p.classes.includes(c as typeof classes[number])).map(p => p.id)])),
   closures: result.closures,
+  profiles: result.report.profiles,
+  kitBytes: Buffer.byteLength(JSON.stringify(result.kit)),
+  catalogueBytes: result.statistics.pieceBytes + Buffer.byteLength(JSON.stringify(result.kit)),
   estimate1km: { placementCountRatio: ratio, placements: Math.round(result.statistics.placements * ratio), placementBytes: Math.round(result.statistics.placementBytes * ratio),
     pieceBytes: result.statistics.pieceBytes, pieces: result.statistics.pieces, buildSeconds: seconds * ratio, assumption: 'The same piece inventory repeats at the measured placement density.' },
-  choice: 'Only used profiles are published; 8 m junction arms contain approach markings, fitted variants preserve exact profiles, and world wear and scan dimensions remain per instance.',
+  choice: 'Every city publishes the complete profile catalogue. Paint, scan poses, wear and marquee text belong to placements.',
 };
 if (values.report) await writeFile(values.report, JSON.stringify(report, null, 2) + '\n');
 process.stdout.write(JSON.stringify(report, null, 2) + '\n');

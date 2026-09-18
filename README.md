@@ -1,6 +1,6 @@
 # Urbe Streets
 
-Version 0.7.1. Builds reusable 8 m street GLBs and placements from Atlas 0.26.0 with planning reservations 2.1.0.
+Version 0.8.0. Builds reusable 8 m street GLBs and placements from Atlas 0.26.0 with planning reservations 2.1.0.
 
 ```sh
 npm ci
@@ -21,9 +21,9 @@ console.log(result.statistics);
 npm run generate -- --request request.json --native-materials street-native.json --out new-bundle
 ```
 
-The bundle contains `manifest.json`, `streets/kit.json`, `streets/placements.json` and the referenced GLBs. Segments retain accepted panels, parking, median profiles and material surfaces. Junction arms contain crossings, approach markings and corner returns. Runs close with whole 4 m and 2 m pieces followed by a plain fitted remainder under 2 m, recorded as `closures.fittedLength`. Props retain their source feature identities and positions outside fitted closures.
+Every city publishes the complete profile catalogue in `streets/kit.json` and identical GLBs, within 200 pieces and 3 MB including kit JSON. `streets/placements.json` contains city poses, receiving clips and per instance paint, scans, wear and text. Widths outside the catalogue select the nearest profile and appear in `report.profiles`. Fractional remainders scale the plain 2 m closure along its run and appear in `closures`.
 
-Engine instances the kit using placement transforms and 128 m cell addresses. Load the native material snapshot, register MeshoptDecoder, apply complete node transforms and evaluate the saved wear field in world coordinates. Indexed geometry uses quantization within 1 mm and meshopt compression. Exact ground replacement, protected station openings and delegated highways remain in the manifest. Builds use one calling thread.
+Engine applies configuration selection, complete GLB node transforms, local offset, closure scale, rotation, translation and receiving clips. [Placement rules](CONTRACT.md) cover palette regions, openings, overlays and collision. Register MeshoptDecoder, bind the native material snapshot and evaluate wear in world coordinates. Construction runs in one calling thread.
 
 Verify a city and write its size report:
 
@@ -32,6 +32,6 @@ npm run test:city -- --blueprint city.json --native-materials street-native.json
 npm run test:compression -- --blueprint city.json
 ```
 
-The report includes unique geometry, placement counts and bytes, class inventories, closure cases and a 1 km density estimate. Compression verification compares every decoded triangle with the authored geometry.
+The report includes unique geometry, placement counts and bytes, class inventories, profile mappings, closure cases and a 1 km density estimate. Compression verification compares every decoded triangle with the authored geometry.
 
 [Contract](CONTRACT.md), [kit schema](schemas/street-kit.schema.json), [placement schema](schemas/street-placement.schema.json), [box map](docs/INDEX.md), [calling guide](SKILL.md).

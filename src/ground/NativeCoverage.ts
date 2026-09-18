@@ -13,11 +13,12 @@ export class NativeCoverage {
   private readonly cover={reservedArea:0,excludedArea:0,constructedArea:0,missingArea:0,outsideArea:0};
   constructor(architecture:NativeArchitecture){this.architecture=architecture;
     this.exclusions=architecture.exclusions.map(ring=>({ring,box:bounds(ring)}));}
-  add(owner:NativeOwner,claims:CoverageClaim[]):void{
+  add(owner:NativeOwner,claims:CoverageClaim[],mappedWidths:Ring[]=[]):void{
     if(this.seen.has(owner.id)||claims.some(claim=>claim.ownerId!==owner.id))throw invariant('Coverage has conflicting owner identity',{ownerId:owner.id});
     const reserved=union(owner.ground.map(ground=>ground.ring)),expected=difference(reserved,this.architecture.shafts.map(shaft=>shaft.ring));
     const actual=union(claims.flatMap(claim=>claim.rings)),missing=totalArea(difference(expected,actual)),outside=totalArea(difference(actual,expected));
-    if(missing>1e-7||outside>1e-7)throw invariant('Native construction does not cover its reserved receiving fields',{ownerId:owner.id,missing,outside});
+    const unexpectedMissing=totalArea(difference(difference(expected,actual),mappedWidths));
+    if(unexpectedMissing>1e-7||outside>1e-7)throw invariant('Native construction does not cover its reserved receiving fields',{ownerId:owner.id,missing,outside});
     const reach=bounds(actual.flat()),near=this.exclusions.filter(exclusion=>intersects(exclusion.box,reach));
     const encroachment=totalArea(intersection(actual,near.map(exclusion=>exclusion.ring)));
     if(encroachment>1e-7)throw unsatisfiable('Native construction enters parcel or water exclusion',{ownerId:owner.id,area:encroachment});

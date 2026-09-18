@@ -22,8 +22,8 @@ export async function buildNative(request: NativeStreetRequest, options: NativeB
       || options.outDir !== undefined && (typeof options.outDir !== 'string' || !options.outDir)) throw invalidParams('Expected native-1.0.0 design, integer seed, wear 0..1 and nativeMaterials binding');
     const a = await readNativeAtlas(request.blueprint), catalog = await NativeCatalog.load(options.nativeMaterials), mode = options.mode ?? 'glb';
     const units = new StreetUnits(a, request.seed, request.design.wear);
-    const kit: StreetKit = { version: '1.0.0', units: 'meters', module: 8, pieces: [] };
-    const placements: StreetPlacements = { version: '1.0.0', cellSize: 128, placements: units.placements };
+    const kit: StreetKit = { version: '1.1.0', units: 'meters', module: 8, profiles: units.catalogue.profiles, pieces: [] };
+    const placements: StreetPlacements = { version: '1.1.0', cellSize: 128, placements: units.placements };
     const assets: Record<string, Uint8Array> = {}, surfaces = new Set<string>();
     if (options.outDir) output = await Output.create(options.outDir);
     for (const piece of units.pieces) {
@@ -37,17 +37,20 @@ export async function buildNative(request: NativeStreetRequest, options: NativeB
         bounds: encoded.bounds, hasCollision: piece.geometry.meshes.some(m => m.collision), surfaces: [...new Set(piece.geometry.meshes.map(m => m.surface))].sort(), triangles: encoded.triangles, bytes: encoded.bytes.length, sha256: hash(encoded.bytes) });
     }
     const kitBytes = new TextEncoder().encode(JSON.stringify(kit)), placementBytes = new TextEncoder().encode(JSON.stringify(placements));
+    const pieceBytes = kit.pieces.reduce((n, p) => n + p.bytes, 0);
+    if (pieceBytes + kitBytes.length > 3_000_000) throw invariant('Street catalogue exceeds byte budget', {
+      pieces: kit.pieces.length, pieceBytes, kitBytes: kitBytes.length, totalBytes: pieceBytes + kitBytes.length, limit: 3_000_000 });
     const featureMap = new Map(units.features.items.map(f => [f.descriptor.id, f.descriptor]));
     const features = units.placements.flatMap(p => p.featureId ? [featureMap.get(p.featureId)!] : []);
     const manifest: NativeStreetManifest = {
-      meta: { version: '0.3.0', generatorVersion: pkg.version, architectureVersion: a.version, reservationVersion: a.reservationVersion,
+      meta: { version: '0.4.0', generatorVersion: pkg.version, architectureVersion: a.version, reservationVersion: a.reservationVersion,
         designVersion: request.design.version, blueprintHash: a.identity.hash, blueprintEncoding: a.identity.encoding, nativeCatalogHash: catalog.hash, seed: request.seed,
         identity: hash(JSON.stringify([a.identity, catalog.hash, request.seed, request.design, pkg.version])), units: 'meters' },
-      kit, placements, files: { kit: 'streets/kit.json', placements: 'streets/placements.json' }, closures: units.plan.closures,
+      kit, placements, files: { kit: 'streets/kit.json', placements: 'streets/placements.json' }, closures: units.plan.closures, report: { profiles: units.profiles.mappings },
       ground: units.ground, features, materials: { mode: 'native-reference', binding: catalog.binding }, wear: { ...units.wear.snapshot(), application: 'world-position' }, protected: a.protections,
       delegated: { highways: { source: 'streets.highwayStructures', hash: a.highwayHash, count: a.protections.filter(p => p.kind === 'highway').length },
         stations: { source: 'transit.subwayStations', hash: a.stationHash, stationIds: [...new Set([...a.stationBays.map(b => b.stationId), ...a.shafts.map(s => s.stationId)])] }, remainingGroundIndices: a.remainingGroundIndices },
-      statistics: { pieces: kit.pieces.length, pieceBytes: kit.pieces.reduce((n, p) => n + p.bytes, 0), placements: units.placements.length, placementBytes: placementBytes.length,
+      statistics: { pieces: kit.pieces.length, pieceBytes, placements: units.placements.length, placementBytes: placementBytes.length,
         triangles: kit.pieces.reduce((n, p) => n + p.triangles, 0), materials: surfaces.size, groundOwners: a.owners.reduce((n, o) => n + o.ground.length, 0), features: features.length, panels: units.panels },
     };
     if (output) { await output.asset(manifest.files.kit, kitBytes); await output.asset(manifest.files.placements, placementBytes); await output.finish(manifest); }

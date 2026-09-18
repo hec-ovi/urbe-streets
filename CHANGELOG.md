@@ -1,5 +1,7 @@
 # Changelog
 
+0.8.0: Streets publishes one bounded profile catalogue with shared geometry, placement attributes and reported width mappings.
+
 0.7.1: Streets closes fractional runs with plain fitted paving and curbs and records their lengths.
 
 0.7.0: Streets publishes reusable 8 m pieces, fitted closures, junctions, original prop placements and marking instances with manifest 0.3.0.

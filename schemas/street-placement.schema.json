@@ -11,7 +11,7 @@
   ],
   "properties": {
     "version": {
-      "const": "1.0.0"
+      "const": "1.1.0"
     },
     "cellSize": {
       "const": 128
@@ -75,35 +75,413 @@
             },
             "minItems": 3,
             "maxItems": 3,
-            "description": "Authored scan dimensions for marking pieces only. Surface and prop pieces use unit scale."
+            "description": "A fractional closure scales the plain 2 m piece along local X."
+          },
+          "configuration": {
+            "type": "string",
+            "minLength": 1
+          },
+          "offset": {
+            "$ref": "street-kit.schema.json#/$defs/vector2"
+          },
+          "clip": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "street-kit.schema.json#/$defs/vector2"
+              },
+              "minItems": 3
+            }
+          },
+          "openings": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "street-kit.schema.json#/$defs/vector2"
+              },
+              "minItems": 3
+            }
+          },
+          "wear": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "markings": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "seed": {
+                "type": "integer"
+              },
+              "domain": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "street-kit.schema.json#/$defs/vector2"
+                  },
+                  "minItems": 3
+                }
+              },
+              "roadTop": {
+                "type": "number"
+              },
+              "roads": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "from": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "to": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "kind": {
+                      "enum": [
+                        "road",
+                        "street",
+                        "alley",
+                        "highway"
+                      ]
+                    },
+                    "path": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "street-kit.schema.json#/$defs/vector2"
+                      }
+                    },
+                    "width": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "lanes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "offset": {
+                            "type": "number"
+                          },
+                          "width": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "direction": {
+                            "enum": [
+                              "forward",
+                              "backward"
+                            ]
+                          },
+                          "path": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "street-kit.schema.json#/$defs/vector2"
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "offset",
+                          "width",
+                          "direction",
+                          "path"
+                        ]
+                      }
+                    },
+                    "runId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "runStart": {
+                      "type": "number"
+                    },
+                    "runForward": {
+                      "type": "boolean"
+                    },
+                    "districtStyle": {
+                      "enum": [
+                        "ordinary",
+                        "luxury",
+                        "industrial"
+                      ]
+                    },
+                    "medianWidth": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "dashOrigin": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "from",
+                    "to",
+                    "kind",
+                    "path",
+                    "width",
+                    "lanes",
+                    "runId",
+                    "runStart",
+                    "runForward"
+                  ]
+                }
+              },
+              "approaches": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "nodeId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "edgeId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "distance": {
+                      "type": "number"
+                    },
+                    "station": {
+                      "$ref": "street-kit.schema.json#/$defs/vector2"
+                    },
+                    "field": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "street-kit.schema.json#/$defs/vector2"
+                      },
+                      "minItems": 3
+                    },
+                    "landings": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "street-kit.schema.json#/$defs/vector2"
+                        },
+                        "minItems": 3
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "nodeId",
+                    "edgeId",
+                    "distance",
+                    "station",
+                    "field",
+                    "landings"
+                  ]
+                }
+              },
+              "turns": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "nodeId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "fromLaneId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "toLaneId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "kind": {
+                      "enum": [
+                        "through",
+                        "left",
+                        "right",
+                        "u-turn"
+                      ]
+                    },
+                    "level": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "nodeId",
+                    "fromLaneId",
+                    "toLaneId",
+                    "kind",
+                    "level"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "seed",
+              "domain",
+              "roadTop",
+              "roads",
+              "approaches",
+              "turns"
+            ]
+          },
+          "scans": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "surface": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "position": {
+                  "$ref": "street-kit.schema.json#/$defs/vector3"
+                },
+                "rotationY": {
+                  "type": "number"
+                },
+                "size": {
+                  "$ref": "street-kit.schema.json#/$defs/vector2"
+                },
+                "clip": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "street-kit.schema.json#/$defs/vector2"
+                    },
+                    "minItems": 3
+                  }
+                }
+              },
+              "required": [
+                "surface",
+                "position",
+                "rotationY",
+                "size",
+                "clip"
+              ]
+            }
+          },
+          "finishes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "finish": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "clip": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "street-kit.schema.json#/$defs/vector2"
+                    },
+                    "minItems": 3
+                  }
+                }
+              },
+              "required": [
+                "finish",
+                "clip"
+              ]
+            }
+          },
+          "panels": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "surface": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "height": {
+                  "type": "number"
+                },
+                "clip": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "street-kit.schema.json#/$defs/vector2"
+                    },
+                    "minItems": 3
+                  }
+                }
+              },
+              "required": [
+                "surface",
+                "height",
+                "clip"
+              ]
+            }
           }
         },
         "allOf": [
           {
             "if": {
               "properties": {
-                "piece": {
-                  "type": "string",
-                  "pattern": "^marking/"
-                }
-              }
-            },
-            "then": {
-              "properties": {
-                "scale": true
+                "scale": {}
               },
               "required": [
                 "scale"
               ]
             },
-            "else": {
-              "not": {
-                "properties": {
-                  "scale": true
+            "then": {
+              "properties": {
+                "piece": {
+                  "type": "string",
+                  "pattern": "/2m-closure$"
                 },
-                "required": [
-                  "scale"
-                ]
+                "scale": {
+                  "type": "array",
+                  "prefixItems": [
+                    {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "exclusiveMaximum": 1
+                    },
+                    {
+                      "const": 1
+                    },
+                    {
+                      "const": 1
+                    }
+                  ],
+                  "items": false,
+                  "minItems": 3,
+                  "maxItems": 3
+                }
               }
             }
           }

@@ -6,12 +6,9 @@ import { DistrictDetails } from '../district/Details.ts';
 import type { DistrictFeature } from '../district/schema.ts';
 import { FeatureBuilder } from '../features/FeatureBuilder.ts';
 import type { PlacedFeature } from '../features/schema.ts';
-import type { SurfaceCut, SurfaceOutput } from '../surfaces/schema.ts';
-import { SurfaceBatch } from '../surfaces/SurfaceBatch.ts';
+import type { SurfaceCut } from '../surfaces/schema.ts';
 import { along } from '../surfaces/Frame.ts';
-import { createHardware } from '../hardware/index.ts';
 import type { FurnitureOptions } from '../hardware/schema.ts';
-import { marqueeGlyphs } from '../district/Glyphs.ts';
 import settings from '../district/settings.json' with { type: 'json' };
 import { UnitFrame } from './Frame.ts';
 
@@ -24,7 +21,7 @@ export interface UnitFeature {
   message?: string;
 }
 
-/** Plans feature instances once in the original Atlas frames, then authors their shared models. */
+/** Plans source feature instances and retains their anchors and opening masks. */
 export class UnitFeatures {
   readonly items: UnitFeature[];
   constructor(a: NativeArchitecture, seed: number, wear: (p: Vec2) => number, excluded: Ring[]) {
@@ -47,17 +44,5 @@ export class UnitFeatures {
       builder.dispose();
     }
     this.items = this.items.filter(f => totalArea(intersection([f.descriptor.footprint, ...(f.cut ? [f.cut.ring] : []), ...(f.panel ? [f.panel] : [])], excluded)) <= 1e-9);
-  }
-  draw(feature: UnitFeature): SurfaceOutput {
-    const batch = new SurfaceBatch({ ownerId: 'prop', groundIds: ['prop'], roadTop: 0, wear: () => 0 });
-    const model = createHardware(feature.options);
-    try {
-      for (const part of model.parts) batch.geometry(part.material, part.geometry, { origin: [0, 0, 0], inward: [0, 1] });
-      if (feature.message) {
-        const face = { start: [0, 0], inward: [0, 1], roadTop: 0 } as const;
-        marqueeGlyphs({ face, station: -feature.options.length / 2, setback: 0, descriptor: feature.descriptor }, batch, feature.message);
-      }
-      return batch.finish();
-    } finally { model.dispose(); }
   }
 }

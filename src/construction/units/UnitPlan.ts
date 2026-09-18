@@ -7,7 +7,7 @@ import { invariant } from '../../errors.ts';
 import { clean, UnitFrame } from './Frame.ts';
 
 export interface UnitRegion {
-  kind: Exclude<StreetKitPiece['kind'], 'prop' | 'marking'>;
+  kind: Exclude<StreetKitPiece['kind'], 'prop'>;
   frame: UnitFrame;
   mask: Ring[];
   roads: NativeRoad[];
@@ -22,7 +22,7 @@ export class UnitPlan {
   readonly closures: StreetClosure[] = [];
   constructor(a: NativeArchitecture) {
     const roads = a.roads.filter((r): r is NativeRoad & { kind: StreetClass } => r.kind !== 'highway');
-    const ground = union(a.owners.flatMap(o => o.ground.map(g => g.ring)));
+    const ground = union(a.owners.filter(o => o.kind !== 'station').flatMap(o => o.ground.map(g => g.ring)));
     const corridors: Ring[] = [];
     for (const road of roads) {
       const first = road.path[0]!, last = road.path.at(-1)!, d = direction(first, last), length = distance(first, last);
@@ -43,7 +43,8 @@ export class UnitPlan {
       for (const span of [...Array<number>(segments).fill(8), ...(halfSegments ? [4] : []), ...(quarterSegments ? [2] : []), ...(fittedLength ? [fittedLength] : [])]) {
         const frame = new UnitFrame([first[0] + d[0] * station, first[1] + d[1] * station], d);
         const mask = [rectangle(0, -width, span, width * 2).map(frame.world)];
-        this.regions.push({ kind: 'segment', frame, mask, roads: [road], classes: [road.kind], length: span, zone: road.districtStyle ?? 'ordinary' });
+        const received = difference(mask, corridors);
+        if (totalArea(received) > 1e-9) this.regions.push({ kind: 'segment', frame, mask: received, roads: [road], classes: [road.kind], length: span, zone: road.districtStyle ?? 'ordinary' });
         corridors.push(...mask); station = clean(station + span);
       }
     }
@@ -76,13 +77,17 @@ export class UnitPlan {
       const center = hx && hz ? intersection(local, [rectangle(-hx, -hz, hx * 2, hz * 2)]) : [];
       if (totalArea(center) > 1e-8) this.regions.push({ kind: 'junction-center', frame, mask: center.map(r => r.map(frame.world)), roads: node.roads, classes, length: 0, zone });
       let arms = difference(local, center);
-      for (const mask of [rectangle(hx, box.min[1], box.max[0] - hx, box.max[1] - box.min[1]),
-        rectangle(box.min[0], box.min[1], -hx - box.min[0], box.max[1] - box.min[1]),
-        rectangle(-hx, hz, hx * 2, box.max[1] - hz), rectangle(-hx, box.min[1], hx * 2, -hz - box.min[1])]) {
+      const reach = Math.max(...box.min.map(Math.abs), ...box.max.map(Math.abs)) + hx + hz + 1;
+      for (const [mask, direction] of [
+        [[[hx, -hz], [reach, -hz - reach + hx], [reach, hz + reach - hx], [hx, hz]], [1, 0]],
+        [[[-hx, hz], [-reach, hz + reach - hx], [-reach, -hz - reach + hx], [-hx, -hz]], [-1, 0]],
+        [[[hx, hz], [hx + reach - hz, reach], [-hx - reach + hz, reach], [-hx, hz]], [0, 1]],
+        [[[-hx, -hz], [-hx - reach + hz, -reach], [hx + reach - hz, -reach], [hx, -hz]], [0, -1]],
+      ] as [Ring, Vec2][]) {
         if (totalArea([mask]) <= 1e-10) continue;
         const part = intersection(arms, [mask]); if (totalArea(part) <= 1e-8) continue;
         arms = difference(arms, part);
-        this.regions.push({ kind: 'junction-arm', frame, mask: part.map(r => r.map(frame.world)), roads: node.roads, classes, length: 0, zone });
+        this.regions.push({ kind: 'junction-arm', frame: new UnitFrame(node.point, direction), mask: part.map(r => r.map(frame.world)), roads: node.roads, classes, length: 0, zone });
       }
       if (totalArea(arms) > 1e-7) this.regions.push({ kind: 'junction-arm', frame, mask: arms.map(r => r.map(frame.world)), roads: node.roads, classes, length: 0, zone });
     }

@@ -2,16 +2,14 @@ import type { NativeArchitecture, NativeFrontage, NativeGround, NativeOwner, Nat
 import type { Ring, Vec2 } from '../../geometry/schema.ts';
 import { bounds, difference, intersection, intersects, rectangle, totalArea, union } from '../../geometry/polygons.ts';
 import { along, direction, distance, dot, sub } from '../surfaces/Frame.ts';
-import type { DistrictFeature } from '../district/schema.ts';
 import type { UnitRegion } from './UnitPlan.ts';
 import type { UnitFeature } from './UnitFeatures.ts';
 import { canonical, clean } from './Frame.ts';
 
-export type UnitDetail = Pick<DistrictFeature, 'cut' | 'panel'>;
-export interface SceneInput { architecture: NativeArchitecture; edgeOwners: NativeOwner[]; details: Map<string, UnitDetail[]>; variant: string; wear: (p: Vec2) => number }
+export interface SceneInput { architecture: NativeArchitecture; edgeOwners: NativeOwner[]; variant: string; }
 
 /** Crops source reservations before triangulation; canonical local inputs share one authored piece. */
-export function unitScene(a: NativeArchitecture, region: UnitRegion, features: UnitFeature[], worldWear: (p: Vec2) => number): SceneInput {
+export function unitScene(a: NativeArchitecture, region: UnitRegion, features: UnitFeature[]): Pick<SceneInput, 'architecture' | 'variant'> {
   const { frame, mask } = region, maskBox = bounds(mask.flat());
   const localRings = (rings: Ring[]) => canonical(rings.map(r => r.map(frame.local)));
   const selected = a.owners.flatMap(owner => {
@@ -56,7 +54,7 @@ export function unitScene(a: NativeArchitecture, region: UnitRegion, features: U
     return { ...r, dashOrigin, id, from: `${id}:from`, to: `${id}:to`, path: [at(start), at(end)], runId: id, runStart: 0, runForward: true,
       lanes: r.lanes.map((l, i) => ({ ...l, id: `${id}:v${i}`, path: [at(start, l.offset), at(end, l.offset)] })) };
   });
-  const owners: NativeOwner[] = [], details = new Map<string, UnitDetail[]>();
+  const owners: NativeOwner[] = [];
   for (const [index, { owner, ground }] of selected.entries()) {
     const id = a.format === 'district' ? `o${index}` : owner.id, worldDomain = ground.map(g => g.ring.map(frame.world));
     const selectedFaces = owner.frontages.filter(f => {
@@ -85,13 +83,7 @@ export function unitScene(a: NativeArchitecture, region: UnitRegion, features: U
           support: { start: clean(p.support.start - f.offset), end: clean(p.support.end - f.offset) }, footprint, slots: [] }));
       }) };
     owners.push(local);
-    details.set(id, features.flatMap(f => {
-      if (f.descriptor.ownerId !== owner.id || !f.cut) return [];
-      const face = faceMap.get(f.cut.frontageId); if (!face) return [];
-      if (totalArea(intersection([f.cut.ring, ...(f.panel ? [f.panel] : [])], mask)) <= 1e-9) return [];
-      return [{ cut: { ...f.cut, id: '', frontageId: face.face.id, start: clean(f.cut.start - face.offset), end: clean(f.cut.end - face.offset), ring: f.cut.ring.map(frame.local) },
-        ...(f.panel ? { panel: f.panel.map(frame.local) } : {}) } satisfies UnitDetail];
-    }));
+
   }
   const approaches = region.roads.flatMap((r, i) => nearbyApproaches[i]!.map(p => {
     const local = roads[i]!, d = direction(local.path[0]!, local.path.at(-1)!);
@@ -121,10 +113,8 @@ export function unitScene(a: NativeArchitecture, region: UnitRegion, features: U
     shafts: [], stationBays: a.stationBays.map(b => ({ ...b, footprint: b.footprint.map(frame.local), shaft: b.shaft.map(frame.local), approach: b.approach.map(frame.local) })),
     medians: selected.flatMap(({ owner }, i) => a.medians?.filter(m => m.id === owner.id).map(m => ({ ...m, id: `o${i}`, edgeId: roadIds.get(m.edgeId)!, footprint: [], paving: [], ornaments: [] })) ?? []),
     protections: [], obstaclePoints: [], exclusions: [] };
-  const variant = region.kind === 'segment' && region.length < 2 ? 'fitted-closure'
-    : [...(owners.some(o => o.parking.length) ? ['parking'] : []), ...([...details.values()].some(d => d.length) ? ['drain'] : [])].join('-') || 'plain';
+  const variant = region.kind === 'segment' && region.length < 8 ? 'closure'
+    : [...(owners.some(o => o.parking.length) ? ['parking'] : []), ...(features.some(f => f.cut && totalArea(intersection([f.cut.ring], mask)) > 1e-9) ? ['drain'] : [])].join('-') || 'plain';
 
-  const halo = { min: [maskBox.min[0] - 1, maskBox.min[1] - 1] as Vec2, max: [maskBox.max[0] + 1, maskBox.max[1] + 1] as Vec2 };
-  const edgeOwners = a.owners.map(o => ({ ...o, ground: o.ground.filter(g => intersects(bounds(g.ring), halo)).map(g => ({ ...g, ring: g.ring.map(frame.local) })) }));
-  return { architecture, edgeOwners, details, variant, wear: p => worldWear(frame.world(p)) };
+  return { architecture, variant };
 }
