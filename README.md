@@ -17,6 +17,8 @@ const result = await build({
 console.log(result.statistics);
 ```
 
+Owners build in parallel on worker threads, by default `availableParallelism() - 1` and never more than the city has owners. Set `STREETS_WORKERS` to pick the count yourself, or 0 to build everything in the calling thread. The bundle is identical either way.
+
 District construction uses uniform panel bands, 2 m parking, fitted corners, junction transitions, LED marquees and occasional cable pieces. Luxury hexagons stay subtle; industrial roads use asphalt.
 
 The saved bundle contains 128 m pieces, original panel/paint UVs, physical collision flags, stable hardware bounds and a native material snapshot. Consumers bind the actual referenced scans. Highways and station interactions retain explicit delegated ownership.
