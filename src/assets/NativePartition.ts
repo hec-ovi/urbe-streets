@@ -3,6 +3,8 @@ import type { NativeMesh } from '../construction/surfaces/schema.ts';
 import type { NativePieceData } from './native-schema.ts';
 
 type Vertex = number[];
+/** One cell mesh plus the membership needed to merge each source owner/ground list once, in first-seen order. */
+type Group = { mesh: NativeMesh; owners: Set<string>; grounds: Set<string>; merged: NativeMesh | undefined };
 const size = 128;
 function cut(vertices: Vertex[], axis: number, boundary: number, sign: number): Vertex[] {
   const result: Vertex[] = [];
@@ -22,7 +24,7 @@ function area(a: Vertex, b: Vertex, c: Vertex): number {
 
 /** Clips whole authored triangles while interpolating every vertex field in its original domain. */
 export class NativePartition {
-  private readonly cells = new Map<string, { piece: NativePieceData; groups: Map<string, NativeMesh> }>();
+  private readonly cells = new Map<string, { piece: NativePieceData; groups: Map<string, Group> }>();
   add(source: NativeMesh): void {
     const count=source.positions.length/3;
     if(!Number.isInteger(count/3)||source.normals.length!==count*3||source.uvs.length!==count*2||source.wear.length!==count||source.heights.length!==count)
@@ -49,10 +51,15 @@ export class NativePartition {
   private append(x:number,z:number,source:NativeMesh,vertices:Vertex[]):void{
     const id=`sp:${x}:${z}`;let cell=this.cells.get(id);
     if(!cell){cell={piece:{id,origin:[x*size,0,z*size],bounds:{min:[Infinity,Infinity,Infinity],max:[-Infinity,-Infinity,-Infinity]},meshes:[]},groups:new Map()};this.cells.set(id,cell);}
-    const key=`${source.surface}:${source.collision}`;let mesh=cell.groups.get(key);
-    if(!mesh){mesh={id:`${id}:${key}`,surface:source.surface,collision:source.collision,ownerIds:[],groundIds:[],positions:[],normals:[],uvs:[],wear:[],heights:[]};cell.groups.set(key,mesh);cell.piece.meshes.push(mesh);}
-    for(const owner of source.ownerIds)if(!mesh.ownerIds.includes(owner))mesh.ownerIds.push(owner);
-    for(const ground of source.groundIds)if(!mesh.groundIds.includes(ground))mesh.groundIds.push(ground);
+    const key=`${source.surface}:${source.collision}`;let group=cell.groups.get(key);
+    if(!group){const mesh={id:`${id}:${key}`,surface:source.surface,collision:source.collision,ownerIds:[],groundIds:[],positions:[],normals:[],uvs:[],wear:[],heights:[]};
+      group={mesh,owners:new Set<string>(),grounds:new Set<string>(),merged:undefined};cell.groups.set(key,group);cell.piece.meshes.push(mesh);}
+    const mesh=group.mesh;
+    if(group.merged!==source){
+      group.merged=source;
+      for(const owner of source.ownerIds)if(!group.owners.has(owner)){group.owners.add(owner);mesh.ownerIds.push(owner);}
+      for(const ground of source.groundIds)if(!group.grounds.has(ground)){group.grounds.add(ground);mesh.groundIds.push(ground);}
+    }
     for(const v of vertices){
       mesh.positions.push(...v.slice(0,3));
       const normalLength = v[10] ? Math.hypot(v[3]!,v[4]!,v[5]!) : 1;
