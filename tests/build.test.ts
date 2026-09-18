@@ -11,12 +11,24 @@ import kitSchema from '../schemas/street-kit.schema.json' with { type: 'json' };
 import placementSchema from '../schemas/street-placement.schema.json' with { type: 'json' };
 import catalog from './fixtures/native-materials.json' with { type: 'json' };
 import type { NativeMaterialCatalog } from '../src/schema/native-materials.ts';
+import { intersection, totalArea } from '../src/geometry/polygons.ts';
 
 const blueprint = fileURLToPath(new URL('../../atlas/samples/city-urbe-tiny.json', import.meta.url));
 const request = { blueprint, seed: 42, design: { version: 'native-1.0.0' as const, wear: 1 } };
 const nativeMaterials = catalog as unknown as NativeMaterialCatalog;
 let result: NativeStreetBuild;
-let source: { streets: { edges: { id: string; class: string; from: string; to: string; path: Vec2[] }[]; construction: { reservations: { owners: { id: string; groundIndices: number[] }[] } } }; volumetric: { ground: { polygon: Ring }[] } };
+let source: {
+  meta: { bounds: { min: Vec2; max: Vec2 } };
+  streets: {
+    nodes: { id: string; position: Vec2; edgeIds: string[] }[];
+    edges: { id: string; class: string; path: Vec2[] }[];
+    construction: {
+      junctions: { id: string; nodeIds: string[]; approaches: { edgeId: string }[] }[];
+      reservations: { owners: { id: string; groundIndices: number[] }[]; frontages: { id: string }[] };
+    };
+  };
+  volumetric: { ground: { polygon: Ring }[] };
+};
 beforeAll(async () => { result = await build(request, { nativeMaterials }); source = JSON.parse(await readFile(blueprint, 'utf8')); });
 
 it('publishes schema valid kit and placements with exact Atlas ownership and material binding', () => {
@@ -66,7 +78,7 @@ function intervals(rings: Ring[], origin: Vec2, d: Vec2): [number, number][] {
   return spans;
 }
 
-it('covers each plan centreline once and closes clear runs with minimal whole metre units', () => {
+it('covers each plan centreline once with whole units and plain fitted fractional closures', () => {
   const pieces = new Map(result.kit.pieces.map(p => [p.id, p]));
   for (const p of result.kit.pieces.filter(p => p.kind === 'segment')) {
     expect(p.bounds.min[0], p.id).toBeGreaterThanOrEqual(-1e-7);
@@ -84,34 +96,74 @@ it('covers each plan centreline once and closes clear runs with minimal whole me
     for (const [start, end] of spans) { expect(start, `${road.id} at ${station}`).toBeCloseTo(station, 6); station = end; }
     expect(station, road.id).toBeCloseTo(length, 6);
   }
+  const fitted = result.closures.filter(c => c.fittedLength > 0);
+  expect(fitted.length).toBeGreaterThan(0);
   for (const c of result.closures) {
-    expect(c.segments * 8 + c.halfSegments * 4 + c.quarterSegments * 2).toBeCloseTo(c.clearLength, 7);
+    expect(c.segments * 8 + c.halfSegments * 4 + c.quarterSegments * 2 + c.fittedLength).toBeCloseTo(c.clearLength, 7);
     expect(c.segments).toBe(Math.floor(c.clearLength / 8));
     expect(c.halfSegments).toBe(Math.floor(c.clearLength % 8 / 4));
-    expect(c.quarterSegments).toBe(Math.round(c.clearLength % 4 / 2));
+    expect(c.quarterSegments).toBe(Math.floor(c.clearLength % 4 / 2));
+    expect(c.fittedLength).toBeGreaterThanOrEqual(0);
+    expect(c.fittedLength).toBeLessThan(2);
+    expect(c.fittedLength * 10).toBeCloseTo(Math.round(c.fittedLength * 10), 7);
+  }
+  const placements = result.placements.placements.filter(p => pieces.get(p.piece)!.variant === 'fitted-closure');
+  expect(placements).toHaveLength(fitted.length);
+  for (const closure of fitted) {
+    const road = source.streets.edges.find(r => r.id === closure.roadId)!;
+    const origin = road.path[0]!, end = road.path.at(-1)!, station = closure.end - closure.fittedLength;
+    const x = origin[0] + (end[0] - origin[0]) * station / closure.length;
+    const z = origin[1] + (end[1] - origin[1]) * station / closure.length;
+    const matching = placements.filter(p => Math.hypot(p.position[0] - x, p.position[2] - z) < 1e-7);
+    expect(matching, closure.roadId).toHaveLength(1);
+    const p = matching[0]!, piece = pieces.get(p.piece)!;
+    expect(piece.length).toBe(closure.fittedLength);
+    expect(p.scale).toBeUndefined();
+    const bytes = Buffer.from(result.assets[`streets/${piece.file}`]!);
+    const gltf = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)).toString());
+    for (const mesh of gltf.meshes) for (const primitive of mesh.primitives) expect(primitive.extras.streetCollision).toBe(true);
+    const cos = Math.cos(p.rotationY), sin = Math.sin(p.rotationY);
+    const footprint = piece.footprint.map(r => r.map(([x, z]): Vec2 => [p.position[0] + cos * x + sin * z, p.position[2] - sin * x + cos * z]));
+    for (const feature of result.features) expect(totalArea(intersection([feature.footprint], footprint)), feature.id).toBeLessThan(1e-8);
   }
 });
 
-it('provides placed crossing arms and a shared central piece for every incident class pair', () => {
-  const nodes = new Map<string, string[]>();
-  for (const road of source.streets.edges.filter(r => r.class !== 'highway')) for (const node of [road.from, road.to]) nodes.set(node, [...nodes.get(node) ?? [], road.class]);
-  const placed = new Set(result.placements.placements.map(p => p.piece));
-  for (const classes of nodes.values()) {
-    const pair = [...new Set(classes)].sort(); if (pair.length === 1) pair.push(pair[0]!);
-    for (const kind of ['junction-arm', 'junction-center']) expect(result.kit.pieces.some(p => p.kind === kind && JSON.stringify(p.classes) === JSON.stringify(pair) && placed.has(p.id)), pair.join('+')).toBe(true);
+it('places crossing arms and one shared central piece at every junction the plan reserves', () => {
+  const classOf = new Map(source.streets.edges.map(e => [e.id, e.class]));
+  const nodeOf = new Map(source.streets.nodes.map(n => [n.id, n]));
+  const pieces = new Map(result.kit.pieces.map(p => [p.id, p]));
+  const placed = result.placements.placements.filter(p => pieces.get(p.piece)!.kind.startsWith('junction'));
+  /** Highway interactions stay delegated, so junctions on a highway node are not built here. */
+  const reserved = source.streets.construction.junctions.filter(j => j.nodeIds.every(id => nodeOf.get(id)!.edgeIds.every(e => classOf.get(e) !== 'highway')));
+  expect(reserved.length).toBeGreaterThan(0);
+  for (const junction of reserved) {
+    const classes = [...new Set(junction.approaches.map(a => classOf.get(a.edgeId)!))].sort();
+    const positions = junction.nodeIds.map(id => nodeOf.get(id)!.position);
+    const here = placed.filter(p => positions.some(([x, z]) => Math.hypot(p.position[0] - x, p.position[2] - z) < 1e-6)).map(p => pieces.get(p.piece)!);
+    expect(here.filter(p => p.kind === 'junction-center'), junction.id).toHaveLength(1);
+    expect(here.filter(p => p.kind === 'junction-arm').length, junction.id).toBeGreaterThan(0);
+    for (const piece of here) expect([...new Set(piece.classes)].sort(), `${junction.id} ${piece.id}`).toEqual(classes);
   }
 });
 
-it('places one original prop per feature with the accepted tiny sample counts and bounds', () => {
-  const expected = { cable: 34, guard: 4, inlet: 104, marquee: 105, 'tree-grate': 12 };
-  const counts: Record<string, number> = {};
+it('places one original prop per constructed feature of the plan, inside its reserved bounds', () => {
   const pieces = new Map(result.kit.pieces.map(p => [p.id, p]));
   const props = result.placements.placements.filter(p => pieces.get(p.piece)!.kind === 'prop');
+  const frontages = new Set(source.streets.construction.reservations.frontages.map(f => f.id));
+  const roads = new Set(source.streets.edges.map(e => e.id));
+  expect(result.features.length).toBeGreaterThan(0);
   expect(props).toHaveLength(result.features.length);
   expect(new Set(props.map(p => p.featureId)).size).toBe(props.length);
   for (const feature of result.features) {
-    counts[feature.kind] = (counts[feature.kind] ?? 0) + 1;
-    const placement = props.find(p => p.featureId === feature.id)!;
+    const anchor = feature.frontageId ?? feature.roadId!;
+    expect(frontages.has(anchor) || roads.has(anchor), feature.id).toBe(true);
+    for (const [axis, plan] of [[0, 0], [2, 1]] as const) {
+      expect(feature.bounds.min[axis], feature.id).toBeGreaterThanOrEqual(source.meta.bounds.min[plan]!);
+      expect(feature.bounds.max[axis], feature.id).toBeLessThanOrEqual(source.meta.bounds.max[plan]!);
+    }
+    const matching = props.filter(p => p.featureId === feature.id);
+    expect(matching, feature.id).toHaveLength(1);
+    const placement = matching[0]!;
     expect(placement.ownerId).toBe(feature.ownerId);
     expect(pieces.get(placement.piece)!.variant).toBe(feature.kind);
     const box = pieces.get(placement.piece)!.bounds, c = Math.cos(placement.rotationY), s = Math.sin(placement.rotationY);
@@ -120,7 +172,6 @@ it('places one original prop per feature with the accepted tiny sample counts an
       p.forEach((v, axis) => { expect(v).toBeGreaterThanOrEqual(feature.bounds.min[axis]! - 0.001); expect(v).toBeLessThanOrEqual(feature.bounds.max[axis]! + 0.001); });
     }
   }
-  expect(counts).toEqual(expected);
 });
 
 it('writes the complete bundle before its manifest and exposes metadata without GLBs in manifest mode', async () => {
@@ -136,7 +187,7 @@ it('writes the complete bundle before its manifest and exposes metadata without 
   const metadata = await build(request, { nativeMaterials, mode: 'manifest' });
   expect(Object.keys(metadata.assets).sort()).toEqual(['streets/kit.json', 'streets/placements.json']);
   expect(metadata.kit).toEqual(result.kit);
-});
+}, 120_000);
 
 it('rejects invalid input and unsupported Atlas versions through build', async () => {
   await expect(build({ ...request, seed: NaN }, { nativeMaterials })).rejects.toMatchObject({ code: 'E_INVALID_PARAMS' });

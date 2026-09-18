@@ -1,6 +1,7 @@
 import type { NativeArchitecture } from '../../architecture/native-schema.ts';
 import type { NativeStreetFeature } from '../../schema/native-result.ts';
-import type { Vec2 } from '../../geometry/schema.ts';
+import type { Ring, Vec2 } from '../../geometry/schema.ts';
+import { intersection, totalArea } from '../../geometry/polygons.ts';
 import { DistrictDetails } from '../district/Details.ts';
 import type { DistrictFeature } from '../district/schema.ts';
 import { FeatureBuilder } from '../features/FeatureBuilder.ts';
@@ -26,7 +27,7 @@ export interface UnitFeature {
 /** Plans feature instances once in the original Atlas frames, then authors their shared models. */
 export class UnitFeatures {
   readonly items: UnitFeature[];
-  constructor(a: NativeArchitecture, seed: number, wear: (p: Vec2) => number) {
+  constructor(a: NativeArchitecture, seed: number, wear: (p: Vec2) => number, excluded: Ring[]) {
     if (a.format === 'district') {
       const details = new DistrictDetails(a);
       this.items = details.features.map(f => {
@@ -45,6 +46,7 @@ export class UnitFeatures {
         options: f.options, ...(f.cut ? { cut: f.cut } : {}) }));
       builder.dispose();
     }
+    this.items = this.items.filter(f => totalArea(intersection([f.descriptor.footprint, ...(f.cut ? [f.cut.ring] : []), ...(f.panel ? [f.panel] : [])], excluded)) <= 1e-9);
   }
   draw(feature: UnitFeature): SurfaceOutput {
     const batch = new SurfaceBatch({ ownerId: 'prop', groundIds: ['prop'], roadTop: 0, wear: () => 0 });

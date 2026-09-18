@@ -33,14 +33,14 @@ export class UnitPlan {
       const arm = crossingEnd - crossingStart >= 16 ? 8 : 0;
       const start = clean(crossingStart + (approaches.some(p => p.nodeId === road.from) ? arm : 0));
       const end = clean(crossingEnd - (approaches.some(p => p.nodeId === road.to) ? arm : 0));
-      const clearLength = clean(end - start), units = Math.round(clearLength / 2);
-      if (clearLength < 0 || Math.abs(units * 2 - clearLength) > 1e-6) throw invariant('Street length cannot close with 8, 4 and 2 metre pieces', { roadId: road.id, start, end, clearLength });
+      const clearLength = clean(Math.max(0, end - start)), units = Math.floor(clearLength / 2);
+      const fittedLength = clean(clearLength - units * 2);
       const segments = Math.floor(units / 4), halfSegments = Math.floor(units % 4 / 2), quarterSegments = units % 2;
-      if (halfSegments || quarterSegments) this.closures.push({ roadId: road.id, length: clean(length), start, end, clearLength, segments, halfSegments, quarterSegments });
+      if (halfSegments || quarterSegments || fittedLength) this.closures.push({ roadId: road.id, length: clean(length), start, end, clearLength, segments, halfSegments, quarterSegments, fittedLength });
       const rim = Math.max(0, ...a.owners.flatMap(o => o.frontages.filter(f => f.edgeIds.includes(road.id) && o.kind !== 'median').map(f => f.pavedWidth + f.curbWidth + f.gutterWidth)));
       const width = road.width / 2 + rim;
       let station = start;
-      for (const span of [...Array<number>(segments).fill(8), ...(halfSegments ? [4] : []), ...(quarterSegments ? [2] : [])]) {
+      for (const span of [...Array<number>(segments).fill(8), ...(halfSegments ? [4] : []), ...(quarterSegments ? [2] : []), ...(fittedLength ? [fittedLength] : [])]) {
         const frame = new UnitFrame([first[0] + d[0] * station, first[1] + d[1] * station], d);
         const mask = [rectangle(0, -width, span, width * 2).map(frame.world)];
         this.regions.push({ kind: 'segment', frame, mask, roads: [road], classes: [road.kind], length: span, zone: road.districtStyle ?? 'ordinary' });

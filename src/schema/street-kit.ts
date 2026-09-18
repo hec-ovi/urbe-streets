@@ -31,4 +31,9 @@ export interface StreetPlacement {
   scale?: Vec3;
 }
 export interface StreetPlacements { version: '1.0.0'; cellSize: 128; placements: StreetPlacement[] }
-export interface StreetClosure { roadId: string; length: number; start: number; end: number; clearLength: number; segments: number; halfSegments: number; quarterSegments: number }
+export interface StreetClosure {
+  roadId: string; length: number; start: number; end: number; clearLength: number;
+  segments: number; halfSegments: number; quarterSegments: number;
+  /** Plain remainder in metres, zero when whole pieces fill the run. */
+  fittedLength: number;
+}

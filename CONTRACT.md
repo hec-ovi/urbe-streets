@@ -1,4 +1,4 @@
-# Streets 0.7.0
+# Streets 0.7.1
 
 Builds reusable street pieces and placements from saved Atlas 0.26.0 with planning reservations 2.1.0.
 
@@ -12,7 +12,7 @@ The bundle contains `manifest.json`, `streets/kit.json`, `streets/placements.jso
 
 Every segment contains the full cross section, including both receiving sidewalks, panel rows, curbs, sloped gutters, lanes, separators and the saved median. Straight units are 8 m long. Parking, drain openings, differing widths, opposite sidewalk palettes and median ends retain fitted variants. Existing construction supplies their dimensions and `streetNativeSurface` material names. Lane dashes repeat 4 m painted and 4 m clear.
 
-Junction pieces use the incident street class pair, fitted crossing arms with corner returns, and one shared central box. Arms include the first 8 m beyond each crossing when the clear span permits it, containing its approach markings. The remaining run uses whole 8 m segments followed by at most one 4 m and one 2 m closure against the last arm. `closures` names each exact road, original length, remaining stations and piece counts. Unrepresentable lengths fail with road evidence. No street piece is stretched.
+Junction pieces use the incident street class pair, fitted crossing arms with corner returns, and one shared central box. Arms include the first 8 m beyond each crossing when the clear span permits it, containing its approach markings. The remaining run uses whole 8 m segments followed by at most one 4 m and one 2 m piece, then a plain fitted closure under 2 m on the 0.1 m grid. Fitted closures contain paving and curbs only; props and markings stay outside them. `closures` names each exact road, original length, remaining stations, piece counts and `fittedLength` in metres (zero for whole pieces). Length alone never raises `E_INVARIANT`. No street piece is stretched.
 
 Props retain the source feature positions, shapes, styles and marquee messages. Drains use a surface variant with its receiving opening and a shared inlet insert. Wear scans retain their original authored footprints in separate noncolliding marking placements. Only marking placements carry `scale`, expressing those scan dimensions.
 

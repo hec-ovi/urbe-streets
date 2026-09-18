@@ -29,8 +29,9 @@ export class StreetUnits {
 
   constructor(a: NativeArchitecture, seed: number, amount: number) {
     this.plan = new UnitPlan(a);
+    const plainClosures = this.plan.regions.filter(r => r.kind === 'segment' && r.length < 2).flatMap(r => r.mask);
     this.wear = new WearField({ seed, amount, bounds: a.bounds, streets: Math.max(1, new Set(a.roads.filter(r => r.kind !== 'highway').map(r => r.runId)).size) });
-    this.features = new UnitFeatures(a, seed, p => this.wear.sample(p));
+    this.features = new UnitFeatures(a, seed, p => this.wear.sample(p), plainClosures);
     const authored = new Map<string, AuthoredUnit>(), claims = new Map(a.owners.map(o => [o.id, [] as Ring[]]));
     for (const region of this.plan.regions) {
       const scene = unitScene(a, region, this.features.items, p => this.wear.sample(p));
@@ -69,7 +70,7 @@ export class StreetUnits {
       this.place(piece.metadata.id, f.frame, [f.descriptor.ownerId], f.descriptor.id);
     }
     const decals = new Map<string, AuthoredUnit>();
-    for (const decal of unitDecals(a, seed, p => this.wear.sample(p))) {
+    for (const decal of unitDecals(a, seed, p => this.wear.sample(p), plainClosures)) {
       const id = `marking/${decal.surface}/${pieceIdentity(decal.geometry)}`;
       if (!decals.has(id)) {
         const piece: AuthoredUnit = { geometry: { ...decal.geometry, id }, metadata: { id, kind: 'marking', classes: [], zone: 'shared', variant: decal.surface,

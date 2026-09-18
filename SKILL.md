@@ -3,7 +3,7 @@ name: streets
 description: Build reusable street GLBs and placements from saved Atlas reservations and native Materials bindings.
 ---
 
-# Streets 0.7.0
+# Streets 0.7.1
 
 Call `build` from `src/index.ts` with [request and options](src/schema/native-request.ts): blueprint 0.26.0, planning reservations 2.1.0, integer seed, design `{version:'native-1.0.0',wear:0..1}` and `options.nativeMaterials` as a binding object or JSON path.
 

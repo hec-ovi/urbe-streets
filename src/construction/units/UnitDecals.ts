@@ -1,5 +1,5 @@
 import type { NativeArchitecture } from '../../architecture/native-schema.ts';
-import type { Vec2, Vec3 } from '../../geometry/schema.ts';
+import type { Ring, Vec2, Vec3 } from '../../geometry/schema.ts';
 import { difference, intersection, rectangle, totalArea, union } from '../../geometry/polygons.ts';
 import { artifactPlan } from '../markings/Artifacts.ts';
 import { direction, distance, dot, sub } from '../surfaces/Frame.ts';
@@ -13,9 +13,9 @@ import { canonical, UnitFrame } from './Frame.ts';
 export interface UnitDecal { geometry: NativePieceData; frame: UnitFrame; scale: Vec3; owners: string[]; surface: string }
 
 /** A scan quad retains the source footprint and UVs through its authored instance dimensions. */
-export function unitDecals(a: NativeArchitecture, seed: number, wear: (p: Vec2) => number): UnitDecal[] {
+export function unitDecals(a: NativeArchitecture, seed: number, wear: (p: Vec2) => number, excluded: Ring[]): UnitDecal[] {
   const fields = a.owners.flatMap(o => o.ground.filter(g => g.surface === 'roadway'));
-  const domain = difference(union(fields.map(g => g.ring)), [...a.owners.flatMap(o => o.parking.map(p => p.footprint)), ...a.shafts.map(s => s.ring)]);
+  const domain = difference(union(fields.map(g => g.ring)), [...a.owners.flatMap(o => o.parking.map(p => p.footprint)), ...a.shafts.map(s => s.ring), ...excluded]);
   const result: UnitDecal[] = [];
   for (const road of a.roads.filter(r => r.kind !== 'highway' && r.kind !== 'alley')) {
     const start = road.path[0]!, end = road.path.at(-1)!, d = direction(start, end), length = distance(start, end);

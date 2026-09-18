@@ -121,7 +121,8 @@ export function unitScene(a: NativeArchitecture, region: UnitRegion, features: U
     shafts: [], stationBays: a.stationBays.map(b => ({ ...b, footprint: b.footprint.map(frame.local), shaft: b.shaft.map(frame.local), approach: b.approach.map(frame.local) })),
     medians: selected.flatMap(({ owner }, i) => a.medians?.filter(m => m.id === owner.id).map(m => ({ ...m, id: `o${i}`, edgeId: roadIds.get(m.edgeId)!, footprint: [], paving: [], ornaments: [] })) ?? []),
     protections: [], obstaclePoints: [], exclusions: [] };
-  const variant = [...(owners.some(o => o.parking.length) ? ['parking'] : []), ...([...details.values()].some(d => d.length) ? ['drain'] : [])].join('-') || 'plain';
+  const variant = region.kind === 'segment' && region.length < 2 ? 'fitted-closure'
+    : [...(owners.some(o => o.parking.length) ? ['parking'] : []), ...([...details.values()].some(d => d.length) ? ['drain'] : [])].join('-') || 'plain';
 
   const halo = { min: [maskBox.min[0] - 1, maskBox.min[1] - 1] as Vec2, max: [maskBox.max[0] + 1, maskBox.max[1] + 1] as Vec2 };
   const edgeOwners = a.owners.map(o => ({ ...o, ground: o.ground.filter(g => intersects(bounds(g.ring), halo)).map(g => ({ ...g, ring: g.ring.map(frame.local) })) }));
