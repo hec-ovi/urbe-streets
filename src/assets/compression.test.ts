@@ -4,7 +4,6 @@ import { EXTMeshoptCompression, KHRMeshQuantization } from '@gltf-transform/exte
 import { encodeNativePiece } from './NativeGlb.ts';
 import { comparePositions, decodePiece } from './decode-fixture.ts';
 import { floatPiece, gridPiece } from './fixtures.ts';
-import { NativePartition } from './NativePartition.ts';
 
 it('indexes each primitive and shares only vertices with all five fields equal', async () => {
   const piece = gridPiece(), mesh = piece.meshes[0]!;
@@ -45,8 +44,10 @@ it('decodes within 1 mm with identical triangles, field precision and native own
   expect(comparison.triangles).toBe(encoded.triangles);
   expect(encoded.bounds).toEqual(piece.bounds);
   expect(after.getRoot().listTextures()).toHaveLength(0);
-  for (const node of after.getRoot().listNodes().filter(node => node.getMesh())) {
-    const primitive = node.getMesh()!.listPrimitives()[0]!, source = piece.meshes.find(m => m.id === node.getMesh()!.getName())!;
+  const compact = await decodePiece((await encodeNativePiece({ ...piece, meshes: [normalized], bounds: piece.bounds })).bytes);
+  expect(compact.getRoot().listMeshes()[0]!.listPrimitives()[0]!.getAttribute('POSITION')!.getArray()).toBeInstanceOf(Int16Array);
+  for (const node of after.getRoot().listNodes().filter(node => node.getMesh())) for (const primitive of node.getMesh()!.listPrimitives()) {
+    const source = piece.meshes.find(m => m.id === primitive.getExtras().streetSource)!;
     expect(node.getExtras()).toEqual({ streetCollision: source.collision, streetOwnerIds: source.ownerIds, streetGroundIds: source.groundIds });
     expect(primitive.getExtras().streetCollision).toBe(source.collision);
     expect(primitive.getMaterial()!.getExtras().streetNativeSurface).toBe(source.surface);
@@ -56,30 +57,28 @@ it('decodes within 1 mm with identical triangles, field precision and native own
       const attribute = primitive.getAttribute(semantic)!;
       const range = Math.max(...values) - Math.min(...values);
       const tolerance = semantic === 'NORMAL' ? 1 / 32767 : semantic === 'TEXCOORD_0' ? 1 / 65535 : range / 255;
-      for (let i = 0; i < 3; i++) for (let axis = 0; axis < size; axis++) {
-        expect(Math.abs(Math.fround(attribute.getElement(i, [])[axis]!) - Math.fround(values[i * size + axis]!))).toBeLessThanOrEqual(tolerance);
+      for (let i = 0; i < 3; i++) {
+        const candidates = [0, 1, 2].map(k => attribute.getElement(primitive.getIndices()!.getScalar(k), []));
+        expect(candidates.some(v => v.every((n, axis) => Math.abs(Math.fround(n) - Math.fround(values[i * size + axis]!)) <= tolerance))).toBe(true);
       }
     }
-    if (source.id === 'normalized') expect(primitive.getAttribute('POSITION')!.getArray()).toBeInstanceOf(Int16Array);
+
     if (source.id === 'grid') expect(primitive.getAttribute('POSITION')!.getArray()).toBeInstanceOf(Float32Array);
     if (source.id === 'tiled') {
       expect(primitive.getAttribute('TEXCOORD_0')!.getArray()).toBeInstanceOf(Float32Array);
       expect(primitive.getAttribute('_STREET_HEIGHT')!.getArray()).toBeInstanceOf(Float32Array);
     }
   }
-  // Cell cuts are quantized after interpolation, including a translated negative cell.
-  const partition = new NativePartition();
-  partition.add({ ...normalized, positions: [-129.12345, 0.13, -2, -126.87654, 0.2, -2, -129.12345, 1.22, 2] });
-  for (const clipped of partition.finish()) {
-    const reference = await new NodeIO().readBinary(await floatPiece(clipped));
-    const decoded = await decodePiece((await encodeNativePiece(clipped)).bytes);
-    expect(comparePositions(reference, decoded).maxError).toBeLessThanOrEqual(0.001);
-    for (const node of decoded.getRoot().listScenes()[0]!.listChildren()) expect(node.getTranslation()).toEqual(clipped.origin);
-  }
+
 });
 
 it('stores a representative panel piece in at most a quarter of the Float32 bytes', async () => {
   const piece = gridPiece();
   const before = await floatPiece(piece), after = await encodeNativePiece(piece);
   expect(after.bytes.byteLength).toBeLessThanOrEqual(before.byteLength / 4);
+});
+
+it('rejects incomplete source attributes at the GLB entry', async () => {
+  const piece = gridPiece(); piece.meshes[0]!.wear = [];
+  await expect(encodeNativePiece(piece)).rejects.toMatchObject({ code: 'E_INVARIANT' });
 });

@@ -26,6 +26,7 @@ export interface NativeRoad {
   lanes: NativeLane[]; runId: string; runStart: number; runForward: boolean;
   districtStyle?: 'luxury' | 'industrial' | 'ordinary';
   medianWidth?: number;
+  dashOrigin?: number;
 }
 export interface NativeMedian {
   id: string; edgeId: string; footprint: Ring; paving: Ring; start: number; end: number;

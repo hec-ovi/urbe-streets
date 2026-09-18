@@ -58,7 +58,7 @@ export class DistrictRoads {
         const d: Vec2 = [face.inward[1], -face.inward[0]], a = bay.start + 0.12, b = bay.end - 0.12;
         const at = (station: number, depth: number): Vec2 => [face.start[0] + d[0] * station + face.inward[0] * depth,
           face.start[1] + d[1] * station + face.inward[1] * depth];
-        batch.polygon('district-parking-light', [[at(a, 0.01), at(b, 0.01), at(b, 0.05), at(a, 0.05)]], face.roadTop + 0.005, p => p, false);
+        batch.polygon('district-parking-light', intersection([[at(a, 0.01), at(b, 0.01), at(b, 0.05), at(a, 0.05)]], [bay.footprint]), face.roadTop + 0.005, p => p, false);
       }
     }
   }

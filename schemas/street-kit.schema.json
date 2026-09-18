@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://urbe.dev/streets/street-kit.schema.json",
+  "title": "Street piece kit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "units",
+    "module",
+    "pieces"
+  ],
+  "properties": {
+    "version": {
+      "const": "1.0.0"
+    },
+    "units": {
+      "const": "meters"
+    },
+    "module": {
+      "const": 8
+    },
+    "pieces": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/piece"
+      }
+    }
+  },
+  "$defs": {
+    "vector2": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "vector3": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "piece": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "file",
+        "kind",
+        "classes",
+        "zone",
+        "variant",
+        "length",
+        "size",
+        "origin",
+        "bounds",
+        "footprint",
+        "surfaces",
+        "triangles",
+        "bytes",
+        "sha256",
+        "hasCollision"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "file": {
+          "type": "string",
+          "pattern": "^pieces/[a-z0-9_+./-]+\\.glb$"
+        },
+        "kind": {
+          "enum": [
+            "segment",
+            "junction-arm",
+            "junction-center",
+            "prop",
+            "marking"
+          ]
+        },
+        "classes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "road",
+              "street",
+              "alley"
+            ]
+          },
+          "maxItems": 3
+        },
+        "zone": {
+          "type": "string",
+          "minLength": 1
+        },
+        "variant": {
+          "type": "string",
+          "minLength": 1
+        },
+        "length": {
+          "type": "number",
+          "minimum": 0
+        },
+        "size": {
+          "$ref": "#/$defs/vector3"
+        },
+        "origin": {
+          "enum": [
+            "run-start-at-road",
+            "junction-at-road",
+            "anchor-at-road"
+          ]
+        },
+        "bounds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "$ref": "#/$defs/vector3"
+            },
+            "max": {
+              "$ref": "#/$defs/vector3"
+            }
+          }
+        },
+        "footprint": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "$ref": "#/$defs/vector2"
+            }
+          }
+        },
+        "surfaces": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "triangles": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "hasCollision": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "segment"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "length": {
+                "enum": [
+                  2,
+                  4,
+                  8
+                ]
+              },
+              "classes": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1
+              },
+              "origin": {
+                "const": "run-start-at-road"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "junction-arm",
+                  "junction-center"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "classes": {
+                "type": "array",
+                "minItems": 2
+              },
+              "origin": {
+                "const": "junction-at-road"
+              },
+              "length": {
+                "const": 0
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

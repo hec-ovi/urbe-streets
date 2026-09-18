@@ -80,6 +80,32 @@
         "repeat"
       ]
     },
+    "asphalt-damage": {
+      "path": "themes/cyberpunk/assets/street-native/asphalt-damage.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "915b36825830b9c4148e32964876b55f4c8134ace529a2ef392e6a3c24e8e235",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "asphalt-fracture": {
+      "path": "themes/cyberpunk/assets/street-native/asphalt-fracture.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "75de63d2a2c9cce88b79ff4567b00eaa9f2f44465ae44f700462562415acc635",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
     "asphalt-normal": {
       "path": "themes/cyberpunk/assets/street-native/asphalt-normal.png",
       "resolution": [
@@ -91,6 +117,19 @@
       "wrap": [
         "repeat",
         "repeat"
+      ]
+    },
+    "asphalt-repair": {
+      "path": "themes/cyberpunk/assets/street-native/asphalt-repair.png",
+      "resolution": [
+        1774,
+        887
+      ],
+      "sha256": "47d3a6f078b52a566e5e953c4a65e203995de87d58f2407d3c42843e91509a73",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
       ]
     },
     "asphalt-roughness": {
@@ -106,6 +145,357 @@
         "repeat"
       ]
     },
+    "barrier-concrete-ao": {
+      "path": "themes/cyberpunk/assets/street-native/barrier-concrete-ao.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "0a84c3af9cf08cc52c5b73a466e65920104514a84e12f3fff09c1baf7b0e7dcd",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "barrier-concrete-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/barrier-concrete-basecolor.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "80615d5076552e07200f339985055cd0682372cf6c45adcd40d03412e9a32f5f",
+      "colorSpace": "srgb",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "barrier-concrete-normal": {
+      "path": "themes/cyberpunk/assets/street-native/barrier-concrete-normal.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "479c16c4167c985888292000019df0574e6ca6d2e977fd299bfc96aef2b104ca",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "barrier-concrete-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/barrier-concrete-roughness.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "2ade69eb05fe2b7417a9ac2d814234fcaedc2122e1b2013c745da6f0f3b80269",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "crosswalk-wait": {
+      "path": "themes/cyberpunk/assets/street-native/crosswalk-wait.png",
+      "resolution": [
+        2160,
+        728
+      ],
+      "sha256": "1715063765330e7a06386a10d913ba80ed6b9a72c3905330254a1302411a4fc4",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "crosswalk-walk": {
+      "path": "themes/cyberpunk/assets/street-native/crosswalk-walk.png",
+      "resolution": [
+        2172,
+        724
+      ],
+      "sha256": "998cc13dd17601fbf460d28622e6e088dd4324557fe7407f37b0f72e599f4cc4",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "curb-ao": {
+      "path": "themes/cyberpunk/assets/street-native/curb-ao.png",
+      "resolution": [
+        1774,
+        887
+      ],
+      "sha256": "735895e34ab2c0fc9f85b66370ebf7cb31d7a91a531f9ec8dc5c3624452ff763",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "curb-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/curb-basecolor.png",
+      "resolution": [
+        1774,
+        887
+      ],
+      "sha256": "9f1416093d30b4d8be6664ab1bb01211ddf6094fb168342a91c145fcac9a4189",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "curb-normal": {
+      "path": "themes/cyberpunk/assets/street-native/curb-normal.png",
+      "resolution": [
+        1774,
+        887
+      ],
+      "sha256": "588ff620a21e6850574b73efc918bc597a82dbfb5c40ccfe32ca74eaa7d36173",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "curb-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/curb-roughness.png",
+      "resolution": [
+        1774,
+        887
+      ],
+      "sha256": "8def29c9adbc9f8e636816e3611f6f6cd195bd140ed8d58c237a87b22e2fe6be",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "damaged-panel-ao": {
+      "path": "themes/cyberpunk/assets/street-native/damaged-panel-ao.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "6a5ce5bc25ee02865078ca409a8cd300905f20963fd1ab7b2308e108c8412511",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "damaged-panel-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/damaged-panel-basecolor.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "e093d8cc12ddfba1478ce7c03d123983ff573ca7e8ca2e8ef79d4056ccbe0213",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "damaged-panel-normal": {
+      "path": "themes/cyberpunk/assets/street-native/damaged-panel-normal.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "e8fbb23b3cca94f604927800c51a47fafa25c758a830eabd88a8806e034c5b8c",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "damaged-panel-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/damaged-panel-roughness.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "37dfa657b3e1a35d68ccca325370b261135244ae5763bd740883beeacc2779ac",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "oil-patch": {
+      "path": "themes/cyberpunk/assets/street-native/oil-patch.png",
+      "resolution": [
+        1536,
+        1024
+      ],
+      "sha256": "fa29b6abfca63ebb954def68b5a5e81898b245756c5263bf31f1f3a293e099ad",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "ordinary-panel-ao": {
+      "path": "themes/cyberpunk/assets/street-native/ordinary-panel-ao.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "a45f26b2dbebec6d5dfee47c5fd0149ec177bf08cbd77976f329ff2fdc8b189e",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "ordinary-panel-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/ordinary-panel-basecolor.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "f6d1cc9a34211d5bc1d8b62ae28fcabd5d1c8f64ec3fcab5a9c26585f996e111",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "ordinary-panel-normal": {
+      "path": "themes/cyberpunk/assets/street-native/ordinary-panel-normal.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "a2e2ffaaa93f0e65d26301bb5ff70f454fc3a0ff68b2b2f9c5b8f908eb85fe78",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "ordinary-panel-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/ordinary-panel-roughness.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "f94871b94b5dcc7c63f777dfcea6d0630c43dab9b1fd5fe9fac5d8dbca6ec5bc",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "oxblood-panel-ao": {
+      "path": "themes/cyberpunk/assets/street-native/oxblood-panel-ao.png",
+      "resolution": [
+        1774,
+        887
+      ],
+      "sha256": "915f63cdedea4b0c3ffd476f70eb0cfa4f6865e0e44112d5e3c4f61bef6cc9d8",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "oxblood-panel-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/oxblood-panel-basecolor.png",
+      "resolution": [
+        1774,
+        887
+      ],
+      "sha256": "9d3876e68b6909b553b58109a5cfc33edcf0e6882da7c6d4ef50a2dc4c9415bd",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "oxblood-panel-normal": {
+      "path": "themes/cyberpunk/assets/street-native/oxblood-panel-normal.png",
+      "resolution": [
+        1774,
+        887
+      ],
+      "sha256": "3fa5b7a1ccfcfe1a6f08bba2792e3d57d9f57eb2045dfb51a779b991c006b727",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "oxblood-panel-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/oxblood-panel-roughness.png",
+      "resolution": [
+        1774,
+        887
+      ],
+      "sha256": "74a9698218be1440857b7a25a3b17703a9a63d7f7068fb6a9807ee7f741ea4a3",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "oxide-panel-ao": {
+      "path": "themes/cyberpunk/assets/street-native/oxide-panel-ao.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "865694904e6630a8d420bbeb947512b56a1ff28b8010f45cea8a1da1a239c9ff",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "oxide-panel-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/oxide-panel-basecolor.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "56a60f01c732b969a513100743f6bd7f879c62df8bda42c409013454f86b8b43",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "oxide-panel-normal": {
+      "path": "themes/cyberpunk/assets/street-native/oxide-panel-normal.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "269c7de358dfc5185b9758cd68f7e0b5794eb824ab84c146927f3e3153c9ac58",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "oxide-panel-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/oxide-panel-roughness.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "171c499a57d1876611532cafea8e2153d347b989165b38fd0d9e5456dd727585",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
     "paint-mask": {
       "path": "themes/cyberpunk/assets/street-native/paint-mask.png",
       "resolution": [
@@ -116,6 +506,1124 @@
       "colorSpace": "linear",
       "wrap": [
         "repeat",
+        "clamp"
+      ]
+    },
+    "panel-a-ao": {
+      "path": "themes/cyberpunk/assets/street-native/panel-a-ao.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "9748bf706ba72739bae3a688ec64674cbd225c240f53084321c537a541fc8f0c",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-a-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/panel-a-basecolor.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "da323f0deb32dcdfeb8703ffa15339e1dc4943a6384141bbcfb11fa9bc9cea2a",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-a-normal": {
+      "path": "themes/cyberpunk/assets/street-native/panel-a-normal.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "135bcb44329f09fc371e6f30ed6015d1d2c2fd3f61ab4030ecda7076c7ea7691",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-a-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/panel-a-roughness.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "90e6be4aee766311c9a5235e42d0685222ddb3f33123a7a44056527ff6999a1b",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-b-ao": {
+      "path": "themes/cyberpunk/assets/street-native/panel-b-ao.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "8ac80b720a1ecff7e0ce72dbe0a4eda619c31e311c6c1dfb93da2cf7705398d6",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-b-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/panel-b-basecolor.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "99743b2c99dfa31e231367d906c316c44b00ca3912d72c2bd1a87d78b13e31d0",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-b-normal": {
+      "path": "themes/cyberpunk/assets/street-native/panel-b-normal.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "dcdb12e88dfebdd0dfee0bc8c2ab939ea3085852626f0b29b6b2cf551e467473",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-b-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/panel-b-roughness.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "1c37af4f961a9ce3282ee3dd0e80ddf800664cc6e5292e90a67e735ba7d22b3a",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-basalt-ao": {
+      "path": "themes/cyberpunk/assets/street-native/panel-basalt-ao.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "d74a3942bf88cace28beabbc80d56f41f9587e88bcf41f95cf02541b3d9f1f3a",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-basalt-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/panel-basalt-basecolor.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "dac4dda17f8414ce518f4528c3ee42206ce3d14741fb4fdff2a557f6e8dafd4d",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-basalt-normal": {
+      "path": "themes/cyberpunk/assets/street-native/panel-basalt-normal.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "7afacae531dbb3a432a9c2b457d383d77e2cc0a244ae30d1b91422ff25d386bb",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-basalt-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/panel-basalt-roughness.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "4496e4b27fec2b8e5591495521f28209b419fd7dbeb86cea09a00d43e91af468",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-c-ao": {
+      "path": "themes/cyberpunk/assets/street-native/panel-c-ao.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "905dbacc2f3c38bf8730db38f5c6a3124d84bd8139d0d4183984b8e8a6052bb8",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-c-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/panel-c-basecolor.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "14830e0cc8ecc6dde64cb7af7bf453ad4c985a07f6eae0c40bdcc2ebd010a801",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-c-normal": {
+      "path": "themes/cyberpunk/assets/street-native/panel-c-normal.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "3c796df3d1667934da295e8c4173faecef174a6abae29e997bd12ac5fd6c5008",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-c-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/panel-c-roughness.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "b5b46fbc39183166431f2236c018423e2ae7191de4a729ac0415fd6ba44d60e5",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-smear": {
+      "path": "themes/cyberpunk/assets/street-native/panel-smear.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "1ec0feaaafd23a71e83b52b82b8414f4a2d43d2e9ffb4dae17b299f9d1d200c5",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-terracotta-ao": {
+      "path": "themes/cyberpunk/assets/street-native/panel-terracotta-ao.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "031b9adf0f4858b5bc424ae3c8f972c5e194ffc2e0e4cfae8cc5d5594c246e8f",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-terracotta-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/panel-terracotta-basecolor.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "ed3e80e3f6b9da790b2965247634538fe8641daa2575a1c0b260f13c52e50b5e",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-terracotta-normal": {
+      "path": "themes/cyberpunk/assets/street-native/panel-terracotta-normal.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "aabf9b3421e625926f36721354b0666218f729362d08b69e6afa2cddac5c3395",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "panel-terracotta-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/panel-terracotta-roughness.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "9ff9fd9782b9d9d1eb868d66f6112f56758ecaee2ac77dd4859ac99c97a8cac7",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "paper-panel-ao": {
+      "path": "themes/cyberpunk/assets/street-native/paper-panel-ao.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "9baffac0d5b4cf9d3ffe1c5565c1569ffa57566fa495b606a98075fd072ec568",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "paper-panel-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/paper-panel-basecolor.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "41646c46ae130494f5f9402e3c831b9abdc84d605b1f5b7b1d7398d841b744a5",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "paper-panel-normal": {
+      "path": "themes/cyberpunk/assets/street-native/paper-panel-normal.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "1cafc6baeaa50fadef271a2fad98b6b9ad383e78fd98b9cf5ba7b9afe760fe22",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "paper-panel-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/paper-panel-roughness.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "730c0ded2ae096b2530cc89a626a114bc144c01a0b3a3ae0f70fcec42fbb2978",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "parking-concrete-ao": {
+      "path": "themes/cyberpunk/assets/street-native/parking-concrete-ao.png",
+      "resolution": [
+        1374,
+        1145
+      ],
+      "sha256": "88fc08cc9b47f8c12325b8e73017302fd49d51ec12835e0951334d50635f79c7",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "parking-concrete-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/parking-concrete-basecolor.png",
+      "resolution": [
+        1374,
+        1145
+      ],
+      "sha256": "590eee57d168530c945d2c0b0c5aa2f7e5d1992ad1fb8a6f90fe6573d12f4f46",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "parking-concrete-normal": {
+      "path": "themes/cyberpunk/assets/street-native/parking-concrete-normal.png",
+      "resolution": [
+        1374,
+        1145
+      ],
+      "sha256": "9c9ee258874d1cd76fa781f5c8f5893b6c84e007bbc92d97f5eea521efa7ce64",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "parking-concrete-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/parking-concrete-roughness.png",
+      "resolution": [
+        1374,
+        1145
+      ],
+      "sha256": "30aa405a639d8fd1a911a6218c7ac886612baf1e8e63b55ed060ef1dcf0e82b6",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "ramp-mesh-ao": {
+      "path": "themes/cyberpunk/assets/street-native/ramp-mesh-ao.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "d66cfb4f250a6a26761e2280bd9c8f47e057d33fda96b91ae0e065b274e52c1d",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "ramp-mesh-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/ramp-mesh-basecolor.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "95183e2c1a605abdab445e56a6aaa6a7c3119e10010d3093e3b5bbf5b6baf944",
+      "colorSpace": "srgb",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "ramp-mesh-normal": {
+      "path": "themes/cyberpunk/assets/street-native/ramp-mesh-normal.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "1eafa2ebbfe7bc2cc5d7b8d4f7219964ac3ebdfd54d53cdb81f5bbca9444c794",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "ramp-mesh-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/ramp-mesh-roughness.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "cd96fe6a87ff6af842df6dd575c6fa8eaa0e4f930635e1f9373d245971de5b3c",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "service-panel-ao": {
+      "path": "themes/cyberpunk/assets/street-native/service-panel-ao.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "4d37c42089adebdeb9b57b691f97dfeaf1f12dacaad19000637da9668a916ef3",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "service-panel-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/service-panel-basecolor.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "77c6328f48b6ccd9e590629493fb399b31fae172425e8c69c120889ddc3d67bb",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "service-panel-normal": {
+      "path": "themes/cyberpunk/assets/street-native/service-panel-normal.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "0c4315cd312b591e211b369c8888ca87aec4477dbef56cd2974a1f95302cbf20",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "service-panel-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/service-panel-roughness.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "7fb3011fa2798936d183621684bc6307261f3636cd961d9fc33125f1ec56d51e",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "tread-ochre-ao": {
+      "path": "themes/cyberpunk/assets/street-native/tread-ochre-ao.png",
+      "resolution": [
+        1774,
+        887
+      ],
+      "sha256": "c9fdacd473b7166bee99a3dfb49199d86b869152becb942f62624529e8047091",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "tread-ochre-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/tread-ochre-basecolor.png",
+      "resolution": [
+        1774,
+        887
+      ],
+      "sha256": "b20a34a6dceacc90cecd1075e0683d6929c0a214ba95c9b8cf646e41fddbd39e",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "tread-ochre-normal": {
+      "path": "themes/cyberpunk/assets/street-native/tread-ochre-normal.png",
+      "resolution": [
+        1774,
+        887
+      ],
+      "sha256": "4a6b48baf4373de052e8cc831fcb32fadae97b2a9724c41269c49b14eaa70712",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "tread-ochre-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/tread-ochre-roughness.png",
+      "resolution": [
+        1774,
+        887
+      ],
+      "sha256": "16019fbf439b8e36ede865259f9e2179453d09a4b6cc6a93f67c9d1023e8565f",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "tread-steel-ao": {
+      "path": "themes/cyberpunk/assets/street-native/tread-steel-ao.png",
+      "resolution": [
+        1774,
+        887
+      ],
+      "sha256": "f685bf0fceddd4502dcc3406c315c8a2c0d98a0d0c3e23fc111f435d254aaff3",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "tread-steel-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/tread-steel-basecolor.png",
+      "resolution": [
+        1774,
+        887
+      ],
+      "sha256": "573816376349ab09ad1ac51c17e11574c356a54866e52ff270425c436a66efde",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "tread-steel-normal": {
+      "path": "themes/cyberpunk/assets/street-native/tread-steel-normal.png",
+      "resolution": [
+        1774,
+        887
+      ],
+      "sha256": "e6f16cc1c194e2129b115e819a5b0cfedaee68b148830ce9116f3ddcd07a8585",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "tread-steel-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/tread-steel-roughness.png",
+      "resolution": [
+        1774,
+        887
+      ],
+      "sha256": "c4802b3195384bcae58c69c21af20b48683ed664982cf06c3136501cd5e37481",
+      "colorSpace": "linear",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
+    },
+    "weathered-steel-ao": {
+      "path": "themes/cyberpunk/assets/street-native/weathered-steel-ao.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "6a897371a48479a879b694e10e7136c71539aa4490f7762e6c6c40342ba96557",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "weathered-steel-basecolor": {
+      "path": "themes/cyberpunk/assets/street-native/weathered-steel-basecolor.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "8591096152f263d49cc16de049d4ecb03d672b8393343d85d57bb95300751515",
+      "colorSpace": "srgb",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "weathered-steel-normal": {
+      "path": "themes/cyberpunk/assets/street-native/weathered-steel-normal.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "ae8db9e9e0eb016ea5cae566c6fc8b840ab02a2b6ebac05b57110c16e1b14990",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "weathered-steel-roughness": {
+      "path": "themes/cyberpunk/assets/street-native/weathered-steel-roughness.png",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "sha256": "8f98c07db3d84e707d33e32e752186311fdd8de3ff5952ab9fa62565312ad3bf",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-hex-basecolor": {
+      "path": "themes/cyberpunk/assets/district-hex/rich/subtle/basecolor.png",
+      "resolution": [
+        512,
+        887
+      ],
+      "sha256": "509628ed54c9ddf19f3aed972745de2f4163678bce65a20059b9658cf1a1f856",
+      "colorSpace": "srgb",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-hex-normal": {
+      "path": "themes/cyberpunk/assets/district-hex/rich/subtle/normal.png",
+      "resolution": [
+        512,
+        887
+      ],
+      "sha256": "d3d821e8f579625fa6276c7243425210c6eeb8424f7d30f04b1f2047752ffd31",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-hex-roughness": {
+      "path": "themes/cyberpunk/assets/district-hex/rich/subtle/roughness.png",
+      "resolution": [
+        512,
+        887
+      ],
+      "sha256": "6dd32aac617c2ded47ff55d26c7b5a5964832d8859644dfb74f16da2e8fc6194",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-hex-ao": {
+      "path": "themes/cyberpunk/assets/district-hex/rich/subtle/ao.png",
+      "resolution": [
+        512,
+        887
+      ],
+      "sha256": "4659c281fc36e8213ecf075ea4d54bdcf61cf9c03d3db2e70874ad0417584fc1",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-panel-blue-basecolor": {
+      "path": "themes/cyberpunk/assets/district-panel-blue/rich/clean/basecolor.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "e8d636549ca8bbc830fe89a88582ac2ab994ce7a0e73f189e9cf39dc010ee4f2",
+      "colorSpace": "srgb",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-panel-blue-normal": {
+      "path": "themes/cyberpunk/assets/district-panel-blue/rich/clean/normal.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "3c5472b590ec3382e168b96f755516cd08e19579d9ddd8a8085d72f09fa0840d",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-panel-blue-roughness": {
+      "path": "themes/cyberpunk/assets/district-panel-blue/rich/clean/roughness.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "ffe8ab99be25ff7747ed6e8e17a52382f89aa3d60f842a7e9149e3edc7ac7084",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-panel-blue-ao": {
+      "path": "themes/cyberpunk/assets/district-panel-blue/rich/clean/ao.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "7e028966597d4dd0c20c93b79c672002f189c7a58e2cda413612f853b7c41284",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-panel-red-basecolor": {
+      "path": "themes/cyberpunk/assets/district-panel-red/rich/clean/basecolor.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "f78cf6d53e4236eb9ec9bc867555abebd49ff2bdb4c9c2f76149c2f6d2a672ee",
+      "colorSpace": "srgb",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-panel-red-normal": {
+      "path": "themes/cyberpunk/assets/district-panel-red/rich/clean/normal.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "3c5472b590ec3382e168b96f755516cd08e19579d9ddd8a8085d72f09fa0840d",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-panel-red-roughness": {
+      "path": "themes/cyberpunk/assets/district-panel-red/rich/clean/roughness.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "ffe8ab99be25ff7747ed6e8e17a52382f89aa3d60f842a7e9149e3edc7ac7084",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-panel-red-ao": {
+      "path": "themes/cyberpunk/assets/district-panel-red/rich/clean/ao.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "7e028966597d4dd0c20c93b79c672002f189c7a58e2cda413612f853b7c41284",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-panel-dark-basecolor": {
+      "path": "themes/cyberpunk/assets/district-panel-dark/rich/clean/basecolor.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "94d1d456551a2a9dd525542030937bb79234c0d5724f279c75dd7f170b7db2af",
+      "colorSpace": "srgb",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-panel-dark-normal": {
+      "path": "themes/cyberpunk/assets/district-panel-dark/rich/clean/normal.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "3c5472b590ec3382e168b96f755516cd08e19579d9ddd8a8085d72f09fa0840d",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-panel-dark-roughness": {
+      "path": "themes/cyberpunk/assets/district-panel-dark/rich/clean/roughness.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "b036af6ab4c24c858152401ddce8414633c83f25474fb6955389e0141353d190",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-panel-dark-ao": {
+      "path": "themes/cyberpunk/assets/district-panel-dark/rich/clean/ao.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "7e028966597d4dd0c20c93b79c672002f189c7a58e2cda413612f853b7c41284",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-curb-blue-basecolor": {
+      "path": "themes/cyberpunk/assets/district-curb-blue/rich/clean/basecolor.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "0f577f284cec2948456574e5425c71c4a1e51fe25dcfbbf4b994777cc8f1eadc",
+      "colorSpace": "srgb",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-curb-blue-normal": {
+      "path": "themes/cyberpunk/assets/district-curb-blue/rich/clean/normal.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "3c5472b590ec3382e168b96f755516cd08e19579d9ddd8a8085d72f09fa0840d",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-curb-blue-roughness": {
+      "path": "themes/cyberpunk/assets/district-curb-blue/rich/clean/roughness.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "502a05f5054e1a92e3e17d22baff6859615b68fef58329a1acd51688799b0562",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-curb-blue-ao": {
+      "path": "themes/cyberpunk/assets/district-curb-blue/rich/clean/ao.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "7e028966597d4dd0c20c93b79c672002f189c7a58e2cda413612f853b7c41284",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-curb-red-basecolor": {
+      "path": "themes/cyberpunk/assets/district-curb-red/rich/clean/basecolor.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "04dbb49b204e509fae443ad9d65e50cf31a9a7fa9fc4e9fa3896b2f480841576",
+      "colorSpace": "srgb",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-curb-red-normal": {
+      "path": "themes/cyberpunk/assets/district-curb-red/rich/clean/normal.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "3c5472b590ec3382e168b96f755516cd08e19579d9ddd8a8085d72f09fa0840d",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-curb-red-roughness": {
+      "path": "themes/cyberpunk/assets/district-curb-red/rich/clean/roughness.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "502a05f5054e1a92e3e17d22baff6859615b68fef58329a1acd51688799b0562",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-curb-red-ao": {
+      "path": "themes/cyberpunk/assets/district-curb-red/rich/clean/ao.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "7e028966597d4dd0c20c93b79c672002f189c7a58e2cda413612f853b7c41284",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-curb-yellow-basecolor": {
+      "path": "themes/cyberpunk/assets/district-curb-yellow/rich/clean/basecolor.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "1b06ceeb6000ac4e73b61e351ffea795a83e74e80d8115b6f63616a5c24d5788",
+      "colorSpace": "srgb",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-curb-yellow-normal": {
+      "path": "themes/cyberpunk/assets/district-curb-yellow/rich/clean/normal.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "3c5472b590ec3382e168b96f755516cd08e19579d9ddd8a8085d72f09fa0840d",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-curb-yellow-roughness": {
+      "path": "themes/cyberpunk/assets/district-curb-yellow/rich/clean/roughness.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "1e359e7c66b4c907cd26eb41d411bf75de11492eb2e3a82b8d173772a4f8d3ca",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-curb-yellow-ao": {
+      "path": "themes/cyberpunk/assets/district-curb-yellow/rich/clean/ao.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "7e028966597d4dd0c20c93b79c672002f189c7a58e2cda413612f853b7c41284",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-junction-blue-basecolor": {
+      "path": "themes/cyberpunk/assets/district-junction-blue/rich/clean/basecolor.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "8c72208e4f4c488f3a1e51e92f58f77a668e134bb8f6ec5711783fc0454b1a29",
+      "colorSpace": "srgb",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-junction-blue-normal": {
+      "path": "themes/cyberpunk/assets/district-junction-blue/rich/clean/normal.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "3c5472b590ec3382e168b96f755516cd08e19579d9ddd8a8085d72f09fa0840d",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-junction-blue-roughness": {
+      "path": "themes/cyberpunk/assets/district-junction-blue/rich/clean/roughness.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "2d98feaec4ca09b3d034e71ee09e038ab7fdc120056e2051c73940ca2a627320",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-junction-blue-ao": {
+      "path": "themes/cyberpunk/assets/district-junction-blue/rich/clean/ao.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "7e028966597d4dd0c20c93b79c672002f189c7a58e2cda413612f853b7c41284",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-junction-yellow-basecolor": {
+      "path": "themes/cyberpunk/assets/district-junction-yellow/rich/clean/basecolor.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "bce67a2ac7755080e914f345eef6a2b0dacc4472a266ee506c9d8406bdaa8836",
+      "colorSpace": "srgb",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-junction-yellow-normal": {
+      "path": "themes/cyberpunk/assets/district-junction-yellow/rich/clean/normal.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "3c5472b590ec3382e168b96f755516cd08e19579d9ddd8a8085d72f09fa0840d",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-junction-yellow-roughness": {
+      "path": "themes/cyberpunk/assets/district-junction-yellow/rich/clean/roughness.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "d8b5ee06dac2c5393920dca3a353a05da7f447c7cc9543c90bd289d1be233e92",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-junction-yellow-ao": {
+      "path": "themes/cyberpunk/assets/district-junction-yellow/rich/clean/ao.png",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "7e028966597d4dd0c20c93b79c672002f189c7a58e2cda413612f853b7c41284",
+      "colorSpace": "linear",
+      "wrap": [
+        "repeat",
+        "repeat"
+      ]
+    },
+    "district-marquee-glyphs": {
+      "path": "themes/cyberpunk/assets/letter-atlas/rich/neon/emission.png",
+      "resolution": [
+        1024,
+        768
+      ],
+      "sha256": "9ab0f995cb9edc776a9380012fa4fd57503f5b77568dbec35c766d63c0b8dd4f",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
         "clamp"
       ]
     }
@@ -147,6 +1655,739 @@
           1
         ],
         "aoWear": 0.55
+      }
+    },
+    "ordinary": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "ordinary-panel-basecolor",
+        "normal": "ordinary-panel-normal",
+        "roughness": "ordinary-panel-roughness",
+        "ao": "ordinary-panel-ao"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 0.6,
+        "aoIntensity": 0.65,
+        "metalness": 0,
+        "roughnessGain": 1.7,
+        "roughnessBias": -0.57,
+        "roughnessRange": [
+          0.45,
+          0.95
+        ]
+      }
+    },
+    "worn-a": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "panel-a-basecolor",
+        "normal": "panel-a-normal",
+        "roughness": "panel-a-roughness",
+        "ao": "panel-a-ao"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 0.75,
+        "aoIntensity": 0.65,
+        "metalness": 0,
+        "roughnessGain": 1.7,
+        "roughnessBias": -0.57,
+        "roughnessRange": [
+          0.45,
+          0.95
+        ]
+      }
+    },
+    "worn-b": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "panel-b-basecolor",
+        "normal": "panel-b-normal",
+        "roughness": "panel-b-roughness",
+        "ao": "panel-b-ao"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 0.75,
+        "aoIntensity": 0.65,
+        "metalness": 0,
+        "roughnessGain": 1.7,
+        "roughnessBias": -0.57,
+        "roughnessRange": [
+          0.45,
+          0.95
+        ]
+      }
+    },
+    "worn-c": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "panel-c-basecolor",
+        "normal": "panel-c-normal",
+        "roughness": "panel-c-roughness",
+        "ao": "panel-c-ao"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 0.75,
+        "aoIntensity": 0.65,
+        "metalness": 0,
+        "roughnessGain": 1.7,
+        "roughnessBias": -0.57,
+        "roughnessRange": [
+          0.45,
+          0.95
+        ]
+      }
+    },
+    "oxide": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "oxide-panel-basecolor",
+        "normal": "oxide-panel-normal",
+        "roughness": "oxide-panel-roughness",
+        "ao": "oxide-panel-ao"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 0.65,
+        "aoIntensity": 0.65,
+        "metalness": 0,
+        "roughnessGain": 1.7,
+        "roughnessBias": -0.57,
+        "roughnessRange": [
+          0.45,
+          0.95
+        ]
+      }
+    },
+    "service": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "service-panel-basecolor",
+        "normal": "service-panel-normal",
+        "roughness": "service-panel-roughness",
+        "ao": "service-panel-ao"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 1,
+        "aoIntensity": 0.65,
+        "metalness": 1,
+        "roughnessGain": 1.7,
+        "roughnessBias": -0.57,
+        "roughnessRange": [
+          0.45,
+          0.95
+        ]
+      }
+    },
+    "paper": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "paper-panel-basecolor",
+        "normal": "paper-panel-normal",
+        "roughness": "paper-panel-roughness",
+        "ao": "paper-panel-ao"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 0.6,
+        "aoIntensity": 0.65,
+        "metalness": 0,
+        "roughnessGain": 1.7,
+        "roughnessBias": -0.57,
+        "roughnessRange": [
+          0.45,
+          0.95
+        ]
+      }
+    },
+    "damaged": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "damaged-panel-basecolor",
+        "normal": "damaged-panel-normal",
+        "roughness": "damaged-panel-roughness",
+        "ao": "damaged-panel-ao"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 1,
+        "aoIntensity": 0.65,
+        "metalness": 0,
+        "roughnessGain": 1.7,
+        "roughnessBias": -0.57,
+        "roughnessRange": [
+          0.45,
+          0.95
+        ]
+      }
+    },
+    "curb": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "curb-basecolor",
+        "normal": "curb-normal",
+        "roughness": "curb-roughness",
+        "ao": "curb-ao"
+      },
+      "uv": {
+        "mode": "curb-band",
+        "scale": [
+          2,
+          0.2
+        ]
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 0.65,
+        "aoIntensity": 0.65,
+        "metalness": 0,
+        "roughnessGain": 1.7,
+        "roughnessBias": -0.57,
+        "roughnessRange": [
+          0.45,
+          0.95
+        ]
+      }
+    },
+    "gutter": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "curb-basecolor",
+        "normal": "curb-normal",
+        "roughness": "curb-roughness",
+        "ao": "curb-ao"
+      },
+      "uv": {
+        "mode": "curb-band",
+        "scale": [
+          2,
+          0.2
+        ]
+      },
+      "parameters": {
+        "tint": "#665e57",
+        "normalScale": 0.5,
+        "aoIntensity": 0.65,
+        "metalness": 0,
+        "roughnessGain": 1.7,
+        "roughnessBias": -0.57,
+        "roughnessRange": [
+          0.45,
+          0.95
+        ]
+      }
+    },
+    "polished": {
+      "effect": "polished",
+      "maps": {
+        "basecolor": "ordinary-panel-basecolor",
+        "normal": "ordinary-panel-normal",
+        "roughness": "ordinary-panel-roughness",
+        "ao": "ordinary-panel-ao",
+        "smear": "panel-smear",
+        "variation": "asphalt-basecolor"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "tint": "#606b69",
+        "normalScale": 0.18,
+        "metalness": 0,
+        "aoIntensity": 0,
+        "clearcoat": 1,
+        "smearGain": 0.55,
+        "variationScale": 13.7,
+        "variationGain": 0.15,
+        "roughnessRange": [
+          0.09,
+          0.4
+        ],
+        "coatBias": -0.3,
+        "coatGain": 0.6,
+        "coatRange": [
+          0.025,
+          0.28
+        ]
+      }
+    },
+    "terracotta": {
+      "effect": "mineral",
+      "maps": {
+        "basecolor": "panel-terracotta-basecolor",
+        "normal": "panel-terracotta-normal",
+        "roughness": "panel-terracotta-roughness",
+        "ao": "panel-terracotta-ao",
+        "smear": "panel-smear"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "normalScale": 0.25,
+        "aoIntensity": 0.5,
+        "clearcoat": 1,
+        "roughnessGain": 0.5,
+        "roughnessBias": -0.1,
+        "roughnessRange": [
+          0.15,
+          0.36
+        ],
+        "coatGain": 0.3,
+        "coatRange": [
+          0.04,
+          0.25
+        ],
+        "tint": "#ffffff",
+        "painted": false,
+        "paintRange": [
+          0.25,
+          0.52
+        ],
+        "paintBias": 0.25
+      }
+    },
+    "basalt": {
+      "effect": "mineral",
+      "maps": {
+        "basecolor": "panel-basalt-basecolor",
+        "normal": "panel-basalt-normal",
+        "roughness": "panel-basalt-roughness",
+        "ao": "panel-basalt-ao",
+        "smear": "panel-smear"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "normalScale": 0.25,
+        "aoIntensity": 0.5,
+        "clearcoat": 1,
+        "roughnessGain": 0.5,
+        "roughnessBias": -0.1,
+        "roughnessRange": [
+          0.15,
+          0.36
+        ],
+        "coatGain": 0.3,
+        "coatRange": [
+          0.04,
+          0.25
+        ],
+        "tint": "#ffffff",
+        "painted": false,
+        "paintRange": [
+          0.25,
+          0.52
+        ],
+        "paintBias": 0.25
+      }
+    },
+    "aggregate": {
+      "effect": "mineral",
+      "maps": {
+        "basecolor": "barrier-concrete-basecolor",
+        "normal": "barrier-concrete-normal",
+        "roughness": "barrier-concrete-roughness",
+        "ao": "barrier-concrete-ao"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "normalScale": 0.25,
+        "aoIntensity": 0.5,
+        "clearcoat": 0,
+        "roughnessGain": 1,
+        "roughnessBias": 0,
+        "roughnessRange": [
+          0,
+          1
+        ],
+        "coatGain": 0.3,
+        "coatRange": [
+          0.04,
+          0.25
+        ],
+        "tint": "#ffffff",
+        "painted": false,
+        "paintRange": [
+          0.25,
+          0.52
+        ],
+        "paintBias": 0.25
+      }
+    },
+    "paintedConcrete": {
+      "effect": "mineral",
+      "maps": {
+        "basecolor": "barrier-concrete-basecolor",
+        "normal": "barrier-concrete-normal",
+        "roughness": "barrier-concrete-roughness",
+        "ao": "barrier-concrete-ao"
+      },
+      "uv": {
+        "mode": "metres",
+        "scale": [
+          1,
+          1
+        ]
+      },
+      "parameters": {
+        "normalScale": 0.25,
+        "aoIntensity": 0.5,
+        "clearcoat": 0,
+        "roughnessGain": 1,
+        "roughnessBias": 0,
+        "roughnessRange": [
+          0,
+          1
+        ],
+        "coatGain": 0.3,
+        "coatRange": [
+          0.04,
+          0.25
+        ],
+        "tint": "#d3a132",
+        "painted": true,
+        "paintRange": [
+          0.25,
+          0.52
+        ],
+        "paintBias": 0.25
+      }
+    },
+    "oxblood": {
+      "effect": "metal-panel",
+      "maps": {
+        "basecolor": "oxblood-panel-basecolor",
+        "normal": "oxblood-panel-normal",
+        "roughness": "oxblood-panel-roughness",
+        "ao": "oxblood-panel-ao",
+        "smear": "panel-smear"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "normalScale": 0.15,
+        "aoIntensity": 0.5,
+        "clearcoat": 1,
+        "roughnessGain": 0.4,
+        "roughnessRange": [
+          0.16,
+          0.34
+        ],
+        "metalness": 0.05,
+        "painted": false,
+        "paintMetalness": 0.02,
+        "paintRange": [
+          0.05,
+          0.18
+        ],
+        "coatGain": 0.25,
+        "coatRange": [
+          0.04,
+          0.22
+        ]
+      }
+    },
+    "tread": {
+      "effect": "metal-panel",
+      "maps": {
+        "basecolor": "tread-steel-basecolor",
+        "normal": "tread-steel-normal",
+        "roughness": "tread-steel-roughness",
+        "ao": "tread-steel-ao"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "normalScale": 0.3,
+        "aoIntensity": 0.5,
+        "clearcoat": 0,
+        "roughnessGain": 0.65,
+        "roughnessRange": [
+          0.25,
+          0.7
+        ],
+        "metalness": 0.9,
+        "painted": false,
+        "paintMetalness": 0.02,
+        "paintRange": [
+          0.05,
+          0.18
+        ],
+        "coatGain": 0.25,
+        "coatRange": [
+          0.04,
+          0.22
+        ]
+      }
+    },
+    "treadOchre": {
+      "effect": "metal-panel",
+      "maps": {
+        "basecolor": "tread-ochre-basecolor",
+        "normal": "tread-ochre-normal",
+        "roughness": "tread-ochre-roughness",
+        "ao": "tread-ochre-ao"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "normalScale": 0.3,
+        "aoIntensity": 0.5,
+        "clearcoat": 0,
+        "roughnessGain": 0.65,
+        "roughnessRange": [
+          0.25,
+          0.7
+        ],
+        "metalness": 0.9,
+        "painted": true,
+        "paintMetalness": 0.02,
+        "paintRange": [
+          0.05,
+          0.18
+        ],
+        "coatGain": 0.25,
+        "coatRange": [
+          0.04,
+          0.22
+        ]
+      }
+    },
+    "metal": {
+      "effect": "hardware",
+      "maps": {
+        "basecolor": "weathered-steel-basecolor",
+        "normal": "weathered-steel-normal",
+        "roughness": "weathered-steel-roughness",
+        "ao": "weathered-steel-ao"
+      },
+      "uv": {
+        "mode": "metres",
+        "scale": [
+          1,
+          1
+        ]
+      },
+      "parameters": {
+        "normalScale": 0.12,
+        "colorGain": 1.5,
+        "painted": false,
+        "tint": "#ffffff",
+        "paintRange": [
+          0.015,
+          0.07
+        ],
+        "paintGain": 2.2,
+        "paintBias": 0.45
+      }
+    },
+    "darkMetal": {
+      "effect": "hardware",
+      "maps": {
+        "basecolor": "weathered-steel-basecolor",
+        "normal": "weathered-steel-normal",
+        "roughness": "weathered-steel-roughness",
+        "ao": "weathered-steel-ao"
+      },
+      "uv": {
+        "mode": "metres",
+        "scale": [
+          1,
+          1
+        ]
+      },
+      "parameters": {
+        "normalScale": 0.12,
+        "colorGain": 1.5,
+        "painted": true,
+        "tint": "#171a18",
+        "paintRange": [
+          0.015,
+          0.07
+        ],
+        "paintGain": 2.2,
+        "paintBias": 0.45
+      }
+    },
+    "ochre": {
+      "effect": "hardware",
+      "maps": {
+        "basecolor": "weathered-steel-basecolor",
+        "normal": "weathered-steel-normal",
+        "roughness": "weathered-steel-roughness",
+        "ao": "weathered-steel-ao"
+      },
+      "uv": {
+        "mode": "metres",
+        "scale": [
+          1,
+          1
+        ]
+      },
+      "parameters": {
+        "normalScale": 0.12,
+        "colorGain": 1.5,
+        "painted": true,
+        "tint": "#b18a30",
+        "paintRange": [
+          0.015,
+          0.07
+        ],
+        "paintGain": 2.2,
+        "paintBias": 0.45
+      }
+    },
+    "green": {
+      "effect": "hardware",
+      "maps": {
+        "basecolor": "weathered-steel-basecolor",
+        "normal": "weathered-steel-normal",
+        "roughness": "weathered-steel-roughness",
+        "ao": "weathered-steel-ao"
+      },
+      "uv": {
+        "mode": "metres",
+        "scale": [
+          1,
+          1
+        ]
+      },
+      "parameters": {
+        "normalScale": 0.12,
+        "colorGain": 1.5,
+        "painted": true,
+        "tint": "#245d38",
+        "paintRange": [
+          0.015,
+          0.07
+        ],
+        "paintGain": 2.2,
+        "paintBias": 0.45
+      }
+    },
+    "perforated": {
+      "effect": "hardware",
+      "maps": {
+        "basecolor": "ramp-mesh-basecolor",
+        "normal": "ramp-mesh-normal",
+        "roughness": "ramp-mesh-roughness",
+        "ao": "ramp-mesh-ao"
+      },
+      "uv": {
+        "mode": "metres",
+        "scale": [
+          0.25,
+          0.25
+        ]
+      },
+      "parameters": {
+        "normalScale": 0.3,
+        "colorGain": 1.5,
+        "painted": false,
+        "tint": "#ffffff",
+        "paintRange": [
+          0.015,
+          0.07
+        ],
+        "paintGain": 2.2,
+        "paintBias": 0.45
+      }
+    },
+    "concrete": {
+      "effect": "cast-concrete",
+      "maps": {
+        "basecolor": "barrier-concrete-basecolor",
+        "normal": "barrier-concrete-normal",
+        "roughness": "barrier-concrete-roughness",
+        "ao": "barrier-concrete-ao"
+      },
+      "uv": {
+        "mode": "metres",
+        "scale": [
+          1,
+          1
+        ]
+      },
+      "parameters": {
+        "normalScale": 0.7,
+        "aoIntensity": 0.8,
+        "greyMix": 0.35,
+        "colorGain": 0.62,
+        "breakupScale": 0.37,
+        "grimeRange": [
+          0.24,
+          0.55
+        ],
+        "grimeBias": -0.5,
+        "grimeHeight": 0.14,
+        "grimeTint": "#6d6456",
+        "grimeStrength": 0.85,
+        "roughnessGain": 0.25,
+        "roughnessBias": 0.72
+      }
+    },
+    "parking": {
+      "effect": "parking",
+      "maps": {
+        "basecolor": "asphalt-basecolor",
+        "normal": "asphalt-normal",
+        "roughness": "asphalt-roughness",
+        "ao": "asphalt-ao",
+        "cleanBasecolor": "asphalt-clean-basecolor",
+        "cleanNormal": "asphalt-clean-normal",
+        "parkingBasecolor": "parking-concrete-basecolor",
+        "parkingNormal": "parking-concrete-normal",
+        "parkingRoughness": "parking-concrete-roughness",
+        "parkingAo": "parking-concrete-ao"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "asphaltColorGain": 0.42,
+        "panelColorGain": 0.7,
+        "entranceRange": [
+          0,
+          0.15
+        ],
+        "entranceBias": -0.15,
+        "entranceNoise": 0.14,
+        "normalScale": 0.6
       }
     },
     "whitePaint": {
@@ -204,6 +2445,487 @@
         "wearStrength": 0.8,
         "depthWrite": false
       }
+    },
+    "crosswalkWalk": {
+      "effect": "decal",
+      "maps": {
+        "basecolor": "crosswalk-walk"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "opacity": 1,
+        "roughness": 0.92,
+        "depthWrite": false,
+        "polygonOffset": -1
+      }
+    },
+    "crosswalkWait": {
+      "effect": "decal",
+      "maps": {
+        "basecolor": "crosswalk-wait"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "opacity": 1,
+        "roughness": 0.92,
+        "depthWrite": false,
+        "polygonOffset": -1
+      }
+    },
+    "asphalt-damage": {
+      "effect": "decal",
+      "maps": {
+        "basecolor": "asphalt-damage"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "opacity": 1,
+        "roughness": 0.92,
+        "depthWrite": false,
+        "polygonOffset": -1
+      }
+    },
+    "asphalt-fracture": {
+      "effect": "decal",
+      "maps": {
+        "basecolor": "asphalt-fracture"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "opacity": 1,
+        "roughness": 0.92,
+        "depthWrite": false,
+        "polygonOffset": -1
+      }
+    },
+    "asphalt-repair": {
+      "effect": "decal",
+      "maps": {
+        "basecolor": "asphalt-repair"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "opacity": 1,
+        "roughness": 0.92,
+        "depthWrite": false,
+        "polygonOffset": -1
+      }
+    },
+    "oil-patch": {
+      "effect": "decal",
+      "maps": {
+        "basecolor": "oil-patch"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "opacity": 0.52,
+        "roughness": 0.2,
+        "depthWrite": false,
+        "polygonOffset": -1
+      }
+    },
+    "joint": {
+      "effect": "solid",
+      "maps": {},
+      "uv": {
+        "mode": "metres",
+        "scale": [
+          1,
+          1
+        ]
+      },
+      "parameters": {
+        "tint": "#444d4d",
+        "roughness": 0.96,
+        "metalness": 0
+      }
+    },
+    "plastic": {
+      "effect": "solid",
+      "maps": {},
+      "uv": {
+        "mode": "metres",
+        "scale": [
+          1,
+          1
+        ]
+      },
+      "parameters": {
+        "tint": "#61666a",
+        "roughness": 0.58,
+        "metalness": 0
+      }
+    },
+    "district-hex": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "district-hex-basecolor",
+        "normal": "district-hex-normal",
+        "roughness": "district-hex-roughness",
+        "ao": "district-hex-ao"
+      },
+      "uv": {
+        "mode": "world-xz",
+        "scale": [
+          1.2,
+          2.078460969
+        ]
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 0.22,
+        "aoIntensity": 0.12,
+        "metalness": 0,
+        "roughnessGain": 1,
+        "roughnessBias": 0,
+        "roughnessRange": [
+          0.08,
+          0.9
+        ]
+      }
+    },
+    "district-panel-blue": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "district-panel-blue-basecolor",
+        "normal": "district-panel-blue-normal",
+        "roughness": "district-panel-blue-roughness",
+        "ao": "district-panel-blue-ao"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 0.025,
+        "aoIntensity": 0,
+        "metalness": 0,
+        "roughnessGain": 1,
+        "roughnessBias": 0,
+        "roughnessRange": [
+          0.08,
+          0.9
+        ]
+      }
+    },
+    "district-panel-red": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "district-panel-red-basecolor",
+        "normal": "district-panel-red-normal",
+        "roughness": "district-panel-red-roughness",
+        "ao": "district-panel-red-ao"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 0.025,
+        "aoIntensity": 0,
+        "metalness": 0,
+        "roughnessGain": 1,
+        "roughnessBias": 0,
+        "roughnessRange": [
+          0.08,
+          0.9
+        ]
+      }
+    },
+    "district-panel-dark": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "district-panel-dark-basecolor",
+        "normal": "district-panel-dark-normal",
+        "roughness": "district-panel-dark-roughness",
+        "ao": "district-panel-dark-ao"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 0.025,
+        "aoIntensity": 0,
+        "metalness": 0,
+        "roughnessGain": 1,
+        "roughnessBias": 0,
+        "roughnessRange": [
+          0.08,
+          0.9
+        ]
+      }
+    },
+    "district-curb-blue": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "district-curb-blue-basecolor",
+        "normal": "district-curb-blue-normal",
+        "roughness": "district-curb-blue-roughness",
+        "ao": "district-curb-blue-ao"
+      },
+      "uv": {
+        "mode": "curb-band",
+        "scale": [
+          2,
+          0.2
+        ]
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 0.025,
+        "aoIntensity": 0,
+        "metalness": 0,
+        "roughnessGain": 1,
+        "roughnessBias": 0,
+        "roughnessRange": [
+          0.08,
+          0.9
+        ]
+      }
+    },
+    "district-curb-red": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "district-curb-red-basecolor",
+        "normal": "district-curb-red-normal",
+        "roughness": "district-curb-red-roughness",
+        "ao": "district-curb-red-ao"
+      },
+      "uv": {
+        "mode": "curb-band",
+        "scale": [
+          2,
+          0.2
+        ]
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 0.025,
+        "aoIntensity": 0,
+        "metalness": 0,
+        "roughnessGain": 1,
+        "roughnessBias": 0,
+        "roughnessRange": [
+          0.08,
+          0.9
+        ]
+      }
+    },
+    "district-curb-yellow": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "district-curb-yellow-basecolor",
+        "normal": "district-curb-yellow-normal",
+        "roughness": "district-curb-yellow-roughness",
+        "ao": "district-curb-yellow-ao"
+      },
+      "uv": {
+        "mode": "curb-band",
+        "scale": [
+          2,
+          0.2
+        ]
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 0.025,
+        "aoIntensity": 0,
+        "metalness": 0,
+        "roughnessGain": 1,
+        "roughnessBias": 0,
+        "roughnessRange": [
+          0.08,
+          0.9
+        ]
+      }
+    },
+    "district-junction-blue": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "district-junction-blue-basecolor",
+        "normal": "district-junction-blue-normal",
+        "roughness": "district-junction-blue-roughness",
+        "ao": "district-junction-blue-ao"
+      },
+      "uv": {
+        "mode": "world-xz",
+        "scale": [
+          1,
+          1
+        ]
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 0.025,
+        "aoIntensity": 0,
+        "metalness": 0,
+        "roughnessGain": 1,
+        "roughnessBias": 0,
+        "roughnessRange": [
+          0.08,
+          0.9
+        ]
+      }
+    },
+    "district-junction-yellow": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "district-junction-yellow-basecolor",
+        "normal": "district-junction-yellow-normal",
+        "roughness": "district-junction-yellow-roughness",
+        "ao": "district-junction-yellow-ao"
+      },
+      "uv": {
+        "mode": "world-xz",
+        "scale": [
+          1,
+          1
+        ]
+      },
+      "parameters": {
+        "tint": "#ffffff",
+        "normalScale": 0.025,
+        "aoIntensity": 0,
+        "metalness": 0,
+        "roughnessGain": 1,
+        "roughnessBias": 0,
+        "roughnessRange": [
+          0.08,
+          0.9
+        ]
+      }
+    },
+    "district-gutter-blue": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "district-curb-blue-basecolor",
+        "normal": "district-curb-blue-normal",
+        "roughness": "district-curb-blue-roughness",
+        "ao": "district-curb-blue-ao"
+      },
+      "uv": {
+        "mode": "curb-band",
+        "scale": [
+          2,
+          0.2
+        ]
+      },
+      "parameters": {
+        "tint": "#c4d1d3",
+        "normalScale": 0.025,
+        "aoIntensity": 0,
+        "metalness": 0,
+        "roughnessGain": 1,
+        "roughnessBias": 0.06,
+        "roughnessRange": [
+          0.08,
+          0.9
+        ]
+      }
+    },
+    "district-gutter-red": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "district-curb-red-basecolor",
+        "normal": "district-curb-red-normal",
+        "roughness": "district-curb-red-roughness",
+        "ao": "district-curb-red-ao"
+      },
+      "uv": {
+        "mode": "curb-band",
+        "scale": [
+          2,
+          0.2
+        ]
+      },
+      "parameters": {
+        "tint": "#c4d1d3",
+        "normalScale": 0.025,
+        "aoIntensity": 0,
+        "metalness": 0,
+        "roughnessGain": 1,
+        "roughnessBias": 0.06,
+        "roughnessRange": [
+          0.08,
+          0.9
+        ]
+      }
+    },
+    "district-gutter-yellow": {
+      "effect": "photographed",
+      "maps": {
+        "basecolor": "district-curb-yellow-basecolor",
+        "normal": "district-curb-yellow-normal",
+        "roughness": "district-curb-yellow-roughness",
+        "ao": "district-curb-yellow-ao"
+      },
+      "uv": {
+        "mode": "curb-band",
+        "scale": [
+          2,
+          0.2
+        ]
+      },
+      "parameters": {
+        "tint": "#c4d1d3",
+        "normalScale": 0.025,
+        "aoIntensity": 0,
+        "metalness": 0,
+        "roughnessGain": 1,
+        "roughnessBias": 0.06,
+        "roughnessRange": [
+          0.08,
+          0.9
+        ]
+      }
+    },
+    "district-marquee": {
+      "effect": "display",
+      "maps": {
+        "basecolor": "district-marquee-glyphs"
+      },
+      "uv": {
+        "mode": "panel"
+      },
+      "parameters": {
+        "tint": "#d5f8ff",
+        "brightness": 2.5,
+        "roughness": 0.25
+      }
+    },
+    "district-parking-light": {
+      "effect": "solid",
+      "maps": {},
+      "uv": {
+        "mode": "metres",
+        "scale": [
+          1,
+          1
+        ]
+      },
+      "parameters": {
+        "tint": "#92ecff",
+        "roughness": 0.22,
+        "metalness": 0,
+        "emissionIntensity": 3
+      }
     }
+  },
+  "authored": {
+    "manifest": "sources/streets/district/manifest.json",
+    "recipes": "batch/cyberpunk/district-streets.json"
   }
 }

@@ -1,6 +1,6 @@
 # Urbe Streets
 
-Version 0.6.0. Builds district and source street GLBs from saved Atlas 0.26.0 with planning reservations 2.1.0, exact ground replacement and native Materials bindings.
+Version 0.7.0. Builds reusable 8 m street GLBs and placements from Atlas 0.26.0 with planning reservations 2.1.0.
 
 ```sh
 npm ci
@@ -17,14 +17,17 @@ const result = await build({
 console.log(result.statistics);
 ```
 
-Owners build in parallel on worker threads, by default `max(1, floor(availableParallelism() / 4))` and never more than the city has owners. Set `STREETS_WORKERS` to pick the count yourself, or 0 to build everything in the calling thread. The bundle is identical either way.
+The bundle contains `manifest.json`, `streets/kit.json`, `streets/placements.json` and the referenced GLBs. Segments retain accepted panels, parking, median profiles and material surfaces. Junction arms contain crossings, approach markings and corner returns. Runs close with 4 m and 2 m pieces. Props retain their source feature identities and positions.
 
-District construction uses uniform panel bands, 2 m parking, fitted corners, junction transitions, LED marquees and occasional cable pieces. Luxury hexagons stay subtle; industrial roads use asphalt.
+Engine instances the kit using placement transforms and 128 m cell addresses. Load the native material snapshot, register MeshoptDecoder, apply complete node transforms and evaluate the saved wear field in world coordinates. Indexed geometry uses quantization within 1 mm and meshopt compression. Exact ground replacement, protected station openings and delegated highways remain in the manifest. Builds use one calling thread.
 
-The saved bundle contains 128 m pieces, original panel/paint UVs, physical collision flags, stable hardware bounds and a native material snapshot. Consumers bind the actual referenced scans, register the meshopt decoder, and apply complete node transforms. Pieces are indexed, quantized within 1 mm, and meshopt compressed. Highways and station interactions retain explicit delegated ownership.
+Verify a city and write its size report:
 
-[Contract](CONTRACT.md), [schemas](src/schema/native-result.ts), [box map](docs/INDEX.md), [calling guide](SKILL.md).
+```sh
+npm run test:city -- --blueprint city.json --native-materials street-native.json --out new-bundle --report report.json
+npm run test:compression -- --blueprint city.json
+```
 
-Real-city conformance: `npm run test:city -- --blueprint blueprint.json --native-materials street-native.json --highway-baseline baseline-blueprint.json`. The input must contain corners, native parking, underpasses and stations; the baseline comparison includes complete highway structures/supports.
+The report includes unique geometry, placement counts and bytes, class inventories, closure cases and a 1 km density estimate. Compression verification compares every decoded triangle with the authored geometry.
 
-Compression conformance: `STREETS_WORKERS=4 npm run test:compression -- --blueprint sample-500m.json`. Compares the same constructed pieces against the unquantized writer, decodes with meshoptimizer, and checks triangle counts, 1 mm position error and at most a quarter of the bytes.
+[Contract](CONTRACT.md), [kit schema](schemas/street-kit.schema.json), [placement schema](schemas/street-placement.schema.json), [box map](docs/INDEX.md), [calling guide](SKILL.md).

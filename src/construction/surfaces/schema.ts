@@ -1,10 +1,7 @@
 import type { Ring, Vec2, Vec3 } from '../../geometry/schema.ts';
-/** Vertex fields stay double precision; worker results arrive as Float64Array and read the same way. */
-export interface NativeMeshData {
+/** Vertex fields remain double precision until kit encoding. */
+export interface NativeMesh {
   id: string; surface: string; collision: boolean; ownerIds: string[]; groundIds: string[];
-  positions: ArrayLike<number>; normals: ArrayLike<number>; uvs: ArrayLike<number>; wear: ArrayLike<number>; heights: ArrayLike<number>;
-}
-export interface NativeMesh extends NativeMeshData {
   positions: number[]; normals: number[]; uvs: number[]; wear: number[]; heights: number[];
 }
 export interface CoverageClaim { ownerId: string; rings: Ring[] }

@@ -14,7 +14,7 @@ export class DistrictPaving {
   private readonly architecture: NativeArchitecture;
   constructor(architecture: NativeArchitecture) { this.architecture = architecture; }
 
-  build(owner: NativeOwner, batch: SurfaceBatch, details: DistrictFeature[], ramps: Ring[] = []): number {
+  build(owner: NativeOwner, batch: SurfaceBatch, details: Pick<DistrictFeature, 'panel'>[], ramps: Ring[] = []): number {
     const fields = owner.ground.filter(field => field.surface === 'sidewalk');
     if (!fields.length) return 0;
     const top = fields[0]!.top, colors = palette(owner, this.architecture);

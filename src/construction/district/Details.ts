@@ -3,10 +3,8 @@ import type { Box2, Ring, Vec2 } from '../../geometry/schema.ts';
 import { bounds, intersects } from '../../geometry/polygons.ts';
 import { difference, intersection, totalArea } from '../surfaces/Regions.ts';
 import { along, dot, sub } from '../surfaces/Frame.ts';
-import { SurfaceBatch } from '../surfaces/SurfaceBatch.ts';
 import { createHardware, type FurnitureModel, type FurnitureOptions } from '../hardware/index.ts';
 import { palette } from './Palette.ts';
-import { marqueeGlyphs } from './Glyphs.ts';
 import type { DistrictFeature } from './schema.ts';
 import settings from './settings.json' with { type: 'json' };
 import { invariant } from '../../errors.ts';
@@ -58,16 +56,6 @@ export class DistrictDetails {
         const station = dot(sub(guard.origin, face.start), [n[1], -n[0]]);
         for (let i = 0; i < guard.count; i++) this.add(owner, face, 'guard', station + i * guard.step, 2, 0.4, face.curbWidth + face.gutterWidth);
       }
-    }
-  }
-
-  draw(owner: NativeOwner, batch: SurfaceBatch): void {
-    for (const [index, feature] of this.features.filter(feature => feature.owner.id === owner.id).entries()) {
-      const point = along(feature.face, feature.station + feature.descriptor.length / 2, feature.setback);
-      for (const part of feature.model.parts) batch.geometry(part.material, part.geometry,
-        { origin: [point[0], feature.face.roadTop, point[1]], inward: feature.face.inward });
-      if (feature.cut) batch.polygon('darkMetal', [feature.cut.ring], feature.face.roadTop - 0.195, p => p, true, true);
-      if (feature.kind === 'marquee') marqueeGlyphs(feature, batch, settings.messages[index % settings.messages.length]!);
     }
   }
 

@@ -1,5 +1,5 @@
 import { mkdir, writeFile, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { invalidParams } from '../errors.ts';
 import type { NativeStreetManifest } from '../schema/native-result.ts';
 
@@ -13,7 +13,7 @@ export class Output {
     return new Output(directory);
   }
   async asset(path: string, data: Uint8Array): Promise<void> {
-    try { await mkdir(join(this.directory, 'pieces'), { recursive: true }); await writeFile(join(this.directory, path), data, { flag: 'wx' }); }
+    try { await mkdir(dirname(join(this.directory, path)), { recursive: true }); await writeFile(join(this.directory, path), data, { flag: 'wx' }); }
     catch { throw invalidParams('outDir: cannot write model asset'); }
   }
   async finish(manifest: NativeStreetManifest): Promise<void> {

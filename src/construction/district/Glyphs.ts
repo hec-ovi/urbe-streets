@@ -4,7 +4,7 @@ import { SurfaceBatch } from '../surfaces/SurfaceBatch.ts';
 import type { DistrictFeature } from './schema.ts';
 import settings from './settings.json' with { type: 'json' };
 
-export function marqueeGlyphs(feature: DistrictFeature, batch: SurfaceBatch, message: string): void {
+export function marqueeGlyphs(feature: Pick<DistrictFeature, 'station' | 'setback' | 'descriptor'> & { face: Pick<DistrictFeature['face'], 'start' | 'inward' | 'roadTop'> }, batch: SurfaceBatch, message: string): void {
   const width = Math.min(0.24, (feature.descriptor.length - 0.2) / message.length);
   const start = feature.station + (feature.descriptor.length - width * message.length) / 2;
   const depth = feature.descriptor.depth, span = Math.sqrt(1 + (0.16 / (depth - 0.04)) ** 2);

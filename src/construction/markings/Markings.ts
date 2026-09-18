@@ -47,7 +47,7 @@ export class Markings {
       for(let i=0;i<lanes.length-1;i++){
         if(lanes[i]!.direction!==lanes[i+1]!.direction)continue;
         const offset=(lanes[i]!.offset-lanes[i]!.width/2+lanes[i+1]!.offset+lanes[i+1]!.width/2)/2;
-        for(let s=Math.ceil(laneStart/6)*6;s+3<=laneEnd;s+=6)paint.strip(frame,s,s+3,offset,0.12,'whitePaint');
+        for(let s=Math.floor((laneStart-(road.road.dashOrigin??0))/8)*8+(road.road.dashOrigin??0);s<laneEnd;s+=8)paint.strip(frame,Math.max(s,laneStart),Math.min(s+4,laneEnd),offset,0.12,'whitePaint');
       }
       for (const item of road.approaches) {
         crossing.build(frame,(item.min+item.max-crossing.depth(frame))/2,item.first?0:road.length);

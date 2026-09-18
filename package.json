@@ -1,16 +1,16 @@
 {
   "name": "urbe-streets",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
-  "description": "Builds source-native street GLBs from saved Atlas reservations with exact ground replacement and native scan bindings.",
+  "description": "Builds reusable 8 m street GLBs and placements from Atlas reservations with exact ground replacement and native material bindings.",
   "engines": {
     "node": ">=22.13.0"
   },
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --maxWorkers=1",
     "typecheck": "tsc --noEmit",
     "generate": "node --experimental-strip-types src/cli/main.ts",
     "test:city": "node --experimental-strip-types tests/city.ts",
@@ -28,6 +28,7 @@
     "@types/earcut": "3.0.0",
     "@types/node": "22.20.2",
     "@types/three": "0.185.4",
+    "ajv": "8.20.0",
     "typescript": "7.0.2",
     "vitest": "4.1.11"
   }

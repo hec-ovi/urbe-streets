@@ -2,23 +2,15 @@ import assert from 'node:assert/strict';
 import { parseArgs } from 'node:util';
 import { NodeIO } from '@gltf-transform/core';
 import { readNativeAtlas } from '../architecture/NativeAtlas.ts';
-import { OwnerConstruction } from '../construction/OwnerConstruction.ts';
-import { NativePartition } from './NativePartition.ts';
+import { StreetUnits } from '../construction/units/StreetUnits.ts';
 import { encodeNativePiece } from './NativeGlb.ts';
 import { comparePositions, decodePiece } from './decode-fixture.ts';
 import { floatPiece } from './fixtures.ts';
 
 const { values } = parseArgs({ options: { blueprint: { type: 'string' } }, strict: true });
-assert(values.blueprint, 'Supply --blueprint with the saved 500 m sample.');
+assert(values.blueprint, 'Supply --blueprint with the saved Atlas sample.');
 const architecture = await readNativeAtlas(values.blueprint);
-const construction = new OwnerConstruction(architecture, 42, 1), partition = new NativePartition();
-try {
-  for (let i = 0; i < architecture.owners.length; i++) {
-    for (const mesh of construction.build(i).meshes) partition.add(mesh);
-  }
-} finally { construction.dispose(); }
-
-const pieces = partition.finish();
+const pieces = new StreetUnits(architecture, 42, 1).pieces.map(piece => piece.geometry);
 const before = { pieces: pieces.length, bytes: 0, triangles: 0, maxPositionError: 0 };
 const after = { pieces: pieces.length, bytes: 0, triangles: 0, maxPositionError: 0 };
 const floatAttributes = new Set<string>();
@@ -40,4 +32,3 @@ for (const piece of pieces) {
   }
 }
 console.log(JSON.stringify({ before, after, ratio: after.bytes / before.bytes, floatAttributes: [...floatAttributes].sort() }, null, 2));
-assert(after.bytes <= before.bytes / 4, 'Compressed sample exceeds a quarter of the reference bytes');

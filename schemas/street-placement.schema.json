@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://urbe.dev/streets/street-placement.schema.json",
+  "title": "Street placements",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cellSize",
+    "placements"
+  ],
+  "properties": {
+    "version": {
+      "const": "1.0.0"
+    },
+    "cellSize": {
+      "const": 128
+    },
+    "placements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "piece",
+          "position",
+          "rotationY",
+          "cell",
+          "ownerId",
+          "ownerIds"
+        ],
+        "properties": {
+          "piece": {
+            "type": "string",
+            "minLength": 1
+          },
+          "position": {
+            "$ref": "street-kit.schema.json#/$defs/vector3"
+          },
+          "rotationY": {
+            "type": "number",
+            "description": "Radians about positive Y in the glTF right handed frame."
+          },
+          "cell": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 2,
+            "maxItems": 2,
+            "description": "Floor of placement X and Z divided by 128."
+          },
+          "ownerId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ownerIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "featureId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scale": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "minItems": 3,
+            "maxItems": 3,
+            "description": "Authored scan dimensions for marking pieces only. Surface and prop pieces use unit scale."
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "piece": {
+                  "type": "string",
+                  "pattern": "^marking/"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "scale": true
+              },
+              "required": [
+                "scale"
+              ]
+            },
+            "else": {
+              "not": {
+                "properties": {
+                  "scale": true
+                },
+                "required": [
+                  "scale"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

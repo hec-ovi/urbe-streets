@@ -50,12 +50,6 @@ export function quantizeNormalized(source: Float32Array, tolerance: number, bits
   return source;
 }
 
-export function quantizeField(source: Float32Array): Attribute {
-  let min = Infinity, max = -Infinity;
-  for (const value of source) { min = Math.min(min, value); max = Math.max(max, value); }
-  return quantizeNormalized(source, (max - min) / 255);
-}
-
 export function quantizeNormals(source: Float32Array): Float32Array | Int16Array {
   if (source.some(value => value < -1 || value > 1)) return source;
   return Int16Array.from(source, value => Math.round(value * 32767));

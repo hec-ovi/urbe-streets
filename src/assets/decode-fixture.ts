@@ -16,11 +16,14 @@ export function worldPosition(node: Node, primitive: Primitive, index: number): 
 /** Triangle codecs may rotate a triangle's first vertex, while preserving its winding and order. */
 export function comparePositions(reference: Document, decoded: Document): { triangles: number; maxError: number } {
   let triangles = 0, maxError = 0;
-  const nodes = decoded.getRoot().listNodes().filter(node => node.getMesh());
-  for (const sourceNode of reference.getRoot().listNodes().filter(node => node.getMesh())) {
-    const node = nodes.find(candidate => candidate.getMesh()!.getName() === sourceNode.getMesh()!.getName());
-    if (!node) throw new Error('Decoded mesh is missing');
-    const source = sourceNode.getMesh()!.listPrimitives()[0]!, primitive = node.getMesh()!.listPrimitives()[0]!;
+  const targets = decoded.getRoot().listNodes().flatMap(node => node.getMesh()?.listPrimitives().map(primitive => ({ node, primitive })) ?? []);
+  let sources = 0;
+  for (const sourceNode of reference.getRoot().listNodes().filter(node => node.getMesh())) for (const source of sourceNode.getMesh()!.listPrimitives()) {
+    sources++;
+    const name = source.getExtras().streetSource ?? sourceNode.getMesh()!.getName();
+    const target = targets.find(({ node, primitive }) => (primitive.getExtras().streetSource ?? node.getMesh()!.getName()) === name);
+    if (!target) throw new Error('Decoded primitive is missing');
+    const { node, primitive } = target;
     const count = source.getIndices()?.getCount() ?? source.getAttribute('POSITION')!.getCount();
     if (primitive.getIndices()!.getCount() !== count) throw new Error('Decoded triangle count differs');
     for (let i = 0; i < count; i += 3) {
@@ -32,6 +35,6 @@ export function comparePositions(reference: Document, decoded: Document): { tria
       triangles++;
     }
   }
-  if (nodes.length !== reference.getRoot().listNodes().filter(node => node.getMesh()).length) throw new Error('Decoded mesh count differs');
+  if (targets.length !== sources) throw new Error('Decoded primitive count differs');
   return { triangles, maxError };
 }
