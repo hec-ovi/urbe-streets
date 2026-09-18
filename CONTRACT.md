@@ -8,7 +8,7 @@ Required values are a saved blueprint object or JSON path, integer seed, design 
 
 ## Piece kit
 
-The bundle contains `manifest.json`, `streets/kit.json`, `streets/placements.json` and `streets/pieces/**/*.glb`. Kit files resolve relative to `streets/kit.json`. Draft 2020 12 schemas: [kit](schemas/street-kit.schema.json), [placements](schemas/street-placement.schema.json). Shared types: [street kit](src/schema/street-kit.ts).
+The bundle contains `manifest.json`, `streets/kit.json`, `streets/placements.json` and `streets/pieces/**/*.glb`. Kit files resolve relative to `streets/kit.json`. Kit [1.0.0](schemas/street-kit.schema.json), placements [1.0.0](schemas/street-placement.schema.json), `cellSize` 128. Shared types: [street kit](src/schema/street-kit.ts).
 
 Every segment contains the full cross section, including both receiving sidewalks, panel rows, curbs, sloped gutters, lanes, separators and the saved median. Straight units are 8 m long. Parking, drain openings, differing widths, opposite sidewalk palettes and median ends retain fitted variants. Existing construction supplies their dimensions and `streetNativeSurface` material names. Lane dashes repeat 4 m painted and 4 m clear.
 
@@ -24,7 +24,7 @@ A placement names the piece, world position, rotationY, primary original ownerId
 
 Placement footprints prove complete coverage of every original ground owner without overlap. `ground.replacements` retains exact original ground indices and module owner ids. Ground polygons, feature bounds, material bindings, station exclusions and delegated infrastructure identities retain their source coordinates. Highways and station interactions remain delegated; only `delegated.remainingGroundIndices` can accompany native ordinary ground.
 
-GLBs use shared indexed attribute and triangle streams, required `KHR_mesh_quantization` and `EXT_meshopt_compression`, and no texture bytes. Register MeshoptDecoder on the GLTF loader. Decoded positions stay within 1 mm of the authored Float32 reference, with identical triangle counts. Material primitives carry `streetNativeSurface` through their materials and `streetCollision` directly; mesh nodes also carry collision admission. Attributes include position, normal, UV, `_STREET_WEAR` and `_STREET_HEIGHT`. [Assets contract](src/assets/CONTRACT.md).
+GLBs use shared indexed attribute and triangle streams, required `KHR_mesh_quantization` and `EXT_meshopt_compression`, and no texture bytes. Register MeshoptDecoder on the GLTF loader. Decoded positions stay within 1 mm of the authored Float32 reference, with identical triangle counts. Materials carry `streetNativeSurface`. Primitives carry `streetCollision` and `streetSource`. Mesh nodes carry `streetCollision` and optional `streetOwnerIds` and `streetGroundIds`. Attributes include position, normal, UV, `_STREET_WEAR` and `_STREET_HEIGHT`. [Assets contract](src/assets/CONTRACT.md).
 
 Engine binds the exact native material snapshot and samples world UV materials after placement. `wear.application` is `world-position`: the shared prototypes have a neutral wear attribute, and Engine evaluates the saved field at each world vertex. For each saved zone, `t=max(0,1-distance/radius)`; wear is `min(1,amount*max(0.025,strength*t*t*(3-2*t)))` across all zones. This retains one continuous city field with instanced geometry.
 

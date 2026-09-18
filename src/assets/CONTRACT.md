@@ -2,7 +2,7 @@
 
 `encodeNativePiece` takes [NativePieceData](native-schema.ts) and returns encoded bytes, source bounds and triangle count. Malformed attributes or duplicate source ids raise E_INVARIANT. Piece coordinates are local. The root supplies its origin; the shared attribute node supplies the quantized position transform. Apply placement transforms afterward.
 
-Equal complete Float32 vertices share indices. All materials reference one attribute stream and one compressed triangle stream, with separate index accessor slices. Mesh nodes group compatible collision and ownership values. Materials carry `streetNativeSurface`; primitives and mesh nodes carry `streetCollision`. Each primitive retains its source identity in `streetSource`. [Native schema](native-schema.ts).
+Equal complete Float32 vertices share indices. All materials reference one attribute stream and one compressed triangle stream, with separate index accessor slices. Mesh nodes group compatible collision and ownership values. Materials carry `streetNativeSurface`. Primitives carry `streetCollision` and `streetSource`. Mesh nodes carry `streetCollision` and optional `streetOwnerIds` and `streetGroundIds`. [Native schema](native-schema.ts).
 
 GLBs require `KHR_mesh_quantization` and `EXT_meshopt_compression`, with no uncompressed fallback bytes. Register MeshoptDecoder on the loader. No textures are embedded.
 

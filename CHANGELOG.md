@@ -1,6 +1,6 @@
 # Changelog
 
-0.7.0: Streets publishes reusable 8 m pieces, fitted closures, junctions and original prop placements with manifest 0.3.0.
+0.7.0: Streets publishes reusable 8 m pieces, fitted closures, junctions, original prop placements and marking instances with manifest 0.3.0.
 
 0.6.0: Streets accepts Atlas 0.26.0 with planning reservations 2.1.0 and builds surfaces from exact ground ownership.
 

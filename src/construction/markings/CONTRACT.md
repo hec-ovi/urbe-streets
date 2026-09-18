@@ -8,4 +8,4 @@ Atlas road frames, approach stations and legal turn IDs determine placement. Sou
 
 Dependencies: [architecture](../../architecture/CONTRACT.md), [surfaces](../surfaces/CONTRACT.md), [style](../style/CONTRACT.md). No layout generation or renderer.
 
-Divided avenues use published lane offsets and median width for lane boundaries. District street edge lines begin 0.10 m inside the carriageway; their 0.12 m coating width remains independent of gutter geometry.
+Divided avenues use published lane offsets and median width for lane boundaries. District street edge lines sit 0.16 m inside the carriageway (source frames 0.65 m); their 0.12 m coating width remains independent of gutter geometry.

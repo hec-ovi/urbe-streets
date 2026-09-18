@@ -17,6 +17,10 @@ const result = await build({
 console.log(result.statistics);
 ```
 
+```sh
+npm run generate -- --request request.json --native-materials street-native.json --out new-bundle
+```
+
 The bundle contains `manifest.json`, `streets/kit.json`, `streets/placements.json` and the referenced GLBs. Segments retain accepted panels, parking, median profiles and material surfaces. Junction arms contain crossings, approach markings and corner returns. Runs close with 4 m and 2 m pieces. Props retain their source feature identities and positions.
 
 Engine instances the kit using placement transforms and 128 m cell addresses. Load the native material snapshot, register MeshoptDecoder, apply complete node transforms and evaluate the saved wear field in world coordinates. Indexed geometry uses quantization within 1 mm and meshopt compression. Exact ground replacement, protected station openings and delegated highways remain in the manifest. Builds use one calling thread.
