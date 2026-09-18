@@ -36,7 +36,7 @@ export function districtBlueprint() {
   const lanes = [6.95, 3.45, -3.45, -6.95].map((offset, i) => ({ id: `e0.v${i}`, offset, width: 3.5,
     direction: i < 2 ? 'backward' : 'forward', path: i < 2 ? [[40, 10 + offset], [0, 10 + offset]] : [[0, 10 + offset], [40, 10 + offset]] }));
   return { ...source,
-    meta: { ...source.meta, version: '0.23.0', bounds: { min: [0, 0], max: [40, 25] }, boundary: rectangle(0, 0, 40, 25) },
+    meta: { ...source.meta, bounds: { min: [0, 0], max: [40, 25] }, boundary: rectangle(0, 0, 40, 25) },
     streets: { ...source.streets,
       nodes: [{ id: 'n0', position: [0, 10] }, { id: 'n1', position: [40, 10] }],
       edges: [{ ...source.streets.edges[0]!, class: 'road', path: [[0, 10], [40, 10]], width: 17.4, districtStyle: 'luxury',

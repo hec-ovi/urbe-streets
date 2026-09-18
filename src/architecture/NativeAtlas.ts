@@ -24,11 +24,13 @@ export async function readNativeAtlas(input: unknown): Promise<NativeArchitectur
   const source = object(parsed, 'blueprint');
   if (!source.meta) bad('meta', 'Expected a saved blueprint; archive indexes require a separate adapter');
   const meta = object(source.meta, 'meta');
-  if ((meta.version !== '0.22.0' && meta.version !== '0.23.0' && meta.version !== '0.24.0') || meta.units !== 'meters') bad('meta.version', 'Expected saved Atlas blueprint 0.22.0, 0.23.0 or 0.24.0 in metres; archive indexes require a separate adapter');
+  if (meta.version !== '0.26.0' || meta.units !== 'meters') bad('meta.version', 'Expected saved Atlas blueprint 0.26.0 in metres; archive indexes require a separate adapter');
   const box = object(meta.bounds, 'meta.bounds'), boundary = ring(meta.boundary, 'meta.boundary');
   const bounds = { min: point(box.min, 'meta.bounds.min'), max: point(box.max, 'meta.bounds.max') };
   if (bounds.min.some((n, i) => n >= bounds.max[i]!)) bad('meta.bounds', 'Invalid city bounds');
   const streets = object(source.streets, 'streets'), construction = object(streets.construction, 'streets.construction');
+  const planning = object(construction.planningReservations, 'streets.construction.planningReservations');
+  if (planning.version !== '2.1.0') bad('streets.construction.planningReservations.version', 'Planning reservations version 2.1.0 is required');
   const reservation = object(construction.reservations, 'construction.reservations');
   const { owners, count, remaining } = nativeGround(source), movement = nativeMovement(source);
   const ownerIds = new Set(owners.map(owner => owner.id)), roadIds = new Set(movement.roads.map(road => road.id));
@@ -96,7 +98,7 @@ export async function readNativeAtlas(input: unknown): Promise<NativeArchitectur
     exclusions.push(...array(body.surfaces, 'water.surfaces').map((r, i) => ring(r, `water.surfaces[${i}]`)));
   }
   const medians = nativeMedians(construction.medians, owners, movement.roads);
-  return { version: meta.version, reservationVersion: '1.0.0', format, medians, identity, bounds, boundary, groundArrayCount: count, owners, ...movement,
+  return { version: meta.version, reservationVersion: planning.version, format, medians, identity, bounds, boundary, groundArrayCount: count, owners, ...movement,
     shafts, stationBays, protections, obstaclePoints, exclusions, highwayHash: digest(JSON.stringify(streets.highwayStructures)),
     stationHash: digest(JSON.stringify(transit.subwayStations)), remainingGroundIndices: remaining };
 }

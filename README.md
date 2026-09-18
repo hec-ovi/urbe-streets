@@ -1,6 +1,6 @@
 # Urbe Streets
 
-Version 0.5.0. Builds district and source-native street GLBs from saved Atlas 0.22.0/0.23.0/0.24.0 reservations, with exact ground replacement and native Materials bindings.
+Version 0.6.0. Builds district and source street GLBs from saved Atlas 0.26.0 with planning reservations 2.1.0, exact ground replacement and native Materials bindings.
 
 ```sh
 npm ci

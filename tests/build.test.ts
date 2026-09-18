@@ -10,12 +10,16 @@ import type {NativeMaterialCatalog} from '../src/schema/native-materials.ts';
 const nativeMaterials=catalog as unknown as NativeMaterialCatalog;
 const request=()=>({blueprint:nativeBlueprint(),seed:42,design:{version:'native-1.0.0' as const,wear:0}});
 const hash=(value:string|Uint8Array)=>createHash('sha256').update(value).digest('hex');
-it('publishes deterministic native geometry and exact source/collision ownership',async()=>{
-  const input=request();input.blueprint.meta.version='0.23.0';const a=await build(input,{nativeMaterials}),b=await build(input,{nativeMaterials});expect(a).toEqual(b);
-  expect(a.meta).toMatchObject({version:'0.2.0',architectureVersion:'0.23.0',blueprintEncoding:'json-stringify-utf8',blueprintHash:hash(JSON.stringify(input.blueprint)),nativeCatalogHash:hash(JSON.stringify(catalog))});
+it('accepts Atlas 0.26.0 with planning reservations 2.1.0 and rejects older versions',async()=>{
+  const input=request();const a=await build(input,{nativeMaterials}),b=await build(input,{nativeMaterials});expect(a).toEqual(b);
+  expect(a.meta).toMatchObject({version:'0.2.0',architectureVersion:'0.26.0',reservationVersion:'2.1.0',blueprintEncoding:'json-stringify-utf8',blueprintHash:hash(JSON.stringify(input.blueprint)),nativeCatalogHash:hash(JSON.stringify(catalog))});
   expect(a.ground.replacements).toEqual({groundIndices:[0],moduleOwnerIds:['roadway']});expect(a.ground.cover.missingArea).toBe(0);
   for(const piece of a.pieces){expect(piece.sha256).toBe(hash(a.assets[piece.asset!]!));expect(piece.hasCollision).toBe(true);}
   const manifest=await build(input,{nativeMaterials,mode:'manifest'});expect(manifest.assets).toEqual({});expect(manifest.pieces.every(piece=>piece.asset===null&&piece.sha256===null)).toBe(true);
+  input.blueprint.meta.version='0.24.0';
+  await expect(build(input,{nativeMaterials})).rejects.toMatchObject({code:'E_UNSUPPORTED_ARCHITECTURE',details:{path:'meta.version'}});
+  input.blueprint.meta.version='0.26.0';input.blueprint.streets.construction.planningReservations.version='1.0.0';
+  await expect(build(input,{nativeMaterials})).rejects.toMatchObject({code:'E_UNSUPPORTED_ARCHITECTURE',details:{path:'streets.construction.planningReservations.version'}});
 });
 it('hashes exact saved blueprint bytes and publishes the disk manifest after its assets',async()=>{
   const dir=await mkdtemp(join(tmpdir(),'streets-native-'));
@@ -36,7 +40,6 @@ it('publishes the same city whether owners are built in this thread or in the wo
     expect(pooled).toEqual(local);expect(pooled.statistics.triangles).toBeGreaterThan(0);
   }finally{if(previous===undefined)delete process.env.STREETS_WORKERS;else process.env.STREETS_WORKERS=previous;}
 });
-it('rejects unsupported source versions and malformed native requests',async()=>{
+it('rejects malformed native requests',async()=>{
   await expect(build({...request(),seed:NaN},{nativeMaterials})).rejects.toMatchObject({code:'E_INVALID_PARAMS'});
-  const input=request();input.blueprint.meta.version='0.21.0';await expect(build(input,{nativeMaterials})).rejects.toMatchObject({code:'E_UNSUPPORTED_ARCHITECTURE'});
 });

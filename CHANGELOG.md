@@ -1,5 +1,7 @@
 # Changelog
 
+0.6.0: Streets accepts Atlas 0.26.0 with planning reservations 2.1.0 and builds surfaces from exact ground ownership.
+
 0.5.0: native GLBs use shared vertices, bounded quantization and required meshopt compression; owner workers default to a quarter of available parallelism.
 
 0.4.0: owners build on a worker pool sized to the machine (`STREETS_WORKERS` overrides), and ownership merging, road frames, detail placement and parcel checks resolve by bounds. A 500 m city builds in 2.3 s.
