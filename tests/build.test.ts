@@ -27,6 +27,15 @@ it('hashes exact saved blueprint bytes and publishes the disk manifest after its
     await expect(build({...request(),blueprint},{nativeMaterials,outDir:join(dir,'bundle')})).rejects.toMatchObject({code:'E_INVALID_PARAMS'});
   }finally{await rm(dir,{recursive:true,force:true});}
 });
+it('publishes the same city whether owners are built in this thread or in the worker pool',async()=>{
+  const input=request();
+  const previous=process.env.STREETS_WORKERS;
+  try{
+    process.env.STREETS_WORKERS='0';const local=await build(input,{nativeMaterials});
+    process.env.STREETS_WORKERS='2';const pooled=await build(input,{nativeMaterials});
+    expect(pooled).toEqual(local);expect(pooled.statistics.triangles).toBeGreaterThan(0);
+  }finally{if(previous===undefined)delete process.env.STREETS_WORKERS;else process.env.STREETS_WORKERS=previous;}
+});
 it('rejects unsupported source versions and malformed native requests',async()=>{
   await expect(build({...request(),seed:NaN},{nativeMaterials})).rejects.toMatchObject({code:'E_INVALID_PARAMS'});
   const input=request();input.blueprint.meta.version='0.21.0';await expect(build(input,{nativeMaterials})).rejects.toMatchObject({code:'E_UNSUPPORTED_ARCHITECTURE'});

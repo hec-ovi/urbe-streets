@@ -1,5 +1,7 @@
 # Changelog
 
+0.4.0: owners build on a worker pool sized to the machine (`STREETS_WORKERS` overrides), and ownership merging, road frames, detail placement and parcel checks resolve by bounds. A 500 m city builds in 2.3 s.
+
 0.3.1: proud cable sockets and world-scaled asphalt parking outside luxury districts.
 
 0.3.0: district panels, 2 m parking, junction transitions, crossing ramps, median grates, subtle hexagons and LED marquee geometry.

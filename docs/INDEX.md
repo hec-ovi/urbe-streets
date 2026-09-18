@@ -6,6 +6,7 @@ Builds bounded street models from a saved Atlas blueprint.
 | --- | --- | --- | --- |
 | [construction/district](../src/construction/district/CONTRACT.md) | Fits uniform district panels, parking, junction transitions and street details. | architecture, surfaces, hardware, markings | [schema](../src/construction/district/schema.ts) |
 | [Streets](../CONTRACT.md) | Builds and exports street assets. | Atlas, Materials | [request](../src/schema/native-request.ts), [result](../src/schema/native-result.ts) |
+| [construction](../src/construction/CONTRACT.md) | Builds one owner's whole surface, in this thread or on the worker pool. | architecture, district, markings, surfaces | [result](../src/construction/OwnerConstruction.ts) |
 | [construction/markings](../src/construction/markings/CONTRACT.md) | Places source paint, crossing and wear details on authoritative road frames. | native architecture, surfaces, style | [schema](../src/construction/markings/schema.ts) |
 | [construction/features](../src/construction/features/CONTRACT.md) | Fits source hardware to reserved street fields and publishes fixed feature bounds. | native architecture, hardware, surfaces, style | [schema](../src/construction/features/schema.ts) |
 | [construction/surfaces](../src/construction/surfaces/CONTRACT.md) | Fits source surface geometry and retains physical coverage and vertex attributes. | geometry, native architecture, style | [schema](../src/construction/surfaces/schema.ts) |

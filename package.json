@@ -1,6 +1,6 @@
 {
   "name": "urbe-streets",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "description": "Builds source-native street GLBs from saved Atlas reservations with exact ground replacement and native scan bindings.",

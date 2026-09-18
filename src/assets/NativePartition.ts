@@ -1,10 +1,10 @@
 import { invariant } from '../errors.ts';
-import type { NativeMesh } from '../construction/surfaces/schema.ts';
+import type { NativeMesh, NativeMeshData } from '../construction/surfaces/schema.ts';
 import type { NativePieceData } from './native-schema.ts';
 
 type Vertex = number[];
 /** One cell mesh plus the membership needed to merge each source owner/ground list once, in first-seen order. */
-type Group = { mesh: NativeMesh; owners: Set<string>; grounds: Set<string>; merged: NativeMesh | undefined };
+type Group = { mesh: NativeMesh; owners: Set<string>; grounds: Set<string>; merged: NativeMeshData | undefined };
 const size = 128;
 function cut(vertices: Vertex[], axis: number, boundary: number, sign: number): Vertex[] {
   const result: Vertex[] = [];
@@ -25,12 +25,13 @@ function area(a: Vertex, b: Vertex, c: Vertex): number {
 /** Clips whole authored triangles while interpolating every vertex field in its original domain. */
 export class NativePartition {
   private readonly cells = new Map<string, { piece: NativePieceData; groups: Map<string, Group> }>();
-  add(source: NativeMesh): void {
+  add(source: NativeMeshData): void {
     const count=source.positions.length/3;
     if(!Number.isInteger(count/3)||source.normals.length!==count*3||source.uvs.length!==count*2||source.wear.length!==count||source.heights.length!==count)
       throw invariant('Native mesh has incomplete vertex attributes',{meshId:source.id});
     for(let i=0;i<count;i+=3){
-      const vertices=Array.from({length:3},(_,k)=>{const j=i+k;return [...source.positions.slice(j*3,j*3+3),...source.normals.slice(j*3,j*3+3),...source.uvs.slice(j*2,j*2+2),source.wear[j]!,source.heights[j]!,0];});
+      const vertices=Array.from({length:3},(_,k)=>{const j=i+k;return [source.positions[j*3]!,source.positions[j*3+1]!,source.positions[j*3+2]!,
+        source.normals[j*3]!,source.normals[j*3+1]!,source.normals[j*3+2]!,source.uvs[j*2]!,source.uvs[j*2+1]!,source.wear[j]!,source.heights[j]!,0];});
       if(vertices.some(v=>v.some(value=>!Number.isFinite(value))))throw invariant('Native mesh contains nonfinite attributes',{meshId:source.id});
       const expected=area(vertices[0]!,vertices[1]!,vertices[2]!); if(expected===0)throw invariant('Native mesh contains a degenerate triangle',{meshId:source.id});
       const minX=Math.min(...vertices.map(v=>v[0]!)),maxX=Math.max(...vertices.map(v=>v[0]!)),minZ=Math.min(...vertices.map(v=>v[2]!)),maxZ=Math.max(...vertices.map(v=>v[2]!));
@@ -48,7 +49,7 @@ export class NativePartition {
     }
   }
   finish(): NativePieceData[] { return [...this.cells.values()].map(cell=>cell.piece).sort((a,b)=>a.id.localeCompare(b.id,'en')); }
-  private append(x:number,z:number,source:NativeMesh,vertices:Vertex[]):void{
+  private append(x:number,z:number,source:NativeMeshData,vertices:Vertex[]):void{
     const id=`sp:${x}:${z}`;let cell=this.cells.get(id);
     if(!cell){cell={piece:{id,origin:[x*size,0,z*size],bounds:{min:[Infinity,Infinity,Infinity],max:[-Infinity,-Infinity,-Infinity]},meshes:[]},groups:new Map()};this.cells.set(id,cell);}
     const key=`${source.surface}:${source.collision}`;let group=cell.groups.get(key);

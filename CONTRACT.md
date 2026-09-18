@@ -1,4 +1,4 @@
-# Streets 0.3.1
+# Streets 0.4.0
 
 Builds bounded source-native street GLBs from saved Atlas reservations, with exact ground ownership and native material references.
 
@@ -11,6 +11,8 @@ Source panel rows, corner fans, parking panels, sloped gutters, curbs, inlets, g
 Pieces occupy 128 m XZ cells. Node translation restores each piece origin; vertex positions are local Float32. Nodes and primitives carry `streetCollision:boolean`; materials carry `streetNativeSurface`. Vertex attributes are position, normal, UV, `_STREET_WEAR` and `_STREET_HEIGHT`. Paint/decal primitives are noncolliding. No texture bytes are embedded. The native binding snapshot supplies safe package-relative texture paths and source scan hashes; Engine owns texture loading and effect implementation.
 
 `ground.replacements` names exact original ground indices and module owner IDs to suppress. Per-owner receiving cover excludes station shafts and cannot enter parcels/water. Features publish stable world bounds and source identities independently of cell residency. Elevated highways remain delegated to the highway renderer, and station stairs/interactions remain delegated to the station renderer. Their exact source hashes and non-owning protection references are retained; only delegated.remainingGroundIndices may be rendered alongside native ordinary ground.
+
+Each reserved owner is built independently, by default on `availableParallelism()-1` worker threads and never more workers than owners. `STREETS_WORKERS` overrides that count exactly; 0 or 1 builds every owner in the calling thread. The pool changes only where the work runs: coverage, the 128 m partition and the export stay in the calling thread, owners are consumed in their published order, and the bundle is identical either way.
 
 Mode defaults to `glb`. Without outDir, bytes are returned in assets. A disk destination must be new, with an existing parent; `<outDir>/manifest.json` is published after relative pieces and excludes assets. Manifest mode retains piece geometry metadata with null asset/hash and no bytes. The same input values produce identical geometry and manifests; paths and timing are excluded from identity.
 
