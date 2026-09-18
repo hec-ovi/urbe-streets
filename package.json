@@ -1,6 +1,6 @@
 {
   "name": "urbe-streets",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "description": "Builds source-native street GLBs from saved Atlas reservations with exact ground replacement and native scan bindings.",
@@ -13,12 +13,15 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "generate": "node --experimental-strip-types src/cli/main.ts",
-    "test:city": "node --experimental-strip-types tests/city.ts"
+    "test:city": "node --experimental-strip-types tests/city.ts",
+    "test:compression": "node --experimental-strip-types src/assets/compression-sample.ts"
   },
   "dependencies": {
     "@gltf-transform/core": "4.5.0",
+    "@gltf-transform/extensions": "4.5.0",
     "clipper2-ts": "2.0.1-18",
     "earcut": "3.2.3",
+    "meshoptimizer": "1.1.1",
     "three": "0.185.1"
   },
   "devDependencies": {

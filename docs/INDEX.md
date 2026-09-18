@@ -16,7 +16,7 @@ Builds bounded street models from a saved Atlas blueprint.
 | [geometry](../src/geometry/CONTRACT.md) | Provides plan boolean operations and bounds. | earcut, clipper2-ts | [schema](../src/geometry/schema.ts) |
 | [finishes](../src/finishes/CONTRACT.md) | Validates native scan binding snapshots. | Materials | [schema](../src/schema/native-materials.ts) |
 | [ground](../src/ground/CONTRACT.md) | Checks retained surface ownership. | geometry | [result](../src/schema/native-result.ts) |
-| [assets](../src/assets/CONTRACT.md) | Splits native vertex buffers, encodes GLBs and writes bundles. | geometry, glTF Transform | [result](../src/schema/native-result.ts) |
+| [assets](../src/assets/CONTRACT.md) | Splits native vertex buffers, welds and quantizes attributes, compresses GLBs and writes bundles. | geometry, glTF Transform, meshoptimizer | [result](../src/schema/native-result.ts) |
 | [cli](../src/cli/CONTRACT.md) | Builds native bundles from saved request JSON. | Streets | [request](../src/schema/native-request.ts) |
 
 [Native bundle schema](../src/schema/native-result.ts): exact input identity, bounded assets, physical collision flags, ground replacement, native material snapshot and constructed feature bounds. [Native request](../src/schema/native-request.ts).

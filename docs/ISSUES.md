@@ -4,9 +4,11 @@ The saved native bundle publishes exact blueprint/material identities, ground re
 
 Atlas diagonal candidate planning is a separate coordinated responsibility. Streets consumes the existing saved reservation baseline without changing planning.
 
-## For Engine: the streets build now takes threads
+## For Engine: worker and decoder settings
 
-`build()` spreads owners over `availableParallelism() - 1` worker threads by default (500 m city, 24 edges, 18 owners: 2.96 s in one thread, 2.26 s on eight workers; both bundles byte-identical). Engine runs it from `src/assembly/streets-worker.js`, so the pool nests inside that worker. If a world build ever overlaps the exterior shell batch with the streets phase, set `STREETS_WORKERS` to the share Engine wants streets to hold; the contract honours the value exactly, and 0 or 1 keeps everything in the calling thread.
+`build()` defaults to `max(1, floor(availableParallelism() / 4))` owner workers, capped at the owner count. `STREETS_WORKERS` overrides that count exactly; 0 or 1 builds in the caller. Engine controls this share when assembly batches overlap.
+
+Native pieces require `KHR_mesh_quantization` and `EXT_meshopt_compression`. Register `MeshoptDecoder` on GLTFLoader and apply the full mesh node transform for rendering and collision. Root translations carry the cell origin; child transforms decode quantized positions. Stable feature bounds and ground ownership remain in world coordinates.
 
 ## For Atlas: one owner holds half the geometry
 

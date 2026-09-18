@@ -4,7 +4,7 @@ import {readFile,mkdtemp,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {parseArgs} from 'node:util';
-import {NodeIO} from '@gltf-transform/core';
+import {decodePiece,worldPosition} from '../src/assets/decode-fixture.ts';
 import {build} from '../src/index.ts';
 const {values}=parseArgs({options:{blueprint:{type:'string'},'native-materials':{type:'string'},'highway-baseline':{type:'string'}},strict:true});
 assert(values.blueprint&&values['native-materials'],'Supply --blueprint and --native-materials; this conformance input must contain corners, parking, underpasses and stations.');
@@ -23,17 +23,17 @@ try{
   let triangles=0;
   for(const piece of output.pieces){
     assert(piece.asset&&piece.sha256);const glb=await readFile(join(dir,'bundle',piece.asset));assert.equal(hash(glb),piece.sha256);
-    const document=await new NodeIO().readBinary(glb);assert.equal(document.getRoot().listTextures().length,0);
-    for(const node of document.getRoot().listNodes()){
-      assert.deepEqual(node.getTranslation(),piece.origin);
+    const document=await decodePiece(glb);assert.equal(document.getRoot().listTextures().length,0);
+    for(const node of document.getRoot().listScenes()[0]!.listChildren())assert.deepEqual(node.getTranslation(),piece.origin);
+    for(const node of document.getRoot().listNodes().filter(node=>node.getMesh())){
       for(const primitive of node.getMesh()!.listPrimitives()){
         const surface=primitive.getMaterial()!.getExtras().streetNativeSurface;assert(typeof surface==='string'&&piece.surfaceIds.includes(surface));
         const effect=output.materials.binding.surfaces[surface]!.effect,collision=primitive.getExtras().streetCollision;
         assert.equal(collision,node.getExtras().streetCollision);if(['road-paint','decal'].includes(effect))assert.equal(collision,false);
-        const positions=primitive.getAttribute('POSITION')!,count=positions.getCount();triangles+=count/3;
+        const positions=primitive.getAttribute('POSITION')!,count=positions.getCount();triangles+=primitive.getIndices()!.getCount()/3;
         for(const semantic of ['NORMAL','TEXCOORD_0','_STREET_WEAR','_STREET_HEIGHT']){const attribute=primitive.getAttribute(semantic);assert(attribute&&attribute.getCount()===count);assert([...attribute.getArray()!].every(Number.isFinite));}
         for(let i=0;i<count;i++){
-          const p=positions.getElement(i,[]);for(let axis=0;axis<3;axis++){const world=p[axis]!+piece.origin[axis]!,precision=Math.max(Number.MIN_VALUE,Math.abs(p[axis]!)*2**-23);assert(world>=piece.bounds.min[axis]!-precision&&world<=piece.bounds.max[axis]!+precision);}
+          const p=worldPosition(node,primitive,i);for(let axis=0;axis<3;axis++){const precision=0.001+Math.abs(p[axis]!-piece.origin[axis]!)*2**-23;assert(p[axis]!>=piece.bounds.min[axis]!-precision&&p[axis]!<=piece.bounds.max[axis]!+precision);}
           const wear=primitive.getAttribute('_STREET_WEAR')!.getScalar(i);assert(wear>=0&&wear<=1);
         }
       }

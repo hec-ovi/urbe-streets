@@ -1,5 +1,7 @@
 # Changelog
 
+0.5.0: native GLBs use shared vertices, bounded quantization and required meshopt compression; owner workers default to a quarter of available parallelism.
+
 0.4.0: owners build on a worker pool sized to the machine (`STREETS_WORKERS` overrides), and ownership merging, road frames, detail placement and parcel checks resolve by bounds. A 500 m city builds in 2.3 s.
 
 0.3.1: proud cable sockets and world-scaled asphalt parking outside luxury districts.

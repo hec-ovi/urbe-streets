@@ -13,12 +13,12 @@ type Reply = { kind: 'ready' } | { kind: 'done'; id: number; result: OwnerResult
 interface Job { id: number; index: number; resolve: (result: OwnerResult) => void; reject: (error: Error) => void }
 
 /**
- * Every owner is an independent job, so the default width is the machine's parallelism minus the thread
- * that assembles the city, and never more workers than owners. STREETS_WORKERS overrides it exactly; 0 or 1 builds here.
+ * The default uses a quarter of available parallelism, rounded down, at least one and capped by owners.
+ * STREETS_WORKERS overrides it exactly; 0 or 1 builds here.
  */
 export function width(owners: number): number {
   const override = process.env.STREETS_WORKERS;
-  if (override === undefined) return Math.min(Math.max(availableParallelism() - 1, 1), owners);
+  if (override === undefined) return Math.min(Math.max(Math.floor(availableParallelism() / 4), 1), owners);
   const requested = Number(override);
   if (!Number.isInteger(requested) || requested < 0) throw invalidParams('STREETS_WORKERS must be a non-negative integer');
   return requested;

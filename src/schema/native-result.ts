@@ -8,7 +8,7 @@ export interface NativeStreetPiece {
   asset: string | null;
   sha256: string | null;
   bounds: Box3;
-  /** GLB node translation restores this city-frame origin; vertex positions are relative to it. */
+  /** GLB root translation restores this city-frame origin; mesh node transforms decode positions. */
   origin: Vec3;
   ownerIds: string[];
   groundIds: string[];
@@ -44,7 +44,7 @@ export type NativeStreetFeature = {
  * Catalog and delegated hashes use SHA-256 over UTF-8 JSON.stringify of the exact parsed
  * binding/infrastructure value, retaining property and array order, with no indentation or newline.
  * GLB SHA-256 uses exact file bytes. Native GLB nodes and primitives carry streetCollision:boolean;
- * materials carry streetNativeSurface:string. Node translation restores piece.origin.
+ * materials carry streetNativeSurface:string. Root translation restores piece.origin; apply full mesh node transforms.
  */
 export interface NativeStreetManifest {
   meta: {
