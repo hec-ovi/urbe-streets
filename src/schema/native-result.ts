@@ -1,6 +1,6 @@
 import type { Box3, Ring } from '../geometry/schema.ts';
 import type { NativeMaterialCatalog } from './native-materials.ts';
-import type { StreetClosure, StreetKit, StreetPlacements, StreetProfileMapping } from './street-kit.ts';
+import type { StreetClosure, StreetKit, StreetPlacements, StreetProfileMapping, StreetOverhangReport } from './street-kit.ts';
 import type { WearSnapshot } from '../construction/style/schema.ts';
 
 export interface NativeStreetGround {
@@ -35,7 +35,7 @@ export type NativeStreetFeature = {
  */
 export interface NativeStreetManifest {
   meta: {
-    version: '0.4.0'; generatorVersion: string; architectureVersion: '0.26.0'; reservationVersion: '2.1.0';
+    version: '0.5.0'; generatorVersion: string; architectureVersion: '0.26.0'; reservationVersion: '2.1.0';
     designVersion: 'native-1.0.0'; blueprintHash: string; blueprintEncoding: 'json-file-bytes' | 'json-stringify-utf8';
     nativeCatalogHash: string; seed: number; identity: string; units: 'meters';
   };
@@ -43,16 +43,16 @@ export interface NativeStreetManifest {
   placements: StreetPlacements;
   files: { kit: 'streets/kit.json'; placements: 'streets/placements.json' };
   closures: StreetClosure[];
-  report: { profiles: StreetProfileMapping[] };
+  report: { profiles: StreetProfileMapping[]; overhangs: StreetOverhangReport };
   ground: {
     owners: NativeStreetGround[];
     replacements: { groundIndices: number[]; moduleOwnerIds: string[] };
     exclusions: { id: string; kind: 'station-shaft'; stationId: string; polygon: Ring }[];
     cover: { reservedArea: number; excludedArea: number; constructedArea: number; missingArea: number; outsideArea: number };
   };
-  features: NativeStreetFeature[];
+  features: (NativeStreetFeature & { placement: number })[];
   materials: { mode: 'native-reference'; binding: NativeMaterialCatalog };
-  wear: WearSnapshot & { application: 'world-position' };
+  wear: WearSnapshot & { application: 'instance' };
   protected: { kind: 'highway' | 'underpass' | 'station-bay' | 'station-shaft'; source: Record<string, unknown> }[];
   delegated: {
     highways: { source: 'streets.highwayStructures'; hash: string; count: number };

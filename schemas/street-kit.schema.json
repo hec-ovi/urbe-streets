@@ -9,11 +9,13 @@
     "units",
     "module",
     "pieces",
-    "profiles"
+    "profiles",
+    "scanAtlas",
+    "glyphs"
   ],
   "properties": {
     "version": {
-      "const": "1.1.0"
+      "const": "1.2.0"
     },
     "units": {
       "const": "meters"
@@ -34,6 +36,19 @@
         "$ref": "#/$defs/profile"
       },
       "minItems": 1
+    },
+    "scanAtlas": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "glyphs": {
+      "type": "string",
+      "minLength": 1
     }
   },
   "$defs": {
@@ -88,7 +103,8 @@
             "segment",
             "junction-arm",
             "junction-center",
-            "prop"
+            "prop",
+            "overlay"
           ]
         },
         "classes": {
@@ -176,34 +192,6 @@
         "profileId": {
           "type": "string",
           "minLength": 1
-        },
-        "configurations": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "footprint"
-            ],
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "footprint": {
-                "type": "array",
-                "items": {
-                  "type": "array",
-                  "minItems": 3,
-                  "items": {
-                    "$ref": "#/$defs/vector2"
-                  }
-                }
-              }
-            }
-          }
         }
       },
       "allOf": [
@@ -250,7 +238,7 @@
             "properties": {
               "classes": {
                 "type": "array",
-                "minItems": 2
+                "minItems": 1
               },
               "origin": {
                 "const": "junction-at-road"

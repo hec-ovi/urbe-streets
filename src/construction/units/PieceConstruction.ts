@@ -1,6 +1,6 @@
 import type { NativePieceData } from '../../assets/native-schema.ts';
 import type { Ring } from '../../geometry/schema.ts';
-import { union } from '../../geometry/polygons.ts';
+import { intersection, union } from '../../geometry/polygons.ts';
 import { EdgeRing } from '../surfaces/EdgeRing.ts';
 import { SurfaceBatch } from '../surfaces/SurfaceBatch.ts';
 import type { NativeMesh, SurfaceOutput } from '../surfaces/schema.ts';
@@ -9,6 +9,7 @@ import { DistrictRoads } from '../district/Roads.ts';
 import { CrossingRamps } from '../district/Ramps.ts';
 import { palette } from '../district/Palette.ts';
 import type { SceneInput } from './UnitScene.ts';
+import { Markings } from '../markings/Markings.ts';
 import { unitBounds } from './UnitBounds.ts';
 import { canonical, clean } from './Frame.ts';
 
@@ -31,7 +32,7 @@ export function pieceGeometry(id: string, surfaces: SurfaceOutput[]): NativePiec
 export function constructPiece(scene: SceneInput): ConstructedPiece {
   const { architecture: a } = scene;
   const plain = scene.variant === 'closure';
-  const edges = new EdgeRing({ owners: scene.edgeOwners }), roads = new DistrictRoads(a), paving = new DistrictPaving(a), ramps = new CrossingRamps(a);
+  const edges = new EdgeRing({ owners: scene.edgeOwners }), roads = new DistrictRoads(a), paving = new DistrictPaving(a), ramps = new CrossingRamps(a), markings = new Markings(a, 0, () => 0);
   const outputs: SurfaceOutput[] = [];
   let panels = 0;
   for (const owner of a.owners) {
@@ -43,6 +44,7 @@ export function constructPiece(scene: SceneInput): ConstructedPiece {
     edges.build(owner, batch, cuts, []);
     panels += paving.build(owner, batch, [], planned.map(r => r.cut.ring));
     ramps.draw(planned, batch);
+    if (!plain && scene.paint !== false) markings.build(owner, batch);
     const colors = palette(owner, a);
     for (const mesh of batch.finish().meshes) {
       if (mesh.surface === 'curb') mesh.surface = colors.curb;
@@ -50,8 +52,9 @@ export function constructPiece(scene: SceneInput): ConstructedPiece {
     }
 
     const output = batch.finish();
-    output.meshes = output.meshes.filter(mesh => mesh.collision).map(mesh => unitBounds(mesh, a.bounds)).filter(mesh => mesh.positions.length);
+    output.meshes = output.meshes.map(mesh => unitBounds(mesh, a.bounds, scene.seam)).filter(mesh => mesh.positions.length);
     outputs.push(output);
   }
-  return { geometry: pieceGeometry('unit', outputs), footprint: canonical(union(outputs.flatMap(o => o.coverage.flatMap(c => c.rings)))), panels };
+  const footprint = union(outputs.flatMap(o => o.coverage.flatMap(c => c.rings)));
+  return { geometry: pieceGeometry('unit', outputs), footprint: canonical(scene.seam ? intersection(footprint, [scene.seam]) : footprint), panels };
 }

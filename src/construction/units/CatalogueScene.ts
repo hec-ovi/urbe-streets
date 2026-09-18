@@ -51,16 +51,16 @@ export class CatalogueScene {
     return this.finish(variant);
   }
 
-  junction(primary: StreetProfile, cross: StreetProfile, center: boolean): SceneInput {
+  junction(primary: StreetProfile, cross: StreetProfile, center: boolean, terminal = false): SceneInput {
     const half = (primary.width || primary.pavedWidth * 2) / 2;
     const x0 = (cross.width || (center ? cross.pavedWidth * 2 : 0)) / 2;
     if (center) {
       const pedestrian = primary.streetClass === 'alley' && cross.streetClass === 'alley';
       this.owner(pedestrian ? 'station' : 'roadway', primary, [{ surface: pedestrian ? 'sidewalk' : 'roadway', ring: rectangle(-x0, -half, x0 * 2, half * 2) }]);
       this.road(primary, [[-x0, 0], [x0, 0]]);
-      return this.finish('plain');
+      return { ...this.finish('plain'), paint: false };
     }
-    const rim = 0.7, paved = 4.2, span = 18, reach = x0 + span;
+    const rim = 0.7, paved = 4.2, span = terminal ? 4.9 : 18, reach = x0 + span;
     this.road(primary, [[0, 0], [reach, 0]]);
     if (primary.streetClass === 'alley') {
       for (const sign of [-1, 1]) this.owner('perimeter', primary,
@@ -76,19 +76,22 @@ export class CatalogueScene {
       const inset = (amount: number) => intersection([outer], [rectangle(x0 + amount,
         sign > 0 ? half + amount : -half - rim - paved, span - amount, rim + paved - amount)]);
       const gutter = difference([outer], inset(0.5)), curb = difference(inset(0.5), inset(rim)), sidewalk = inset(rim);
-      const face = this.face(sign > 0 ? [x0 + rim + paved, half] : [reach, -half],
-        sign > 0 ? [reach, half] : [x0 + rim + paved, -half], [0, sign], { ...primary, pavedWidth: paved, gutterWidth: 0.5, curbWidth: 0.2 });
+      const face = this.face(sign > 0 ? [x0 + (terminal ? 0 : rim + paved), half] : [reach, -half],
+        sign > 0 ? [reach, half] : [x0 + (terminal ? 0 : rim + paved), -half], [0, sign], { ...primary, pavedWidth: paved, gutterWidth: 0.5, curbWidth: 0.2 });
       const owner = this.owner('perimeter', primary, [...gutter.map(ring => ({ surface: 'gutter' as const, ring })),
         ...curb.map(ring => ({ surface: 'curb' as const, ring })), ...sidewalk.map(ring => ({ surface: 'sidewalk' as const, ring }))], [face]);
       owner.corners.push({ id: `${owner.id}:corner`, ownerId: owner.id, frontageIds: [face.id], kind: 'explicit',
         boundary: rectangle(x0 + rim, sign > 0 ? half + rim : -half - rim - paved, paved, paved) });
     }
-    if (primary.medianWidth) this.medianEnd(primary, x0 + 13, reach);
+    if (primary.medianWidth && !terminal) this.medianEnd(primary, x0 + 13, reach);
     // The return bands meet the perpendicular carriageway beyond the selected arm.
     const context = this.owner('roadway', primary, [{ surface: 'roadway', ring: rectangle(x0 - 1, -half - 4.9, 1, half * 2 + 9.8) }]);
     const edgeOwners = [...this.architecture.owners];
     this.architecture.owners = this.architecture.owners.filter(o => o !== context);
-    return { ...this.finish('plain'), edgeOwners };
+    const seam: Ring = [[x0, -half], [x0 + rim + paved, -half - rim - paved], [reach, -half - rim - paved],
+      [reach, half + rim + paved], [x0 + rim + paved, half + rim + paved], [x0, half]];
+    if (terminal) this.architecture.approaches = [];
+    return { ...this.finish('plain'), edgeOwners, seam, paint: !terminal };
   }
 
   private medianEnd(p: StreetProfile, start: number, end: number): void {
@@ -110,6 +113,12 @@ export class CatalogueScene {
     const id = `r${this.architecture.roads.length}`;
     const road: NativeRoad = { id, from: 'start', to: 'end', kind: p.streetClass, width: p.width, path, lanes: [],
       runId: id, runStart: 0, runForward: true, districtStyle: p.zone as NativeRoad['districtStyle'] & string, medianWidth: p.medianWidth };
+    for (let i = 0; i < p.lanes; i++) {
+      const sign = i < p.lanes / 2 && p.lanes > 1 ? 1 : -1;
+      const offset = p.lanes === 1 ? 0 : sign * (p.medianWidth / 2 + (p.lanes / 2 - 0.5 - i % (p.lanes / 2)) * p.laneWidth);
+      road.lanes.push({ id: `${id}:v${i}`, width: p.laneWidth, offset, direction: sign > 0 ? 'backward' : 'forward',
+        path: path.map(([x, z]) => [x, z + offset]) });
+    }
     this.architecture.roads.push(road);
   }
 

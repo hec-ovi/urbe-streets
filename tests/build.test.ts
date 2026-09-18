@@ -4,6 +4,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
+import { decodePiece, worldPosition } from '../src/assets/decode-fixture.ts';
 import { build, placementFootprint } from '../src/index.ts';
 import type { NativeStreetBuild } from '../src/schema/native-result.ts';
 import type { Ring, Vec2 } from '../src/geometry/schema.ts';
@@ -11,7 +12,7 @@ import kitSchema from '../schemas/street-kit.schema.json' with { type: 'json' };
 import placementSchema from '../schemas/street-placement.schema.json' with { type: 'json' };
 import catalog from './fixtures/native-materials.json' with { type: 'json' };
 import type { NativeMaterialCatalog } from '../src/schema/native-materials.ts';
-import { intersection, totalArea } from '../src/geometry/polygons.ts';
+import { area, difference, intersection, totalArea, union } from '../src/geometry/polygons.ts';
 
 const blueprint = fileURLToPath(new URL('../../atlas/samples/city-urbe-tiny.json', import.meta.url));
 const request = { blueprint, seed: 42, design: { version: 'native-1.0.0' as const, wear: 1 } };
@@ -82,7 +83,16 @@ it('publishes schema valid kit and placements with exact Atlas ownership and mat
   expect(result.ground.replacements.groundIndices).toEqual(source.streets.construction.reservations.owners.flatMap(o => o.groundIndices).sort((a, b) => a - b));
   for (const g of result.ground.owners) expect(g.polygon).toEqual(source.volumetric.ground[g.sourceIndex]!.polygon);
   expect(result.ground.cover.missingArea).toBeLessThan(1e-7);
-  expect(result.ground.cover.outsideArea).toBeLessThan(1e-7);
+  expect(result.ground.cover.outsideArea).toBeGreaterThanOrEqual(0);
+  expect(result.placements.version).toBe('1.2.0');
+  const validate = ajv.compile(placementSchema);
+  for (const key of ['featureId', 'configuration', 'offset', 'clip', 'openings', 'finishes', 'panels', 'markings', 'scans', 'message'])
+    expect(validate({ ...result.placements, placements: [{ ...result.placements.placements[0], [key]: [] }] }), key).toBe(false);
+  const lastGlyph = result.kit.glyphs.length - 1;
+  expect(placementSchema.properties.placements.items.properties.text.items.maximum).toBe(lastGlyph);
+  expect(validate({ ...result.placements, placements: [{ ...result.placements.placements[0], tint: [1, 0.5, 0], wear: 0.2, scan: { offset: [0, 0], scale: [0.25, 1] }, text: [0, lastGlyph] }] })).toBe(true);
+  for (const values of [{ wear: 1.1 }, { tint: [-1, 0, 0] }, { scan: { offset: [0, 0], scale: [0, 1] } }, { text: [-1] }, { text: [lastGlyph + 1] }, { scale: [0, 1, 1] }])
+    expect(validate({ ...result.placements, placements: [{ ...result.placements.placements[0], ...values }] })).toBe(false);
   expect(result.materials.binding).toEqual(catalog);
   for (const p of result.kit.pieces) expect(p.surfaces.every(s => s in catalog.surfaces)).toBe(true);
 });
@@ -99,9 +109,9 @@ it('gives two cities and seeds byte identical complete kits within the inventory
   expect(result.statistics.pieces).toBeLessThanOrEqual(200);
   expect(result.statistics.pieceBytes + result.assets['streets/kit.json']!.length).toBeLessThanOrEqual(3_000_000);
   expect(result.statistics.placements).toBeGreaterThan(600);
-  expect(result.statistics.placements).toBeLessThan(800);
+  expect(result.statistics.placements).toBeLessThan(1100);
   expect(other.statistics.placements).toBeGreaterThan(3000);
-  expect(other.statistics.placements).toBeLessThan(3700);
+  expect(other.statistics.placements).toBeLessThan(5300);
   expect(result.report.profiles).toEqual([]);
   expect(other.report.profiles).toEqual([]);
   for (const p of result.kit.pieces) expect(createHash('sha256').update(result.assets[`streets/${p.file}`]!).digest('hex')).toBe(p.sha256);
@@ -111,7 +121,7 @@ it('maps an off catalogue width to the nearest profile and reports it without ad
   const blueprint = fractionalBlueprint(30);
   const mapped = await build({ ...request, blueprint }, { nativeMaterials });
   expect(mapped.report.profiles).toEqual([{ roadId: 'e0', profileId: 'ordinary/local', requestedWidth: 30, width: 7, delta: -23 }]);
-  expect(mapped.placements.placements.filter(p => !p.featureId).every(p => p.piece.startsWith('street/ordinary/local/'))).toBe(true);
+  expect(mapped.placements.placements.filter(p => result.kit.pieces.find(k => k.id === p.piece)!.kind === 'segment').every(p => p.piece.startsWith('street/ordinary/local/'))).toBe(true);
   expect(mapped.kit).toEqual(result.kit);
   expect(mapped.ground.cover.missingArea).toBeGreaterThan(0);
 });
@@ -134,7 +144,7 @@ function intervals(rings: Ring[], origin: Vec2, d: Vec2): [number, number][] {
   return spans;
 }
 
-it('covers each plan centreline once with whole units and plain fitted fractional closures', async () => {
+it('covers each plan centreline with whole units and plain fitted fractional closures', async () => {
   const pieces = new Map(result.kit.pieces.map(p => [p.id, p]));
   for (const p of result.kit.pieces.filter(p => p.kind === 'segment')) {
     expect(p.bounds.min[0], p.id).toBeGreaterThanOrEqual(-1e-7);
@@ -144,11 +154,13 @@ it('covers each plan centreline once with whole units and plain fitted fractiona
     const origin = road.path[0]!, end = road.path.at(-1)!, length = Math.hypot(end[0] - origin[0], end[1] - origin[1]);
     const d: Vec2 = [(end[0] - origin[0]) / length, (end[1] - origin[1]) / length];
     const spans = result.placements.placements.flatMap(p => {
-      const rings = placementFootprint(pieces.get(p.piece)!, p);
+      const piece = pieces.get(p.piece)!;
+      if (piece.kind === 'prop' || piece.kind === 'overlay') return [];
+      const rings = placementFootprint(piece, p);
       return intervals(rings, origin, d).map(([a, b]): [number, number] => [Math.max(0, a), Math.min(length, b)]).filter(([a, b]) => b - a > 1e-7);
     }).sort((a, b) => a[0] - b[0]);
     let station = 0;
-    for (const [start, end] of spans) { expect(start, `${road.id} at ${station}`).toBeCloseTo(station, 6); station = end; }
+    for (const [start, end] of spans) { expect(start, `${road.id} at ${station}`).toBeLessThanOrEqual(station + 1e-6); station = Math.max(station, end); }
     expect(station, road.id).toBeCloseTo(length, 6);
   }
   const fractional = fractionalBlueprint();
@@ -166,7 +178,7 @@ it('covers each plan centreline once with whole units and plain fitted fractiona
     expect(c.fittedLength).toBeLessThan(2);
     expect(c.fittedLength * 10).toBeCloseTo(Math.round(c.fittedLength * 10), 7);
   }
-  const placements = closureResult.placements.placements.filter(p => p.scale);
+  const placements = closureResult.placements.placements.filter(p => p.scale && p.piece.endsWith('/2m-closure'));
   expect(placements).toHaveLength(fitted.length);
   for (const closure of fitted) {
     const road = fractional.streets.edges.find(r => r.id === closure.roadId)!;
@@ -179,7 +191,7 @@ it('covers each plan centreline once with whole units and plain fitted fractiona
     expect(piece.length).toBe(2);
     expect(piece.variant).toBe('closure');
     expect(p.scale).toEqual([closure.fittedLength / 2, 1, 1]);
-    expect(p.markings).toBeUndefined();
+    expect(piece.surfaces.some(s => /Paint|crosswalk/.test(s))).toBe(false);
     expect(piece.surfaces).toContain('curb');
     const bytes = Buffer.from(closureResult.assets[`streets/${piece.file}`]!);
     const gltf = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)).toString());
@@ -202,8 +214,9 @@ it('places crossing arms and one shared central piece at every junction the plan
     const positions = junction.nodeIds.map(id => nodeOf.get(id)!.position);
     const here = placed.filter(p => positions.some(([x, z]) => Math.hypot(p.position[0] - x, p.position[2] - z) < 1e-6)).map(p => pieces.get(p.piece)!);
     expect(here.filter(p => p.kind === 'junction-center'), junction.id).toHaveLength(1);
-    expect(here.filter(p => p.kind === 'junction-arm').length, junction.id).toBeGreaterThan(0);
     for (const piece of here) expect([...new Set(piece.classes)].sort(), `${junction.id} ${piece.id}`).toEqual(classes);
+    const arms = placed.filter(p => pieces.get(p.piece)!.kind === 'junction-arm' && positions.some(([x, z]) => Math.hypot(p.position[0] - x, p.position[2] - z) <= 8.7 + 1e-6));
+    expect(arms.length, junction.id).toBeGreaterThan(0);
   }
 });
 
@@ -214,7 +227,7 @@ it('places one original prop per constructed feature of the plan, inside its res
   const roads = new Set(source.streets.edges.map(e => e.id));
   expect(result.features.length).toBeGreaterThan(0);
   expect(props).toHaveLength(result.features.length);
-  expect(new Set(props.map(p => p.featureId)).size).toBe(props.length);
+  expect(new Set(result.features.map(f => f.placement)).size).toBe(props.length);
   for (const feature of result.features) {
     const anchor = feature.frontageId ?? feature.roadId!;
     expect(frontages.has(anchor) || roads.has(anchor), feature.id).toBe(true);
@@ -222,9 +235,8 @@ it('places one original prop per constructed feature of the plan, inside its res
       expect(feature.bounds.min[axis], feature.id).toBeGreaterThanOrEqual(source.meta.bounds.min[plan]!);
       expect(feature.bounds.max[axis], feature.id).toBeLessThanOrEqual(source.meta.bounds.max[plan]!);
     }
-    const matching = props.filter(p => p.featureId === feature.id);
-    expect(matching, feature.id).toHaveLength(1);
-    const placement = matching[0]!;
+    const placement = result.placements.placements[feature.placement]!;
+    expect(props).toContain(placement);
     expect(placement.ownerId).toBe(feature.ownerId);
     expect(pieces.get(placement.piece)!.variant).toBe(feature.kind);
     const box = pieces.get(placement.piece)!.bounds, c = Math.cos(placement.rotationY), s = Math.sin(placement.rotationY);
@@ -255,4 +267,101 @@ it('rejects invalid input and unsupported Atlas versions through build', async (
   const invalid = { ...source, meta: { version: '0.24.0', units: 'meters' } };
   await expect(build({ ...request, blueprint: invalid }, { nativeMaterials })).rejects.toMatchObject({ code: 'E_UNSUPPORTED_ARCHITECTURE' });
   expect(result.meta.blueprintHash).toBe(createHash('sha256').update(await readFile(blueprint)).digest('hex'));
+});
+
+it('reports whole transformed coverage, collision footprints and accepted fringes', () => {
+  const pieces = new Map(result.kit.pieces.map(p => [p.id, p]));
+  const surfaces = result.placements.placements.flatMap(p => {
+    const piece = pieces.get(p.piece)!;
+    if (!piece.hasCollision) return [];
+    const rings = placementFootprint(piece, p);
+    expect(totalArea(intersection(rings, result.ground.exclusions.map(e => e.polygon)))).toBeLessThan(1e-7);
+    return piece.kind === 'prop' ? [] : rings;
+  });
+  const complete = union(surfaces), report = result.report.overhangs;
+  expect(totalArea(difference(complete, result.ground.owners.map(g => g.polygon)))).toBeCloseTo(result.ground.cover.outsideArea, 6);
+  expect(totalArea(surfaces) - totalArea(complete)).toBeCloseTo(report.overlapArea, 6);
+  expect(report.accepted.length).toBeGreaterThan(0);
+  expect(report.accepted.reduce((n, r) => n + r.boundaryArea, 0)).toBeCloseTo(report.boundaryArea, 6);
+  expect(report.accepted.reduce((n, r) => n + r.fringeArea, 0)).toBeCloseTo(report.fringeArea, 6);
+  for (const r of report.accepted) {
+    expect(result.placements.placements[r.placement]!.piece).toBe(r.piece);
+    expect(r.boundaryArea + r.fringeArea).toBeGreaterThan(1e-7);
+  }
+  const piece = result.kit.pieces.find(p => p.id === 'street/ordinary/local/2m-closure')!;
+  const p = { piece: piece.id, position: [19, 3, 7] as const, rotationY: Math.PI / 2, scale: [0.5, 1, 2] as const, cell: [0, 0] as const, ownerId: 'roadway', ownerIds: ['roadway'] };
+  const footprint = placementFootprint(piece, p);
+  expect(footprint).toHaveLength(piece.footprint.length);
+  piece.footprint.forEach((ring, i) => {
+    expect(footprint[i]).toHaveLength(ring.length);
+    ring.forEach(([x, z], j) => {
+      expect(footprint[i]![j]![0]).toBeCloseTo(19 + z * 2, 7);
+      expect(footprint[i]![j]![1]).toBeCloseTo(7 - x * 0.5, 7);
+    });
+  });
+});
+
+it('publishes footprints matching drawable GLB triangles without geometry selection', async () => {
+  for (const piece of result.kit.pieces) {
+    const decoded = await decodePiece(result.assets[`streets/${piece.file}`]!);
+    const triangles: Ring[] = [];
+    for (const node of decoded.getRoot().listNodes()) for (const primitive of node.getMesh()?.listPrimitives() ?? []) {
+      if (piece.hasCollision && !primitive.getExtras().streetCollision) continue;
+      const indices = primitive.getIndices()!;
+      for (let i = 0; i < indices.getCount(); i += 3) {
+        const ring = [0, 1, 2].map(k => { const p = worldPosition(node, primitive, indices.getScalar(i + k)); return [p[0]!, p[2]!] as Vec2; });
+        const signed = area(ring);
+        if (Math.abs(signed) > 1e-10) triangles.push(signed < 0 ? ring.reverse() : ring);
+      }
+    }
+    const footprint = union(triangles);
+    const perimeter = piece.footprint.reduce((n, r) => n + r.reduce((m, p, i) => {
+      const q = r[(i + 1) % r.length]!; return m + Math.hypot(p[0] - q[0], p[1] - q[1]);
+    }, 0), 0);
+    const error = totalArea(difference(footprint, piece.footprint)) + totalArea(difference(piece.footprint, footprint));
+    expect(error, piece.id).toBeLessThan(perimeter * 0.001 + 1e-6);
+  }
+});
+
+it('bakes one dash phase, approach paint, corner seams and shader ready overlays', async () => {
+  const piece = result.kit.pieces.find(p => p.id === 'road/ordinary/avenue/8m-plain')!;
+  const decoded = await decodePiece(result.assets[`streets/${piece.file}`]!);
+  const dash: number[] = [];
+  for (const node of decoded.getRoot().listNodes()) for (const primitive of node.getMesh()?.listPrimitives() ?? []) {
+    if (primitive.getMaterial()!.getExtras().streetNativeSurface !== 'whitePaint') continue;
+    expect(primitive.getExtras().streetCollision).toBe(false);
+    const indices = primitive.getIndices()!;
+    for (let i = 0; i < indices.getCount(); i++) {
+      const p = worldPosition(node, primitive, indices.getScalar(i));
+      if (Math.abs(p[2]! - 3.5) < 0.07) dash.push(p[0]!);
+    }
+  }
+  expect(dash.length).toBeGreaterThan(0);
+  expect(Math.min(...dash)).toBeCloseTo(0, 3);
+  expect(Math.max(...dash)).toBeCloseTo(4, 3);
+  for (const zone of ['ordinary', 'luxury', 'industrial']) {
+    const arm = result.kit.pieces.find(p => p.id === `junction/${zone}/avenue/arm`)!;
+    expect(arm.surfaces).toContain('yellowPaint');
+    expect(arm.footprint.flat().some(([x, z]) => Math.abs(x - (Math.abs(z) - 7)) < 1e-7)).toBe(true);
+  }
+  const overlays = result.kit.pieces.filter(p => p.kind === 'overlay');
+  expect(overlays.filter(p => p.variant === 'arrow')).toHaveLength(7);
+  expect(overlays.filter(p => p.variant === 'drain')).toHaveLength(2);
+  expect(overlays.filter(p => p.variant === 'scan')).toHaveLength(1);
+  expect(overlays.every(p => !p.hasCollision)).toBe(true);
+  const quad = overlays.find(p => p.variant === 'scan')!;
+  expect(quad.triangles).toBe(2);
+  const scans = result.placements.placements.filter(p => p.scan);
+  expect(scans.length).toBeGreaterThan(0);
+  for (const p of scans) {
+    expect(p.piece).toBe(quad.id);
+    expect(p.scan!.scale).toEqual([1 / result.kit.scanAtlas.length, 1]);
+    expect(p.scan!.offset[0] * result.kit.scanAtlas.length).toBeLessThan(result.kit.scanAtlas.length);
+  }
+  const displays = result.placements.placements.filter(p => p.text);
+  expect(displays.length).toBeGreaterThan(0);
+  for (const p of displays) {
+    expect(p.text!.every(g => g >= 0 && g < result.kit.glyphs.length)).toBe(true);
+    expect(result.kit.pieces.find(k => k.id === p.piece)!.surfaces).toContain('district-marquee');
+  }
 });

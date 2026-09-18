@@ -1,5 +1,4 @@
 import type { Box3, Ring, Vec2, Vec3 } from '../geometry/schema.ts';
-import type { NativeApproach, NativeRoad, NativeTurn } from '../architecture/native-schema.ts';
 
 export type StreetClass = 'street' | 'road' | 'alley';
 export interface StreetProfile {
@@ -10,7 +9,7 @@ export interface StreetProfileMapping { roadId: string; profileId: string; reque
 export interface StreetKitPiece {
   id: string;
   file: string;
-  kind: 'segment' | 'junction-arm' | 'junction-center' | 'prop';
+  kind: 'segment' | 'junction-arm' | 'junction-center' | 'prop' | 'overlay';
   classes: StreetClass[];
   zone: string;
   variant: string;
@@ -25,35 +24,34 @@ export interface StreetKitPiece {
   bytes: number;
   sha256: string;
   profileId?: string;
-  configurations?: { id: string; footprint: Ring[] }[];
 }
-export interface StreetKit { version: '1.1.0'; units: 'meters'; module: 8; profiles: StreetProfile[]; pieces: StreetKitPiece[] }
-export interface StreetScan {
-  surface: string; position: Vec3; rotationY: number; size: Vec2; clip: Ring[];
+export interface StreetKit {
+  version: '1.2.0'; units: 'meters'; module: 8; profiles: StreetProfile[]; pieces: StreetKitPiece[];
+  /** Equal horizontal UV cells, resolved once from the native material binding. */
+  scanAtlas: string[];
+  glyphs: string;
 }
 export interface StreetPlacement {
   piece: string;
   position: Vec3;
   rotationY: number;
+  scale?: Vec3;
   cell: Vec2;
   ownerId: string;
   ownerIds: string[];
-  featureId?: string;
-  scale?: Vec3;
-  configuration?: string;
-  /** Local translation applied before scale, rotation and position. */
-  offset?: Vec2;
-  /** Receiving polygons in placement coordinates after local offset and scale. */
-  clip?: Ring[];
-  markings?: { seed: number; domain: Ring[]; roadTop: number; roads: NativeRoad[]; approaches: NativeApproach[]; turns: NativeTurn[] };
-  scans?: StreetScan[];
-  message?: string;
+  tint?: Vec3;
   wear?: number;
-  openings?: Ring[];
-  finishes?: { finish: string; clip: Ring[] }[];
-  panels?: { surface: string; clip: Ring[]; height: number }[];
+  scan?: { offset: Vec2; scale: Vec2 };
+  text?: number[];
 }
-export interface StreetPlacements { version: '1.1.0'; cellSize: 128; placements: StreetPlacement[] }
+export interface StreetPlacements { version: '1.2.0'; cellSize: 128; placements: StreetPlacement[] }
+export interface StreetOverhang {
+  placement: number; piece: string; boundaryArea: number; fringeArea: number;
+}
+export interface StreetOverhangReport {
+  accepted: StreetOverhang[];
+  boundaryArea: number; fringeArea: number; overlapArea: number;
+}
 export interface StreetClosure {
   roadId: string; length: number; start: number; end: number; clearLength: number;
   segments: number; halfSegments: number; quarterSegments: number;
