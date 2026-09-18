@@ -1,6 +1,6 @@
 import type { NativeArchitecture, NativeFrontage, NativeOwner } from '../../architecture/native-schema.ts';
-import type { Ring, Vec2 } from '../../geometry/schema.ts';
-import { bounds } from '../../geometry/polygons.ts';
+import type { Box2, Ring, Vec2 } from '../../geometry/schema.ts';
+import { bounds, intersects } from '../../geometry/polygons.ts';
 import { difference, intersection, totalArea } from '../surfaces/Regions.ts';
 import { along, dot, sub } from '../surfaces/Frame.ts';
 import { SurfaceBatch } from '../surfaces/SurfaceBatch.ts';
@@ -14,6 +14,7 @@ import { invariant } from '../../errors.ts';
 /** Whole pieces on shared two-metre stations, with source clearance checks. */
 export class DistrictDetails {
   readonly features: DistrictFeature[] = [];
+  private readonly boxes: Box2[] = [];
   private readonly models = new Map<string, FurnitureModel>();
   private readonly architecture: NativeArchitecture;
   private readonly excluded: Ring[];
@@ -88,9 +89,9 @@ export class DistrictDetails {
     const z0 = setback + min[2]!, z1 = setback + max[2]!;
     const footprint: Ring = [along(face, a, z0), along(face, b, z0), along(face, b, z1), along(face, a, z1)];
     const receiving = owner.ground.filter(field => !['guard', 'tree-grate'].includes(kind) || field.surface === 'sidewalk').map(field => field.ring);
-    if (totalArea(difference([footprint], receiving)) > 1e-7 || totalArea(intersection([footprint], this.excluded)) > 1e-7
-      || this.features.some(feature => totalArea(intersection([footprint], [feature.descriptor.footprint])) > 1e-7)) return;
     const box = bounds(footprint);
+    if (totalArea(difference([footprint], receiving)) > 1e-7 || totalArea(intersection([footprint], this.excluded)) > 1e-7
+      || this.features.some((other, index) => intersects(this.boxes[index]!, box) && totalArea(intersection([footprint], [other.descriptor.footprint])) > 1e-7)) return;
     if (this.architecture.obstaclePoints.some(point => Math.hypot(Math.max(box.min[0] - point.position[0], 0, point.position[0] - box.max[0]),
       Math.max(box.min[1] - point.position[1], 0, point.position[1] - box.max[1])) < point.clearance)) return;
     const id = `${face.id}:${kind}:${station}:${setback}`;
@@ -103,6 +104,6 @@ export class DistrictDetails {
         ring: [along(face, station), along(face, station + length), along(face, station + length, depth), along(face, station, depth)] };
       feature.panel = [along(face, station, depth), along(face, station + 2, depth), along(face, station + 2, depth + 2), along(face, station, depth + 2)];
     }
-    this.features.push(feature);
+    this.features.push(feature); this.boxes.push(box);
   }
 }

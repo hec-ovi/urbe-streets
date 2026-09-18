@@ -1,21 +1,25 @@
 import {invariant,unsatisfiable} from '../errors.ts';
+import type {Box2,Ring} from '../geometry/schema.ts';
 import type {NativeArchitecture,NativeOwner} from '../architecture/native-schema.ts';
 import type {CoverageClaim} from '../construction/surfaces/schema.ts';
 import type {NativeStreetManifest} from '../schema/native-result.ts';
-import {difference,intersection,totalArea,union} from '../geometry/polygons.ts';
+import {bounds,difference,intersection,intersects,totalArea,union} from '../geometry/polygons.ts';
 
 /** Each receiving owner proves coverage independently, so neighboring owners cannot hide a loss. */
 export class NativeCoverage {
   private readonly architecture:NativeArchitecture;
+  private readonly exclusions:{ring:Ring;box:Box2}[];
   private readonly seen=new Set<string>();
   private readonly cover={reservedArea:0,excludedArea:0,constructedArea:0,missingArea:0,outsideArea:0};
-  constructor(architecture:NativeArchitecture){this.architecture=architecture;}
+  constructor(architecture:NativeArchitecture){this.architecture=architecture;
+    this.exclusions=architecture.exclusions.map(ring=>({ring,box:bounds(ring)}));}
   add(owner:NativeOwner,claims:CoverageClaim[]):void{
     if(this.seen.has(owner.id)||claims.some(claim=>claim.ownerId!==owner.id))throw invariant('Coverage has conflicting owner identity',{ownerId:owner.id});
     const reserved=union(owner.ground.map(ground=>ground.ring)),expected=difference(reserved,this.architecture.shafts.map(shaft=>shaft.ring));
     const actual=union(claims.flatMap(claim=>claim.rings)),missing=totalArea(difference(expected,actual)),outside=totalArea(difference(actual,expected));
     if(missing>1e-7||outside>1e-7)throw invariant('Native construction does not cover its reserved receiving fields',{ownerId:owner.id,missing,outside});
-    const encroachment=totalArea(intersection(actual,this.architecture.exclusions));
+    const reach=bounds(actual.flat()),near=this.exclusions.filter(exclusion=>intersects(exclusion.box,reach));
+    const encroachment=totalArea(intersection(actual,near.map(exclusion=>exclusion.ring)));
     if(encroachment>1e-7)throw unsatisfiable('Native construction enters parcel or water exclusion',{ownerId:owner.id,area:encroachment});
     this.seen.add(owner.id);this.cover.reservedArea+=totalArea(reserved);this.cover.excludedArea+=totalArea(reserved)-totalArea(expected);
     this.cover.constructedArea+=totalArea(actual);this.cover.missingArea+=missing;this.cover.outsideArea+=outside;
