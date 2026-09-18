@@ -1,4 +1,5 @@
 import type { Box2, Ring, Vec2 } from '../geometry/schema.ts';
+import type { StreetDegradation } from '../schema/street-kit.ts';
 export interface NativeIdentity { hash: string; encoding: 'json-file-bytes' | 'json-stringify-utf8' }
 export interface NativeGround { id: string; sourceIndex: number; ownerId: string; surface: 'roadway' | 'sidewalk' | 'curb' | 'gutter'; ring: Ring; bottom: number; top: number }
 export interface NativeFrontage {
@@ -45,4 +46,6 @@ export interface NativeArchitecture {
   shafts: NativeShaft[]; stationBays: NativeStationBay[]; protections: NativeProtection[];
   obstaclePoints: { id: string; position: Vec2; clearance: number }[]; exclusions: Ring[];
   highwayHash: string; stationHash: string; remainingGroundIndices: number[];
+  /** Authored reservations dropped because the box cannot build them. */
+  degraded: StreetDegradation[];
 }

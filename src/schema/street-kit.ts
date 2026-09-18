@@ -6,6 +6,8 @@ export interface StreetProfile {
   width: number; medianWidth: number; pavedWidth: number; curbWidth: number; gutterWidth: number;
 }
 export interface StreetProfileMapping { roadId: string; profileId: string; requestedWidth: number; width: number; delta: number }
+/** One authored reservation the box could not build, dropped from the placements. */
+export interface StreetDegradation { id: string; reason: string }
 export interface StreetKitPiece {
   id: string;
   file: string;

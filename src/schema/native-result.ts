@@ -1,6 +1,6 @@
 import type { Box3, Ring } from '../geometry/schema.ts';
 import type { NativeMaterialCatalog } from './native-materials.ts';
-import type { StreetClosure, StreetKit, StreetPlacements, StreetProfileMapping, StreetOverhangReport } from './street-kit.ts';
+import type { StreetClosure, StreetDegradation, StreetKit, StreetPlacements, StreetProfileMapping, StreetOverhangReport } from './street-kit.ts';
 import type { WearSnapshot } from '../construction/style/schema.ts';
 
 export interface NativeStreetGround {
@@ -43,7 +43,7 @@ export interface NativeStreetManifest {
   placements: StreetPlacements;
   files: { kit: 'streets/kit.json'; placements: 'streets/placements.json' };
   closures: StreetClosure[];
-  report: { profiles: StreetProfileMapping[]; overhangs: StreetOverhangReport };
+  report: { profiles: StreetProfileMapping[]; overhangs: StreetOverhangReport; degraded: StreetDegradation[] };
   ground: {
     owners: NativeStreetGround[];
     replacements: { groundIndices: number[]; moduleOwnerIds: string[] };

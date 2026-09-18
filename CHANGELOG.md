@@ -1,5 +1,7 @@
 # Changelog
 
+0.9.1: a parking bay the box cannot build is dropped, its ground keeps the ordinary segment, and `report.degraded` names the bay and the reason.
+
 0.9.0: Streets bakes paint, junction seams and zone palettes into a shared kit with overlay pieces, transform placements and reported overhangs.
 
 0.8.0: Streets publishes one bounded profile catalogue with shared geometry, placement attributes and reported width mappings.

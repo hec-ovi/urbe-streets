@@ -1,8 +1,10 @@
 import { area, difference, totalArea } from '../geometry/polygons.ts';
+import { StreetsError } from '../errors.ts';
 import { bad, array, integer, number, object, path, point, records, ring, string, strings, indexed, type RecordValue } from './values.ts';
 import type { NativeCorner, NativeFrontage, NativeGround, NativeOwner, NativeParking } from './native-schema.ts';
+import type { StreetDegradation } from '../schema/street-kit.ts';
 
-export function nativeGround(source: RecordValue): { owners: NativeOwner[]; count: number; remaining: number[] } {
+export function nativeGround(source: RecordValue): { owners: NativeOwner[]; count: number; remaining: number[]; degraded: StreetDegradation[] } {
   const streets = object(source.streets, 'streets'), construction = object(streets.construction, 'streets.construction');
   const format = object(construction.modules, 'construction.modules').format, district = format === 'district';
   if (format !== undefined && format !== 'source' && format !== 'district') bad('construction.modules.format', 'Unsupported street module format');
@@ -64,23 +66,37 @@ export function nativeGround(source: RecordValue): { owners: NativeOwner[]; coun
   }
   for (const f of frontages.values()) if (f.cornerIds.some(id => id !== null && !cornerRows.has(id))) bad(`frontages.${f.id}`, 'Missing corner support');
   const parkingRows = indexed(records(reservation.parking, 'reservations.parking'), 'reservations.parking');
+  const degraded: StreetDegradation[] = [];
   for (const [id, v] of parkingRows) {
-    const ownerId = string(v.ownerId, `parking.${id}.ownerId`), owner = byOwner.get(ownerId), frontageId = string(v.frontageId, `parking.${id}.frontageId`), frontage = frontages.get(frontageId);
-    const depth = number(v.depth, `parking.${id}.depth`);
-    if (!owner || frontage?.ownerId !== ownerId || frontage.pavedWidth !== (district ? 4.2 : 6) || v.slotLength !== 6 || depth !== (district ? 2 : 2.5) || v.endRun !== 2
-      || Math.abs(number(v.walkingClearance, `parking.${id}.walkingClearance`) - (frontage.pavedWidth - depth)) > 1e-8) bad(`parking.${id}`, 'Unsupported native parking reservation');
-    const support = object(v.support, `parking.${id}.support`);
-    const p: NativeParking = { id, ownerId, frontageId, start: number(v.start, `parking.${id}.start`), end: number(v.end, `parking.${id}.end`),
-      support: { start: number(support.start, `parking.${id}.support.start`), end: number(support.end, `parking.${id}.support.end`) },
-      slotCount: integer(v.slotCount, `parking.${id}.slotCount`), depth, footprint: ring(v.footprint, `parking.${id}.footprint`),
-      slots: array(v.slots, `parking.${id}.slots`).map((r, i) => ring(r, `parking.${id}.slots[${i}]`)) };
-    if (p.slotCount < 1 || p.slotCount > 3 || p.support.start !== p.start - 2 || p.support.end !== p.end + 2
-      || p.support.start < 0 || p.support.end > frontage.length || p.end - p.start !== p.slotCount * 6 + 4 || p.slots.length !== p.slotCount
-      || p.slots.some(r => Math.abs(area(r.map(([x, z]) => [x - r[0]![0], z - r[0]![1]])) - 6 * p.depth) > 1e-6)
-      || p.slots.some(slot => totalArea(difference([slot], [p.footprint])) > 1e-7)
-      || totalArea(difference([p.footprint], owner.ground.filter(g => g.surface === 'roadway').map(g => g.ring))) > 1e-7) bad(`parking.${id}`, 'Parking footprint disagrees with authored ground');
-    owner.parking.push(p);
+    // A bay the box cannot build is dropped; the ordinary segment keeps its ground covered.
+    try {
+      const bay = parkingBay(id, v, byOwner, frontages, district);
+      byOwner.get(bay.ownerId)!.parking.push(bay);
+    } catch (error) {
+      if (!(error instanceof StreetsError) || error.code !== 'E_UNSUPPORTED_ARCHITECTURE') throw error;
+      degraded.push({ id, reason: error.message });
+    }
   }
   ground.forEach((g, index) => { if (['roadway', 'sidewalk', 'curb', 'gutter'].includes(String(g.surface)) && !seen.has(index)) bad(`ground[${index}]`, 'Unowned street ground'); });
-  return { owners, count: ground.length, remaining: ground.flatMap((_, index) => seen.has(index) ? [] : [index]) };
+  return { owners, count: ground.length, remaining: ground.flatMap((_, index) => seen.has(index) ? [] : [index]), degraded };
+}
+
+/** Reads one authored parking reservation; a bay the box cannot build throws and its caller degrades it. */
+function parkingBay(id: string, v: RecordValue, byOwner: Map<string, NativeOwner>, frontages: Map<string, NativeFrontage>, district: boolean): NativeParking {
+  const ownerId = string(v.ownerId, `parking.${id}.ownerId`), owner = byOwner.get(ownerId), frontageId = string(v.frontageId, `parking.${id}.frontageId`), frontage = frontages.get(frontageId);
+  const depth = number(v.depth, `parking.${id}.depth`);
+  if (!owner || frontage?.ownerId !== ownerId || frontage.pavedWidth !== (district ? 4.2 : 6) || v.slotLength !== 6 || depth !== (district ? 2 : 2.5) || v.endRun !== 2
+    || Math.abs(number(v.walkingClearance, `parking.${id}.walkingClearance`) - (frontage.pavedWidth - depth)) > 1e-8) bad(`parking.${id}`, 'Unsupported native parking reservation');
+  const support = object(v.support, `parking.${id}.support`);
+  const p: NativeParking = { id, ownerId, frontageId, start: number(v.start, `parking.${id}.start`), end: number(v.end, `parking.${id}.end`),
+    support: { start: number(support.start, `parking.${id}.support.start`), end: number(support.end, `parking.${id}.support.end`) },
+    slotCount: integer(v.slotCount, `parking.${id}.slotCount`), depth, footprint: ring(v.footprint, `parking.${id}.footprint`),
+    slots: array(v.slots, `parking.${id}.slots`).map((r, i) => ring(r, `parking.${id}.slots[${i}]`)) };
+  if (p.slotCount < 1 || p.slotCount > 3) bad(`parking.${id}`, 'Parking bay holds an unsupported slot count');
+  if (p.support.start !== p.start - 2 || p.support.end !== p.end + 2
+    || p.support.start < 0 || p.support.end > frontage.length || p.end - p.start !== p.slotCount * 6 + 4 || p.slots.length !== p.slotCount
+    || p.slots.some(r => Math.abs(area(r.map(([x, z]) => [x - r[0]![0], z - r[0]![1]])) - 6 * p.depth) > 1e-6)
+    || p.slots.some(slot => totalArea(difference([slot], [p.footprint])) > 1e-7)
+    || totalArea(difference([p.footprint], owner.ground.filter(g => g.surface === 'roadway').map(g => g.ring))) > 1e-7) bad(`parking.${id}`, 'Parking footprint disagrees with authored ground');
+  return p;
 }

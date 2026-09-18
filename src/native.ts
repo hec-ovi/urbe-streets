@@ -49,7 +49,7 @@ export async function buildNative(request: NativeStreetRequest, options: NativeB
       meta: { version: '0.5.0', generatorVersion: pkg.version, architectureVersion: a.version, reservationVersion: a.reservationVersion,
         designVersion: request.design.version, blueprintHash: a.identity.hash, blueprintEncoding: a.identity.encoding, nativeCatalogHash: catalog.hash, seed: request.seed,
         identity: hash(JSON.stringify([a.identity, catalog.hash, request.seed, request.design, pkg.version])), units: 'meters' },
-      kit, placements, files: { kit: 'streets/kit.json', placements: 'streets/placements.json' }, closures: units.plan.closures, report: { profiles: units.profiles.mappings, overhangs: units.overhangs },
+      kit, placements, files: { kit: 'streets/kit.json', placements: 'streets/placements.json' }, closures: units.plan.closures, report: { profiles: units.profiles.mappings, overhangs: units.overhangs, degraded: a.degraded },
       ground: units.ground, features, materials: { mode: 'native-reference', binding: catalog.binding }, wear: { ...units.wear.snapshot(), application: 'instance' }, protected: a.protections,
       delegated: { highways: { source: 'streets.highwayStructures', hash: a.highwayHash, count: a.protections.filter(p => p.kind === 'highway').length },
         stations: { source: 'transit.subwayStations', hash: a.stationHash, stationIds: [...new Set([...a.stationBays.map(b => b.stationId), ...a.shafts.map(s => s.stationId)])] }, remainingGroundIndices: a.remainingGroundIndices },

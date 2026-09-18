@@ -32,6 +32,11 @@ let source: {
 };
 beforeAll(async () => { result = await build(request, { nativeMaterials }); source = JSON.parse(await readFile(blueprint, 'utf8')); });
 
+interface ParkingBay {
+  id: string; ownerId: string; frontageId: string; start: number; end: number; support: { start: number; end: number };
+  slotCount: number; slotLength: number; depth: number; endRun: number; walkingClearance: number; footprint: Ring; slots: Ring[];
+}
+
 function fractionalBlueprint(width = 7) {
   const length = 31.7, half = width / 2;
   const strip = (z: number, depth: number): Ring => [[0, z], [length, z], [length, z + depth], [0, z + depth]];
@@ -43,14 +48,14 @@ function fractionalBlueprint(width = 7) {
         elevationProfile: [{ distance: 0, level: 0 }, { distance: length, level: 0 }] }],
       highwayStructures: [], crossings: [], signals: [], planting: [],
       construction: {
-        modules: { version: '1.0.0', definitions: [], placements: [] }, planningReservations: { version: '2.1.0' },
+        modules: { version: '1.0.0', definitions: [], placements: [], format: 'source' }, planningReservations: { version: '2.1.0' },
         runs: [{ id: 'r0', edges: [{ edgeId: 'e0', start: 0, end: length, forward: true }] }], junctions: [],
         reservations: { version: '1.0.0', groundArray: { path: 'volumetric.ground', count: 4 },
           owners: [{ id: 'roadway', kind: 'roadway', groundIndices: [0], excludedParcelIds: [], interiors: [], finish: null },
             { id: 'block', kind: 'block', groundIndices: [1, 2, 3], excludedParcelIds: [], interiors: [], finish: 'ordinary' }],
           frontages: [{ id: 'frontage:block', ownerId: 'block', edgeIds: ['e0'], start: [0, half], end: [length, half], inward: [0, 1],
             stationRange: [0, length], moduleStationOffset: 0, pavedWidth: 2, roadTop: 0, pavedTop: 0.2, curbWidth: 0.2, gutterWidth: 0.3, cornerIds: [null, null] }],
-          corners: [], parking: [], protected: [] },
+          corners: [], parking: [] as ParkingBay[], protected: [] },
       },
     },
     architecture: { version: '1.0.0', edges: [{ edgeId: 'e0', lanes: [
@@ -65,6 +70,31 @@ function fractionalBlueprint(width = 7) {
       { surface: 'sidewalk', polygon: strip(half + 0.5, 2), bottom: -0.2, top: 0.2 },
     ] },
   };
+}
+
+/** The same run in district format with one authored parking bay carved out of its walk. */
+function parkingBlueprint() {
+  const source = fractionalBlueprint(), length = 31.7, half = 3.5;
+  const strip = (z: number, depth: number): Ring => [[0, z], [length, z], [length, z + depth], [0, z + depth]];
+  const bay: Ring = [[8, 4.2], [24, 4.2], [22, 6.2], [10, 6.2]];
+  const slot = (x: number): Ring => [[x, 4.2], [x + 6, 4.2], [x + 6, 6.2], [x, 6.2]];
+  source.meta.bounds = { min: [0, -half], max: [length, 8.4] };
+  source.meta.boundary = strip(-half, 11.9);
+  source.volumetric.ground = [
+    { surface: 'roadway', polygon: strip(-half, 7), bottom: -0.2, top: 0 },
+    { surface: 'gutter', polygon: strip(half, 0.5), bottom: -0.2, top: 0 },
+    { surface: 'curb', polygon: strip(4, 0.2), bottom: -0.2, top: 0.2 },
+    { surface: 'sidewalk', polygon: [[0, 4.2], [8, 4.2], [10, 6.2], [22, 6.2], [24, 4.2], [length, 4.2], [length, 8.4], [0, 8.4]], bottom: -0.2, top: 0.2 },
+    { surface: 'roadway', polygon: bay, bottom: -0.2, top: 0 },
+  ];
+  const construction = source.streets.construction, reservations = construction.reservations;
+  construction.modules.format = 'district';
+  reservations.groundArray.count = 5;
+  reservations.owners[1]!.groundIndices = [1, 2, 3, 4];
+  Object.assign(reservations.frontages[0]!, { pavedWidth: 4.2, gutterWidth: 0.5 });
+  reservations.parking = [{ id: 'bay', ownerId: 'block', frontageId: 'frontage:block', start: 8, end: 24, support: { start: 6, end: 26 },
+    slotCount: 2, slotLength: 6, depth: 2, endRun: 2, walkingClearance: 2.2, footprint: bay, slots: [slot(10), slot(16)] }];
+  return source;
 }
 
 it('publishes schema valid kit and placements with exact Atlas ownership and material binding', () => {
@@ -262,12 +292,30 @@ it('writes the complete bundle before its manifest and exposes metadata without 
   expect(metadata.kit).toEqual(result.kit);
 }, 120_000);
 
-it('rejects invalid input and unsupported Atlas versions through build', async () => {
+it('rejects invalid input and plans it cannot read through build', async () => {
   await expect(build({ ...request, seed: NaN }, { nativeMaterials })).rejects.toMatchObject({ code: 'E_INVALID_PARAMS' });
-  const invalid = { ...source, meta: { version: '0.24.0', units: 'meters' } };
-  await expect(build({ ...request, blueprint: invalid }, { nativeMaterials })).rejects.toMatchObject({ code: 'E_UNSUPPORTED_ARCHITECTURE' });
+  const version = { ...source, meta: { version: '0.24.0', units: 'meters' } };
+  await expect(build({ ...request, blueprint: version }, { nativeMaterials })).rejects.toMatchObject({ code: 'E_UNSUPPORTED_ARCHITECTURE' });
+  const { construction, ...streets } = source.streets;
+  await expect(build({ ...request, blueprint: { ...source, streets } }, { nativeMaterials })).rejects.toMatchObject({ code: 'E_UNSUPPORTED_ARCHITECTURE' });
   expect(result.meta.blueprintHash).toBe(createHash('sha256').update(await readFile(blueprint)).digest('hex'));
 });
+
+it('drops a parking bay that disagrees with the authored ground and keeps its ground covered', async () => {
+  const authored = await build({ ...request, blueprint: parkingBlueprint() }, { nativeMaterials });
+  const broken = parkingBlueprint(), bay = broken.streets.construction.reservations.parking[0]!;
+  bay.footprint = bay.footprint.map(([x, z]) => [x, z + 0.1] as Vec2);
+  bay.slots = bay.slots.map(slot => slot.map(([x, z]) => [x, z + 0.1] as Vec2));
+  const dropped = await build({ ...request, blueprint: broken }, { nativeMaterials });
+  expect(authored.report.degraded).toEqual([]);
+  expect(dropped.report.degraded).toEqual([{ id: 'bay', reason: 'Parking footprint disagrees with authored ground' }]);
+  const segments = (r: NativeStreetBuild) => r.placements.placements
+    .map(p => r.kit.pieces.find(k => k.id === p.piece)!).filter(k => k.kind === 'segment');
+  expect(segments(authored).filter(k => k.variant === 'parking')).toHaveLength(2);
+  expect(segments(dropped).some(k => k.variant === 'parking')).toBe(false);
+  expect(segments(dropped)).toHaveLength(segments(authored).length);
+  expect(dropped.ground.cover).toEqual(authored.ground.cover);
+}, 60_000);
 
 it('reports whole transformed coverage, collision footprints and accepted fringes', () => {
   const pieces = new Map(result.kit.pieces.map(p => [p.id, p]));

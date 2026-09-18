@@ -32,7 +32,7 @@ export async function readNativeAtlas(input: unknown): Promise<NativeArchitectur
   const planning = object(construction.planningReservations, 'streets.construction.planningReservations');
   if (planning.version !== '2.1.0') bad('streets.construction.planningReservations.version', 'Planning reservations version 2.1.0 is required');
   const reservation = object(construction.reservations, 'construction.reservations');
-  const { owners, count, remaining } = nativeGround(source), movement = nativeMovement(source);
+  const { owners, count, remaining, degraded } = nativeGround(source), movement = nativeMovement(source);
   const ownerIds = new Set(owners.map(owner => owner.id)), roadIds = new Set(movement.roads.map(road => road.id));
   for (const owner of owners) for (const frontage of owner.frontages) if (frontage.edgeIds.some(id => !roadIds.has(id))) bad(`frontages.${frontage.id}`, 'Unknown frontage road');
   const modules = object(construction.modules, 'construction.modules');
@@ -100,5 +100,5 @@ export async function readNativeAtlas(input: unknown): Promise<NativeArchitectur
   const medians = nativeMedians(construction.medians, owners, movement.roads);
   return { version: meta.version, reservationVersion: planning.version, format, medians, identity, bounds, boundary, groundArrayCount: count, owners, ...movement,
     shafts, stationBays, protections, obstaclePoints, exclusions, highwayHash: digest(JSON.stringify(streets.highwayStructures)),
-    stationHash: digest(JSON.stringify(transit.subwayStations)), remainingGroundIndices: remaining };
+    stationHash: digest(JSON.stringify(transit.subwayStations)), remainingGroundIndices: remaining, degraded };
 }

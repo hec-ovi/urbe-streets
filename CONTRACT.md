@@ -1,4 +1,4 @@
-# Streets 0.9.0
+# Streets 0.9.1
 
 Builds a shared street catalogue and city placements from saved Atlas 0.26.0 with planning reservations 2.1.0.
 
@@ -35,7 +35,7 @@ Straight runs use 8 m segments, at most one 4 m and one 2 m closure, then a plai
 
 `cell` is `[floor(x/128),floor(z/128)]`. Cells do not split pieces. Every placement identifies its primary owner and all ground owners touched by its footprint. Feature records retain source identities, anchors and the index of their prop placement in `features[].placement`. Shaft and station references, original ground indices and delegated infrastructure remain in the manifest.
 
-Coverage and collision checks start from whole transformed piece footprints. Physical pieces cannot enter station shafts. Intersections with owner reservations measure coverage only. Boundary and fringe overhangs remain drawn and collidable. `report.overhangs.accepted` lists placement index, piece, boundaryArea outside the city and fringeArea inside the city beyond its receiving region. Totals sum those per placement areas; overlapArea measures repeated physical surface coverage. `ground.cover.outsideArea` measures the union outside retained reservations. Paint and other overlays contribute no ground coverage.
+Coverage and collision checks start from whole transformed piece footprints. Physical pieces cannot enter station shafts. Intersections with owner reservations measure coverage only. Boundary and fringe overhangs remain drawn and collidable. `report.overhangs.accepted` lists placement index, piece, boundaryArea outside the city and fringeArea inside the city beyond its receiving region. `report.degraded` lists every parking bay the box cannot build, with its authored id and the reason; the bay leaves the placements and the ordinary segment keeps its ground covered. Totals sum those per placement areas; overlapArea measures repeated physical surface coverage. `ground.cover.outsideArea` measures the union outside retained reservations. Paint and other overlays contribute no ground coverage.
 
 ## Materials and output
 
@@ -45,6 +45,6 @@ Shared vertex wear is neutral. Streets samples the wear field at each placement 
 
 Construction and encoding run sequentially in the calling thread. Equal requests produce byte identical manifests and placements. Without outDir, assets contains JSON and GLB bytes. With outDir, the destination must be new and its parent must exist; manifest.json is written last and assets is empty. Manifest mode emits the same metadata with JSON assets only. Statistics count unique GLB bytes and exact compact placement JSON bytes.
 
-Errors: `E_INVALID_PARAMS` for requests, bindings and IO; `E_UNSUPPORTED_ARCHITECTURE` for source versions or malformed profiles; `E_UNSATISFIABLE` for excluded receiving land; `E_INVARIANT` for coverage, budgets or export failures. [StreetsError](src/errors.ts).
+Errors: `E_INVALID_PARAMS` for requests, bindings and IO; `E_UNSUPPORTED_ARCHITECTURE` for a plan the box cannot read, meaning its versions, sections or malformed profiles; `E_UNSATISFIABLE` for excluded receiving land; `E_INVARIANT` for coverage, budgets or export failures. [StreetsError](src/errors.ts).
 
 Dependencies: [Atlas](../atlas/CONTRACT.md), [native Materials](../materials/sources/streets/scene-native/CONTRACT.md), and the boxes in [INDEX](docs/INDEX.md). No renderer or sibling runtime imports.

@@ -12,7 +12,7 @@ export class CatalogueScene {
   constructor() {
     this.architecture = { format: 'district', version: '0.26.0', reservationVersion: '2.1.0', identity: { hash: '', encoding: 'json-stringify-utf8' },
       bounds: { min: [0, 0], max: [1, 1] }, boundary: [], groundArrayCount: 0, owners: [], roads: [], approaches: [], turns: [], medians: [],
-      shafts: [], stationBays: [], protections: [], obstaclePoints: [], exclusions: [], highwayHash: '', stationHash: '', remainingGroundIndices: [] };
+      shafts: [], stationBays: [], protections: [], obstaclePoints: [], exclusions: [], highwayHash: '', stationHash: '', remainingGroundIndices: [], degraded: [] };
   }
 
   segment(profile: StreetProfile, length: number, variant: string): SceneInput {

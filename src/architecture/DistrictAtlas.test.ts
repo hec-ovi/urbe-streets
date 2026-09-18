@@ -25,11 +25,6 @@ const invalid: { name: string; path: string; change: (input: Fixture) => void }[
   { name: 'non-string style', path: 'edges.e0.districtStyle', change: source => { Object.assign(source.streets.edges[0]!, { districtStyle: ['luxury'] }); } },
   { name: 'null median', path: 'edges.e0.median', change: source => { Object.assign(source.streets.edges[0]!.crossSection, { median: null }); } },
   { name: 'lane inside median', path: 'edges.e0.median', change: source => { source.architecture.edges[0]!.lanes[1]!.offset = 1.75; } },
-  { name: 'source parking depth in district', path: 'parking.parking:block', change: source => { source.streets.construction.reservations.parking[0]!.depth = 2.5; } },
-  { name: 'parking slot outside its footprint', path: 'parking.parking:block', change: source => {
-    const parking = source.streets.construction.reservations.parking[0]!;
-    parking.slots[0] = parking.slots[0]!.map(([x, z]) => [x + 10, z]);
-  } },
   { name: 'missing median source', path: 'construction.medians', change: source => { source.streets.construction.medians = []; } },
   { name: 'median source outside declared stations', path: 'median.stations', change: source => { source.streets.construction.medians[0]!.start = 9; } },
   { name: 'median source different from physical paving', path: 'median.footprint', change: source => {
