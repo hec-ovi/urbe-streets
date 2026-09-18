@@ -13,6 +13,7 @@ import { ProfileCatalogue } from './ProfileCatalogue.ts';
 import { stationPlacements } from './StationPlacements.ts';
 import { UnitFrame } from './Frame.ts';
 import { UnitCoverage } from './UnitCoverage.ts';
+import { ParkingUnits } from './ParkingUnits.ts';
 import { placement, turnPlacements } from './UnitOverlays.ts';
 
 export class StreetUnits {
@@ -34,6 +35,9 @@ export class StreetUnits {
     const plainClosures = this.plan.regions.filter(r => r.kind === 'segment' && r.length < 2).flatMap(r => r.mask);
     this.wear = new WearField({ seed, amount, bounds: a.bounds, streets: Math.max(1, new Set(a.roads.filter(r => r.kind !== 'highway').map(r => r.runId)).size) });
     this.features = new UnitFeatures(a, seed, p => this.wear.sample(p), plainClosures);
+    const drained = new Set(this.plan.regions.filter(r => r.kind === 'segment'
+      && this.features.items.some(f => f.cut && totalArea(intersection([f.cut.ring], r.mask)) > 1e-9)));
+    const parking = new ParkingUnits(surfaces, this.plan.regions, drained);
     const pieces = new Map(this.pieces.map(p => [p.metadata.id, p]));
     const coverage = new UnitCoverage(a);
     const add = (p: StreetPlacement, receiving?: Ring[]) => {
@@ -53,9 +57,7 @@ export class StreetUnits {
       if (region.kind === 'segment') {
         const profile = this.profiles.select(region.roads[0]!);
         const length = Math.max(2, region.length);
-        const drain = this.features.items.some(f => f.cut && totalArea(intersection([f.cut.ring], region.mask)) > 1e-9);
-        const parking = a.owners.some(o => o.parking.some(b => totalArea(intersection([b.footprint], region.mask)) > 1e-9));
-        const variant = length < 8 ? 'closure' : drain ? 'drain' : parking ? 'parking' : 'plain';
+        const variant = length < 8 ? 'closure' : parking.regions.has(region) ? 'parking' : drained.has(region) ? 'drain' : 'plain';
         p = placement(KitCatalogue.segment(profile, length, variant), region.frame, ['roadway']);
         if (region.length < 2) p.scale = [region.length / 2, 1, 1];
       } else {

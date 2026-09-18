@@ -1,4 +1,4 @@
-# Streets 0.9.1
+# Streets 0.9.2
 
 Builds a shared street catalogue and city placements from saved Atlas 0.26.0 with planning reservations 2.1.0.
 
@@ -31,7 +31,7 @@ Each placement carries only `piece`, `position`, `rotationY`, optional `scale`, 
 
 The scan piece is one unit quad with local UV `[x+0.5,0.5-z]`. Placement scale supplies its dimensions. `kit.scanAtlas` orders four equal horizontal UV cells: damage, fracture, repair and oil. Resolve each cell to its native surface maps once when preparing the shared scan material; UV cell selection happens in the shader. Marquee pieces contain a display face with UV 0 to 1. Its physical width is 1.8 m and sloping height is `hypot(0.44,0.44*0.16/0.46)` m. For N glyphs, the shader centres an area of width `N*w` and height `w`, where `w=min(0.24,1.8/N)`. Glyph i samples column `i%8` and row `floor(i/8)` of the existing 8 by 6 font atlas, with bottom V `1-(floor(i/8)+1)/6`. Space and the area outside the glyphs are transparent. No placement value changes geometry.
 
-Straight runs use 8 m segments, at most one 4 m and one 2 m closure, then a plain 2 m closure scaled along X for a fractional remainder. `closures` records roadId, length, remaining stations, piece counts and fittedLength. Station aprons tile pedestrian pieces around shafts; edge tiles scale to their rectangular receiving area. Retained ground below highways uses ordinary surface profiles; elevated structures stay delegated.
+Straight runs use 8 m segments, at most one 4 m and one 2 m closure, then a plain 2 m closure scaled along X for a fractional remainder. An authored parking bay holds one to six 6 m slots and takes one 8 m parking segment per slot on its own run: the units its footprint covers most, each carrying one slot with its 2 m end. `closures` records roadId, length, remaining stations, piece counts and fittedLength. Station aprons tile pedestrian pieces around shafts; edge tiles scale to their rectangular receiving area. Retained ground below highways uses ordinary surface profiles; elevated structures stay delegated.
 
 `cell` is `[floor(x/128),floor(z/128)]`. Cells do not split pieces. Every placement identifies its primary owner and all ground owners touched by its footprint. Feature records retain source identities, anchors and the index of their prop placement in `features[].placement`. Shaft and station references, original ground indices and delegated infrastructure remain in the manifest.
 

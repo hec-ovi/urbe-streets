@@ -25,7 +25,7 @@ let source: {
     edges: { id: string; class: string; path: Vec2[] }[];
     construction: {
       junctions: { id: string; nodeIds: string[]; approaches: { edgeId: string }[] }[];
-      reservations: { owners: { id: string; groundIndices: number[] }[]; frontages: { id: string }[] };
+      reservations: { owners: { id: string; groundIndices: number[] }[]; frontages: { id: string }[]; parking: { slotCount: number }[] };
     };
   };
   volumetric: { ground: { polygon: Ring }[] };
@@ -37,8 +37,8 @@ interface ParkingBay {
   slotCount: number; slotLength: number; depth: number; endRun: number; walkingClearance: number; footprint: Ring; slots: Ring[];
 }
 
-function fractionalBlueprint(width = 7) {
-  const length = 31.7, half = width / 2;
+function fractionalBlueprint(width = 7, length = 31.7) {
+  const half = width / 2;
   const strip = (z: number, depth: number): Ring => [[0, z], [length, z], [length, z + depth], [0, z + depth]];
   return {
     meta: { version: '0.26.0', units: 'meters', bounds: { min: [0, -half], max: [length, half + 2.5] }, boundary: strip(-half, width + 2.5) },
@@ -72,11 +72,12 @@ function fractionalBlueprint(width = 7) {
   };
 }
 
-/** The same run in district format with one authored parking bay carved out of its walk. */
+/** The same run in district format with one authored six slot parking bay carved out of its walk. */
 function parkingBlueprint() {
-  const source = fractionalBlueprint(), length = 31.7, half = 3.5;
+  const length = 55.7, half = 3.5, slots = 6, start = 4, end = start + slots * 6 + 4;
+  const source = fractionalBlueprint(7, length);
   const strip = (z: number, depth: number): Ring => [[0, z], [length, z], [length, z + depth], [0, z + depth]];
-  const bay: Ring = [[8, 4.2], [24, 4.2], [22, 6.2], [10, 6.2]];
+  const bay: Ring = [[start, 4.2], [end, 4.2], [end - 2, 6.2], [start + 2, 6.2]];
   const slot = (x: number): Ring => [[x, 4.2], [x + 6, 4.2], [x + 6, 6.2], [x, 6.2]];
   source.meta.bounds = { min: [0, -half], max: [length, 8.4] };
   source.meta.boundary = strip(-half, 11.9);
@@ -84,7 +85,7 @@ function parkingBlueprint() {
     { surface: 'roadway', polygon: strip(-half, 7), bottom: -0.2, top: 0 },
     { surface: 'gutter', polygon: strip(half, 0.5), bottom: -0.2, top: 0 },
     { surface: 'curb', polygon: strip(4, 0.2), bottom: -0.2, top: 0.2 },
-    { surface: 'sidewalk', polygon: [[0, 4.2], [8, 4.2], [10, 6.2], [22, 6.2], [24, 4.2], [length, 4.2], [length, 8.4], [0, 8.4]], bottom: -0.2, top: 0.2 },
+    { surface: 'sidewalk', polygon: [[0, 4.2], [start, 4.2], [start + 2, 6.2], [end - 2, 6.2], [end, 4.2], [length, 4.2], [length, 8.4], [0, 8.4]], bottom: -0.2, top: 0.2 },
     { surface: 'roadway', polygon: bay, bottom: -0.2, top: 0 },
   ];
   const construction = source.streets.construction, reservations = construction.reservations;
@@ -92,8 +93,9 @@ function parkingBlueprint() {
   reservations.groundArray.count = 5;
   reservations.owners[1]!.groundIndices = [1, 2, 3, 4];
   Object.assign(reservations.frontages[0]!, { pavedWidth: 4.2, gutterWidth: 0.5 });
-  reservations.parking = [{ id: 'bay', ownerId: 'block', frontageId: 'frontage:block', start: 8, end: 24, support: { start: 6, end: 26 },
-    slotCount: 2, slotLength: 6, depth: 2, endRun: 2, walkingClearance: 2.2, footprint: bay, slots: [slot(10), slot(16)] }];
+  reservations.parking = [{ id: 'bay', ownerId: 'block', frontageId: 'frontage:block', start, end, support: { start: start - 2, end: end + 2 },
+    slotCount: slots, slotLength: 6, depth: 2, endRun: 2, walkingClearance: 2.2, footprint: bay,
+    slots: Array.from({ length: slots }, (_, i) => slot(start + 2 + i * 6)) }];
   return source;
 }
 
@@ -301,7 +303,7 @@ it('rejects invalid input and plans it cannot read through build', async () => {
   expect(result.meta.blueprintHash).toBe(createHash('sha256').update(await readFile(blueprint)).digest('hex'));
 });
 
-it('drops a parking bay that disagrees with the authored ground and keeps its ground covered', async () => {
+it('places one parking piece per authored slot and drops a bay that disagrees with its ground', async () => {
   const authored = await build({ ...request, blueprint: parkingBlueprint() }, { nativeMaterials });
   const broken = parkingBlueprint(), bay = broken.streets.construction.reservations.parking[0]!;
   bay.footprint = bay.footprint.map(([x, z]) => [x, z + 0.1] as Vec2);
@@ -311,10 +313,13 @@ it('drops a parking bay that disagrees with the authored ground and keeps its gr
   expect(dropped.report.degraded).toEqual([{ id: 'bay', reason: 'Parking footprint disagrees with authored ground' }]);
   const segments = (r: NativeStreetBuild) => r.placements.placements
     .map(p => r.kit.pieces.find(k => k.id === p.piece)!).filter(k => k.kind === 'segment');
-  expect(segments(authored).filter(k => k.variant === 'parking')).toHaveLength(2);
+  expect(segments(authored).filter(k => k.variant === 'parking')).toHaveLength(6);
   expect(segments(dropped).some(k => k.variant === 'parking')).toBe(false);
   expect(segments(dropped)).toHaveLength(segments(authored).length);
   expect(dropped.ground.cover).toEqual(authored.ground.cover);
+  const city = source.streets.construction.reservations.parking;
+  expect(result.report.degraded).toEqual([]);
+  expect(segments(result).filter(k => k.variant === 'parking')).toHaveLength(city.reduce((n, b) => n + b.slotCount, 0));
 }, 60_000);
 
 it('reports whole transformed coverage, collision footprints and accepted fringes', () => {

@@ -1,5 +1,7 @@
 # Changelog
 
+0.9.2: a parking bay holds one to six slots and places one 8 m parking piece per slot on its run.
+
 0.9.1: a parking bay the box cannot build is dropped, its ground keeps the ordinary segment, and `report.degraded` names the bay and the reason.
 
 0.9.0: Streets bakes paint, junction seams and zone palettes into a shared kit with overlay pieces, transform placements and reported overhangs.

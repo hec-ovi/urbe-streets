@@ -92,7 +92,7 @@ function parkingBay(id: string, v: RecordValue, byOwner: Map<string, NativeOwner
     support: { start: number(support.start, `parking.${id}.support.start`), end: number(support.end, `parking.${id}.support.end`) },
     slotCount: integer(v.slotCount, `parking.${id}.slotCount`), depth, footprint: ring(v.footprint, `parking.${id}.footprint`),
     slots: array(v.slots, `parking.${id}.slots`).map((r, i) => ring(r, `parking.${id}.slots[${i}]`)) };
-  if (p.slotCount < 1 || p.slotCount > 3) bad(`parking.${id}`, 'Parking bay holds an unsupported slot count');
+  if (p.slotCount < 1 || p.slotCount > 6) bad(`parking.${id}`, 'Parking bay holds an unsupported slot count');
   if (p.support.start !== p.start - 2 || p.support.end !== p.end + 2
     || p.support.start < 0 || p.support.end > frontage.length || p.end - p.start !== p.slotCount * 6 + 4 || p.slots.length !== p.slotCount
     || p.slots.some(r => Math.abs(area(r.map(([x, z]) => [x - r[0]![0], z - r[0]![1]])) - 6 * p.depth) > 1e-6)
