@@ -31,6 +31,41 @@ let source: {
 };
 beforeAll(async () => { result = await build(request, { nativeMaterials }); source = JSON.parse(await readFile(blueprint, 'utf8')); });
 
+function fractionalBlueprint() {
+  const length = 31.7;
+  const strip = (z: number, depth: number): Ring => [[0, z], [length, z], [length, z + depth], [0, z + depth]];
+  return {
+    meta: { version: '0.26.0', units: 'meters', bounds: { min: [0, -3.5], max: [length, 6] }, boundary: strip(-3.5, 9.5) },
+    streets: {
+      nodes: [{ id: 'n0', position: [0, 0] }, { id: 'n1', position: [length, 0] }],
+      edges: [{ id: 'e0', from: 'n0', to: 'n1', class: 'street', path: [[0, 0], [length, 0]] as Vec2[], width: 7, level: 0,
+        elevationProfile: [{ distance: 0, level: 0 }, { distance: length, level: 0 }] }],
+      highwayStructures: [], crossings: [], signals: [], planting: [],
+      construction: {
+        modules: { version: '1.0.0', definitions: [], placements: [] }, planningReservations: { version: '2.1.0' },
+        runs: [{ id: 'r0', edges: [{ edgeId: 'e0', start: 0, end: length, forward: true }] }], junctions: [],
+        reservations: { version: '1.0.0', groundArray: { path: 'volumetric.ground', count: 4 },
+          owners: [{ id: 'roadway', kind: 'roadway', groundIndices: [0], excludedParcelIds: [], interiors: [], finish: null },
+            { id: 'block', kind: 'block', groundIndices: [1, 2, 3], excludedParcelIds: [], interiors: [], finish: 'ordinary' }],
+          frontages: [{ id: 'frontage:block', ownerId: 'block', edgeIds: ['e0'], start: [0, 3.5], end: [length, 3.5], inward: [0, 1],
+            stationRange: [0, length], moduleStationOffset: 0, pavedWidth: 2, roadTop: 0, pavedTop: 0.2, curbWidth: 0.2, gutterWidth: 0.3, cornerIds: [null, null] }],
+          corners: [], parking: [], protected: [] },
+      },
+    },
+    architecture: { version: '1.0.0', edges: [{ edgeId: 'e0', lanes: [
+      { id: 'e0.v0', offset: 1.75, width: 3.5, direction: 'backward', path: [[length, 1.75], [0, 1.75]] },
+      { id: 'e0.v1', offset: -1.75, width: 3.5, direction: 'forward', path: [[0, -1.75], [length, -1.75]] },
+    ] }], nodes: [{ nodeId: 'n0', turns: [] }, { nodeId: 'n1', turns: [] }] },
+    transit: { subwayStations: [] }, parcels: [],
+    volumetric: { ground: [
+      { surface: 'roadway', polygon: strip(-3.5, 7), bottom: -0.2, top: 0 },
+      { surface: 'gutter', polygon: strip(3.5, 0.3), bottom: -0.2, top: 0 },
+      { surface: 'curb', polygon: strip(3.8, 0.2), bottom: -0.2, top: 0.2 },
+      { surface: 'sidewalk', polygon: strip(4, 2), bottom: -0.2, top: 0.2 },
+    ] },
+  };
+}
+
 it('publishes schema valid kit and placements with exact Atlas ownership and material binding', () => {
   const ajv = new Ajv2020({ strict: true, allErrors: true });
   ajv.addSchema(kitSchema);
@@ -78,7 +113,7 @@ function intervals(rings: Ring[], origin: Vec2, d: Vec2): [number, number][] {
   return spans;
 }
 
-it('covers each plan centreline once with whole units and plain fitted fractional closures', () => {
+it('covers each plan centreline once with whole units and plain fitted fractional closures', async () => {
   const pieces = new Map(result.kit.pieces.map(p => [p.id, p]));
   for (const p of result.kit.pieces.filter(p => p.kind === 'segment')) {
     expect(p.bounds.min[0], p.id).toBeGreaterThanOrEqual(-1e-7);
@@ -96,9 +131,13 @@ it('covers each plan centreline once with whole units and plain fitted fractiona
     for (const [start, end] of spans) { expect(start, `${road.id} at ${station}`).toBeCloseTo(station, 6); station = end; }
     expect(station, road.id).toBeCloseTo(length, 6);
   }
-  const fitted = result.closures.filter(c => c.fittedLength > 0);
-  expect(fitted.length).toBeGreaterThan(0);
-  for (const c of result.closures) {
+  const fractional = fractionalBlueprint();
+  const closureResult = await build({ ...request, blueprint: fractional }, { nativeMaterials });
+  const closurePieces = new Map(closureResult.kit.pieces.map(p => [p.id, p]));
+  const fitted = closureResult.closures.filter(c => c.fittedLength > 0);
+  expect(fitted).toHaveLength(1);
+  expect(fitted[0]!.fittedLength).toBe(1.7);
+  for (const c of [...result.closures, ...closureResult.closures]) {
     expect(c.segments * 8 + c.halfSegments * 4 + c.quarterSegments * 2 + c.fittedLength).toBeCloseTo(c.clearLength, 7);
     expect(c.segments).toBe(Math.floor(c.clearLength / 8));
     expect(c.halfSegments).toBe(Math.floor(c.clearLength % 8 / 4));
@@ -107,24 +146,25 @@ it('covers each plan centreline once with whole units and plain fitted fractiona
     expect(c.fittedLength).toBeLessThan(2);
     expect(c.fittedLength * 10).toBeCloseTo(Math.round(c.fittedLength * 10), 7);
   }
-  const placements = result.placements.placements.filter(p => pieces.get(p.piece)!.variant === 'fitted-closure');
+  const placements = closureResult.placements.placements.filter(p => closurePieces.get(p.piece)!.variant === 'fitted-closure');
   expect(placements).toHaveLength(fitted.length);
   for (const closure of fitted) {
-    const road = source.streets.edges.find(r => r.id === closure.roadId)!;
+    const road = fractional.streets.edges.find(r => r.id === closure.roadId)!;
     const origin = road.path[0]!, end = road.path.at(-1)!, station = closure.end - closure.fittedLength;
     const x = origin[0] + (end[0] - origin[0]) * station / closure.length;
     const z = origin[1] + (end[1] - origin[1]) * station / closure.length;
     const matching = placements.filter(p => Math.hypot(p.position[0] - x, p.position[2] - z) < 1e-7);
     expect(matching, closure.roadId).toHaveLength(1);
-    const p = matching[0]!, piece = pieces.get(p.piece)!;
+    const p = matching[0]!, piece = closurePieces.get(p.piece)!;
     expect(piece.length).toBe(closure.fittedLength);
     expect(p.scale).toBeUndefined();
-    const bytes = Buffer.from(result.assets[`streets/${piece.file}`]!);
+    expect(piece.surfaces).toContain('curb');
+    const bytes = Buffer.from(closureResult.assets[`streets/${piece.file}`]!);
     const gltf = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)).toString());
     for (const mesh of gltf.meshes) for (const primitive of mesh.primitives) expect(primitive.extras.streetCollision).toBe(true);
     const cos = Math.cos(p.rotationY), sin = Math.sin(p.rotationY);
     const footprint = piece.footprint.map(r => r.map(([x, z]): Vec2 => [p.position[0] + cos * x + sin * z, p.position[2] - sin * x + cos * z]));
-    for (const feature of result.features) expect(totalArea(intersection([feature.footprint], footprint)), feature.id).toBeLessThan(1e-8);
+    for (const feature of closureResult.features) expect(totalArea(intersection([feature.footprint], footprint)), feature.id).toBeLessThan(1e-8);
   }
 });
 
