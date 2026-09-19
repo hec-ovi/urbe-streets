@@ -1,6 +1,6 @@
 # Streets
 
-Version 0.9.3. Builds reusable street units and placements from a saved Atlas blueprint.
+Version 0.9.4. Builds reusable street units and placements from a saved Atlas blueprint.
 
 | Folder | Purpose | Dependencies | Input / output |
 | --- | --- | --- | --- |
@@ -21,6 +21,8 @@ Version 0.9.3. Builds reusable street units and placements from a saved Atlas bl
 | [cli](../src/cli/CONTRACT.md) | Builds native bundles from saved request JSON. | Streets | [request](../src/schema/native-request.ts) |
 
 [Profile catalogue](../src/construction/units/profiles.json): Atlas classes and zone dimensions.
+
+Parking construction in [units](../src/construction/units/CONTRACT.md) places road cores and independent kerb strips at authored bay stations. Slot strips and end returns share the fixed catalogue; reservations determine their side and receiving ground.
 
 [Native bundle schema](../src/schema/native-result.ts): exact input identity, reusable kit, placements, physical collision flags, ground replacement, native material snapshot and constructed feature bounds. [Native request](../src/schema/native-request.ts).
 

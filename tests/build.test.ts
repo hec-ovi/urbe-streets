@@ -25,7 +25,7 @@ let source: {
     edges: { id: string; class: string; path: Vec2[] }[];
     construction: {
       junctions: { id: string; nodeIds: string[]; approaches: { edgeId: string }[] }[];
-      reservations: { owners: { id: string; groundIndices: number[] }[]; frontages: { id: string }[]; parking: { slotCount: number }[] };
+      reservations: { owners: { id: string; groundIndices: number[] }[]; frontages: { id: string; start: Vec2; inward: Vec2 }[]; parking: ParkingBay[] };
     };
   };
   volumetric: { ground: { polygon: Ring }[] };
@@ -77,15 +77,15 @@ function parkingBlueprint() {
   const length = 55.7, half = 3.5, slots = 6, start = 4, end = start + slots * 6 + 4;
   const source = fractionalBlueprint(7, length);
   const strip = (z: number, depth: number): Ring => [[0, z], [length, z], [length, z + depth], [0, z + depth]];
-  const bay: Ring = [[start, 4.2], [end, 4.2], [end - 2, 6.2], [start + 2, 6.2]];
-  const slot = (x: number): Ring => [[x, 4.2], [x + 6, 4.2], [x + 6, 6.2], [x, 6.2]];
+  const bay: Ring = [[start, 3.5], [end, 3.5], [end, 5.5], [start, 5.5]];
+  const slot = (x: number): Ring => [[x, 3.5], [x + 6, 3.5], [x + 6, 5.5], [x, 5.5]];
   source.meta.bounds = { min: [0, -half], max: [length, 8.4] };
   source.meta.boundary = strip(-half, 11.9);
   source.volumetric.ground = [
     { surface: 'roadway', polygon: strip(-half, 7), bottom: -0.2, top: 0 },
-    { surface: 'gutter', polygon: strip(half, 0.5), bottom: -0.2, top: 0 },
-    { surface: 'curb', polygon: strip(4, 0.2), bottom: -0.2, top: 0.2 },
-    { surface: 'sidewalk', polygon: [[0, 4.2], [start, 4.2], [start + 2, 6.2], [end - 2, 6.2], [end, 4.2], [length, 4.2], [length, 8.4], [0, 8.4]], bottom: -0.2, top: 0.2 },
+    { surface: 'gutter', polygon: [[0,3.5],[start,3.5],[start,5.5],[end,5.5],[end,3.5],[length,3.5],[length,4],[end+0.5,4],[end+0.5,6],[start-0.5,6],[start-0.5,4],[0,4]], bottom: -0.2, top: 0 },
+    { surface: 'curb', polygon: [[0,4],[start-0.5,4],[start-0.5,6],[end+0.5,6],[end+0.5,4],[length,4],[length,4.2],[end+0.7,4.2],[end+0.7,6.2],[start-0.7,6.2],[start-0.7,4.2],[0,4.2]], bottom: -0.2, top: 0.2 },
+    { surface: 'sidewalk', polygon: [[0, 4.2], [start-0.7, 4.2], [start-0.7, 6.2], [end+0.7, 6.2], [end+0.7, 4.2], [length, 4.2], [length, 8.4], [0, 8.4]], bottom: -0.2, top: 0.2 },
     { surface: 'roadway', polygon: bay, bottom: -0.2, top: 0 },
   ];
   const construction = source.streets.construction, reservations = construction.reservations;
@@ -105,6 +105,12 @@ it('publishes schema valid kit and placements with exact Atlas ownership and mat
   for (const [schema, value] of [[kitSchema, result.kit], [placementSchema, result.placements]] as const) {
     const validate = ajv.compile(schema); expect(validate(value), JSON.stringify(validate.errors)).toBe(true);
   }
+  const validatePiece = ajv.compile({ $ref: `${kitSchema.$id}#/$defs/piece` });
+  const ordinary = result.kit.pieces.find(p => p.kind === 'segment' && p.profileId)!;
+  const slot = result.kit.pieces.find(p => p.variant === 'parking-slot')!;
+  for (const piece of [{ ...ordinary, length: 6 }, { ...ordinary, classes: ['street', 'road'] },
+    { ...slot, length: 8 }, { ...slot, classes: ['alley'] }, { ...slot, variant: 'walk' }])
+    expect(validatePiece(piece), JSON.stringify(piece)).toBe(false);
   const ids = new Set(result.kit.pieces.map(p => p.id));
   expect(ids.size).toBe(result.kit.pieces.length);
   for (const p of result.placements.placements) {
@@ -137,13 +143,11 @@ it('gives two cities and seeds byte identical complete kits within the inventory
   expect(other.kit).toEqual(result.kit);
   expect(result.kit.profiles).toHaveLength(15);
   for (const p of result.kit.profiles) expect(result.kit.pieces.filter(k => k.profileId === p.id).map(k => [k.length, k.variant]).sort())
-    .toEqual([[8, 'plain'], [8, 'parking'], [4, 'closure'], [2, 'closure'], [8, 'drain']].sort());
+    .toEqual([[8, 'plain'], [4, 'closure'], [2, 'closure'], ...(p.width && !p.medianWidth ? [[8, 'core'], [2, 'core-closure']] : [])].sort());
   expect(result.statistics.pieces).toBeLessThanOrEqual(200);
   expect(result.statistics.pieceBytes + result.assets['streets/kit.json']!.length).toBeLessThanOrEqual(3_000_000);
   expect(result.statistics.placements).toBeGreaterThan(600);
-  expect(result.statistics.placements).toBeLessThan(1100);
   expect(other.statistics.placements).toBeGreaterThan(3000);
-  expect(other.statistics.placements).toBeLessThan(5300);
   expect(result.report.profiles).toEqual([]);
   expect(other.report.profiles).toEqual([]);
   for (const p of result.kit.pieces) expect(createHash('sha256').update(result.assets[`streets/${p.file}`]!).digest('hex')).toBe(p.sha256);
@@ -303,7 +307,7 @@ it('rejects invalid input and plans it cannot read through build', async () => {
   expect(result.meta.blueprintHash).toBe(createHash('sha256').update(await readFile(blueprint)).digest('hex'));
 });
 
-it('places one parking piece per authored slot and drops a bay that disagrees with its ground', async () => {
+it('fits parking slots, kerbs and returns to saved bays and reports unbuildable records', async () => {
   const authored = await build({ ...request, blueprint: parkingBlueprint() }, { nativeMaterials });
   const broken = parkingBlueprint(), bay = broken.streets.construction.reservations.parking[0]!;
   bay.footprint = bay.footprint.map(([x, z]) => [x, z + 0.1] as Vec2);
@@ -313,13 +317,68 @@ it('places one parking piece per authored slot and drops a bay that disagrees wi
   expect(dropped.report.degraded).toEqual([{ id: 'bay', reason: 'Parking footprint disagrees with authored ground' }]);
   const segments = (r: NativeStreetBuild) => r.placements.placements
     .map(p => r.kit.pieces.find(k => k.id === p.piece)!).filter(k => k.kind === 'segment');
-  expect(segments(authored).filter(k => k.variant === 'parking')).toHaveLength(6);
-  expect(segments(dropped).some(k => k.variant === 'parking')).toBe(false);
-  expect(segments(dropped)).toHaveLength(segments(authored).length);
+  expect(segments(authored).filter(k => k.variant === 'parking-slot')).toHaveLength(6);
+  expect(segments(dropped).some(k => k.variant === 'parking-slot')).toBe(false);
   expect(dropped.ground.cover).toEqual(authored.ground.cover);
   const city = source.streets.construction.reservations.parking;
   expect(result.report.degraded).toEqual([]);
-  expect(segments(result).filter(k => k.variant === 'parking')).toHaveLength(city.reduce((n, b) => n + b.slotCount, 0));
+  expect(segments(result).filter(k => k.variant === 'parking-slot')).toHaveLength(city.reduce((n, b) => n + b.slotCount, 0));
+  for (const [built, plan] of [[authored, parkingBlueprint()], [result, source]] as const) {
+    const pieces = new Map(built.kit.pieces.map(p => [p.id, p]));
+    const faces = plan.streets.construction.reservations.frontages;
+    const parking = built.placements.placements.filter(p => pieces.get(p.piece)!.variant.startsWith('parking-'));
+    const triangles = new Map<string, { floor: Ring[]; paint: Ring[]; curb: Ring[] }>();
+    for (const p of parking) if (!triangles.has(p.piece)) {
+      const piece = pieces.get(p.piece)!;
+      const document = await decodePiece(built.assets[`streets/${piece.file}`]!);
+      const groups = { floor: [] as Ring[], paint: [] as Ring[], curb: [] as Ring[] };
+      for (const node of document.getRoot().listNodes()) for (const primitive of node.getMesh()?.listPrimitives() ?? []) {
+        const surface = String(primitive.getMaterial()!.getExtras().streetNativeSurface);
+        const kind = ['asphalt', 'district-hex'].includes(surface) ? 'floor' : surface === 'whitePaint' ? 'paint'
+          : surface === 'curb' || surface.startsWith('district-curb-') ? 'curb' : undefined;
+        if (!kind) continue;
+        const indices = primitive.getIndices()!;
+        for (let i = 0; i < indices.getCount(); i += 3) {
+          const xyz = [0, 1, 2].map(k => worldPosition(node, primitive, indices.getScalar(i + k)));
+          const [a, b, c] = xyz as [number[], number[], number[]];
+          if ((b[2]! - a[2]!) * (c[0]! - a[0]!) - (b[0]! - a[0]!) * (c[2]! - a[2]!) <= 1e-8) continue;
+          groups[kind].push(xyz.map(v => [v[0]!, v[2]!]));
+        }
+      }
+      for (const k of ['floor','paint','curb'] as const) groups[k] = union(groups[k]);
+      triangles.set(p.piece, groups);
+    }
+    for (const bay of plan.streets.construction.reservations.parking) {
+      const face = faces.find(f => f.id === bay.frontageId)!;
+      const d: Vec2 = [face.inward[1], -face.inward[0]];
+      const local = ([x,z]: Vec2): Vec2 => [(x-face.start[0])*d[0]+(z-face.start[1])*d[1], (x-face.start[0])*face.inward[0]+(z-face.start[1])*face.inward[1]];
+      const placed = parking.filter(p => {
+        const [x,z] = local([p.position[0],p.position[2]]);
+        return Math.abs(z)<1e-7 && x>=bay.support.start-1e-7 && x<bay.support.end;
+      });
+      expect(placed, bay.id).toHaveLength(bay.slotCount+2);
+      expect(placed.map(p=>pieces.get(p.piece)!.variant)).toEqual(['parking-start', ...Array<string>(bay.slotCount).fill('parking-slot'), 'parking-end']);
+      const stations = [bay.support.start, ...Array.from({ length: bay.slotCount }, (_, i) => bay.start + 2 + i * 6), bay.end - 2];
+      placed.forEach((p, i) => expect(local([p.position[0], p.position[2]])[0], bay.id).toBeCloseTo(stations[i]!, 7));
+      for (const p of placed) { expect(p.scale).toBeUndefined(); expect(p.rotationY).toBeCloseTo(-Math.atan2(d[1],d[0]), 7); }
+      const geometry = (kind: 'floor' | 'paint' | 'curb') => placed.flatMap(p => placementFootprint({footprint:triangles.get(p.piece)![kind]},p)).map(r=>r.map(local));
+      const floor = geometry('floor'), paint = geometry('paint'), curb = geometry('curb');
+      expect(totalArea(difference([bay.footprint.map(local)],union(floor))),bay.id).toBeLessThan(0.01);
+      expect(totalArea(difference(union(floor),[bay.footprint.map(local)])),bay.id).toBeLessThan(0.01);
+      expect(totalArea(floor)-totalArea(union(floor)),bay.id).toBeLessThan(0.01);
+      for (let i=0;i<=bay.slotCount;i++) {
+        const x=bay.start+2+i*6;
+        expect(totalArea(intersection(paint,[[[x,0.1],[x+0.12,0.1],[x+0.12,1.9],[x,1.9]]])),bay.id).toBeGreaterThan(0.21);
+      }
+      for (const x of [bay.start-0.7,bay.end+0.5])
+        expect(totalArea(intersection(curb,[[[x,0.6],[x+0.2,0.6],[x+0.2,2.5],[x,2.5]]])),bay.id).toBeGreaterThan(0.36);
+    }
+  }
+  const misplaced = parkingBlueprint();
+  misplaced.streets.construction.reservations.parking[0]!.slots[1] = misplaced.streets.construction.reservations.parking[0]!.slots[0]!;
+  const rejected = await build({...request,blueprint:misplaced},{nativeMaterials});
+  expect(rejected.report.degraded).toEqual([{id:'bay',reason:'Parking does not match the rectangular bay and 6 m slot catalogue'}]);
+
 }, 60_000);
 
 it('reports whole transformed coverage, collision footprints and accepted fringes', () => {

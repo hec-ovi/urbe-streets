@@ -1,7 +1,7 @@
 import type { NativeArchitecture, NativeRoad } from '../../architecture/native-schema.ts';
 import type { Ring } from '../../geometry/schema.ts';
 import type { StreetPlacement } from '../../schema/street-kit.ts';
-import { bounds, difference, intersection, totalArea, union } from '../../geometry/polygons.ts';
+import { bounds, difference, intersection, union } from '../../geometry/polygons.ts';
 import { BoxIndex } from '../../geometry/BoxIndex.ts';
 import { WearField } from '../style/WearField.ts';
 import { invariant } from '../../errors.ts';
@@ -37,11 +37,9 @@ export class StreetUnits {
     const shafts = new BoxIndex(a.shafts.map(s => s.ring), bounds);
     const receivingGround = new BoxIndex(a.owners.filter(o => o.kind !== 'station').flatMap(o => o.ground.map(g => g.ring)), bounds);
     this.wear = new WearField({ seed, amount, bounds: a.bounds, streets: Math.max(1, new Set(a.roads.filter(r => r.kind !== 'highway').map(r => r.runId)).size) });
-    this.features = new UnitFeatures(a, seed, p => this.wear.sample(p), plainClosures);
-    const cuts = new BoxIndex(this.features.items.flatMap(f => f.cut ? [f.cut.ring] : []), bounds);
-    const drained = new Set(this.plan.regions.filter(r => r.kind === 'segment'
-      && cuts.near(r.box).some(ring => totalArea(intersection([ring], r.mask)) > 1e-9)));
-    const parking = new ParkingUnits(surfaces, this.plan.regions, drained);
+    const parking = new ParkingUnits(a, this.plan.regions, this.profiles);
+    const details = { ...a, owners: a.owners.map(o => ({ ...o, parking: o.parking.filter(b => parking.bays.has(b)) })) };
+    this.features = new UnitFeatures(details, seed, p => this.wear.sample(p), plainClosures);
     const pieces = new Map(this.pieces.map(p => [p.metadata.id, p]));
     const coverage = new UnitCoverage(a);
     const add = (p: StreetPlacement, receiving?: Ring[]) => {
@@ -57,11 +55,13 @@ export class StreetUnits {
     for (const region of this.plan.regions) {
       const expected = difference(intersection(receivingGround.near(region.box), region.mask), shafts.near(region.box));
       if (!expected.length) continue;
+      const parked = parking.regions.get(region);
+      if (parked) { for (const p of parked) add(p, expected); continue; }
       let p: StreetPlacement;
       if (region.kind === 'segment') {
         const profile = this.profiles.select(region.roads[0]!);
         const length = Math.max(2, region.length);
-        const variant = length < 8 ? 'closure' : parking.regions.has(region) ? 'parking' : drained.has(region) ? 'drain' : 'plain';
+        const variant = length < 8 ? 'closure' : 'plain';
         p = placement(KitCatalogue.segment(profile, length, variant), region.frame, ['roadway']);
         if (region.length < 2) p.scale = [region.length / 2, 1, 1];
       } else {
@@ -92,6 +92,7 @@ export class StreetUnits {
       }
       add(p, expected);
     }
+    for (const p of parking.placements) add(p);
     for (const p of stationPlacements(a, this.profiles.profiles)) add(p);
     for (const f of this.features.items) {
       const p = placement(KitCatalogue.prop(f.options), f.frame, [f.descriptor.ownerId]);
@@ -101,7 +102,7 @@ export class StreetUnits {
       if (f.cut?.kind === 'inlet') add(placement(`overlay/drain/${f.options.depth}m`, f.frame, [f.descriptor.ownerId]));
     }
     for (const p of turnPlacements(a, plainClosures)) add(p);
-    for (const p of unitDecals(a, seed, p => this.wear.sample(p), plainClosures)) add(p);
+    for (const p of unitDecals(details, seed, p => this.wear.sample(p), plainClosures)) add(p);
     this.ground = coverage.finish(mappedWidths);
     this.overhangs = coverage.report;
   }

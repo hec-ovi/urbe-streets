@@ -24,18 +24,7 @@ export class CatalogueScene {
       const band = (offset: number, width: number) => rectangle(0, sign < 0 ? -half - offset - width : half + offset, length, width);
       const fields: { surface: NativeGround['surface']; ring: Ring }[] = [{ surface: 'sidewalk', ring: band(rim, profile.pavedWidth) }];
       if (rim) fields.push({ surface: 'gutter', ring: band(0, profile.gutterWidth) }, { surface: 'curb', ring: band(profile.gutterWidth, profile.curbWidth) });
-      const owner = this.owner('perimeter', profile, fields, [face]);
-      if (variant === 'parking' && sign === 1 && profile.width) {
-        const footprint = band(0, 2);
-        owner.ground = [
-          { ...owner.ground[0]!, surface: 'sidewalk', ring: band(rim + 2, profile.pavedWidth - 2), top: 0.2 },
-          { ...owner.ground[0]!, surface: 'roadway', ring: footprint, top: 0 },
-          { ...owner.ground[0]!, surface: 'gutter', ring: band(2, profile.gutterWidth), top: 0 },
-          { ...owner.ground[0]!, surface: 'curb', ring: band(2 + profile.gutterWidth, profile.curbWidth), top: 0.2 },
-        ];
-        owner.parking.push({ id: 'parking', ownerId: owner.id, frontageId: face.id, start: 0, end: length,
-          support: { start: 0, end: length }, slotCount: 1, depth: 2, footprint, slots: [] });
-      }
+      this.owner('perimeter', profile, fields, [face]);
     }
     if (profile.medianWidth) {
       const h = profile.medianWidth / 2, roadOwner = a.owners.find(o => o.kind === 'roadway')!;

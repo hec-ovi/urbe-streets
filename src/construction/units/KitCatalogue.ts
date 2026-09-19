@@ -9,6 +9,7 @@ import { CatalogueScene } from './CatalogueScene.ts';
 import { overlayPieces } from './OverlayPieces.ts';
 import { pieceFootprint } from './PieceFootprint.ts';
 import { ProfileCatalogue } from './ProfileCatalogue.ts';
+import { coreId, parkingFinishes, parkingSide } from './ParkingScene.ts';
 
 export interface AuthoredUnit { geometry: NativePieceData; metadata: Omit<StreetKitPiece, 'file' | 'size' | 'bounds' | 'surfaces' | 'triangles' | 'bytes' | 'sha256' | 'hasCollision'> }
 
@@ -19,12 +20,26 @@ export class KitCatalogue {
   panels = 0;
 
   constructor() {
-    for (const profile of this.profiles) for (const [variant, length] of [['plain', 8], ['parking', 8], ['closure', 4], ['closure', 2], ['drain', 8]] as const) {
+    for (const profile of this.profiles) for (const [variant, length] of [['plain', 8], ['closure', 4], ['closure', 2]] as const) {
       const built = constructPiece(new CatalogueScene().segment(profile, length, variant));
       const id = `${profile.streetClass}/${profile.id}/${length}m-${variant}`;
       this.panels += built.panels;
       this.pieces.push({ geometry: { ...built.geometry, id }, metadata: { id, kind: 'segment', classes: [profile.streetClass], zone: profile.zone,
         variant, length, origin: 'run-start-at-road', footprint: built.footprint, profileId: profile.id } });
+    }
+    for (const profile of this.profiles.filter(p => p.width && !p.medianWidth)) for (const closure of [false, true]) {
+      const scene = new CatalogueScene().segment(profile, closure ? 2 : 8, closure ? 'closure' : 'plain');
+      scene.architecture.owners = scene.architecture.owners.filter(o => o.kind === 'roadway');
+      const built = constructPiece(scene), id = coreId(profile, closure);
+      this.pieces.push({ geometry: { ...built.geometry, id }, metadata: { id, kind: 'segment', classes: [profile.streetClass], zone: profile.zone,
+        variant: closure ? 'core-closure' : 'core', length: closure ? 2 : 8, origin: 'run-start-at-road', footprint: built.footprint, profileId: profile.id } });
+    }
+    for (const finish of parkingFinishes) {
+      const zone = finish.split('-')[0], profile = this.profiles.find(p => p.zone === zone && p.width === 7)!;
+      for (const variant of ['walk', 'walk-closure', 'parking-slot', 'parking-start', 'parking-end']) {
+        const piece = parkingSide(profile, finish, variant);
+        this.panels += piece.panels; this.pieces.push(piece);
+      }
     }
     for (const primary of this.profiles) for (const terminal of [false, true]) {
       const built = constructPiece(new CatalogueScene().junction(primary, { ...primary, width: 0 }, false, terminal));
