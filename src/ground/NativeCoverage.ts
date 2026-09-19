@@ -1,26 +1,30 @@
 import {invariant,unsatisfiable} from '../errors.ts';
-import type {Box2,Ring} from '../geometry/schema.ts';
+import type {Ring} from '../geometry/schema.ts';
 import type {NativeArchitecture,NativeOwner} from '../architecture/native-schema.ts';
 import type {CoverageClaim} from '../construction/surfaces/schema.ts';
 import type {NativeStreetManifest} from '../schema/native-result.ts';
-import {bounds,difference,intersection,intersects,totalArea,union} from '../geometry/polygons.ts';
+import {bounds,difference,intersection,totalArea,union} from '../geometry/polygons.ts';
+import {BoxIndex} from '../geometry/BoxIndex.ts';
 
 /** Each receiving owner proves coverage independently, so neighboring owners cannot hide a loss. */
 export class NativeCoverage {
   private readonly architecture:NativeArchitecture;
-  private readonly exclusions:{ring:Ring;box:Box2}[];
+  private readonly exclusions:BoxIndex<Ring>;
+  private readonly shafts:BoxIndex<Ring>;
   private readonly seen=new Set<string>();
   private readonly cover={reservedArea:0,excludedArea:0,constructedArea:0,missingArea:0,outsideArea:0};
   constructor(architecture:NativeArchitecture){this.architecture=architecture;
-    this.exclusions=architecture.exclusions.map(ring=>({ring,box:bounds(ring)}));}
-  add(owner:NativeOwner,claims:CoverageClaim[],mappedWidths:Ring[]=[]):void{
+    this.exclusions=new BoxIndex(architecture.exclusions,bounds);
+    this.shafts=new BoxIndex(architecture.shafts.map(shaft=>shaft.ring),bounds);}
+  add(owner:NativeOwner,claims:CoverageClaim[],mappedWidths=new BoxIndex<Ring>()):void{
     if(this.seen.has(owner.id)||claims.some(claim=>claim.ownerId!==owner.id))throw invariant('Coverage has conflicting owner identity',{ownerId:owner.id});
-    const reserved=union(owner.ground.map(ground=>ground.ring)),expected=difference(reserved,this.architecture.shafts.map(shaft=>shaft.ring));
-    const actual=union(claims.flatMap(claim=>claim.rings)),missing=totalArea(difference(expected,actual)),outside=totalArea(difference(actual,expected));
-    const unexpectedMissing=totalArea(difference(difference(expected,actual),mappedWidths));
+    const reserved=union(owner.ground.map(ground=>ground.ring)),box=bounds(reserved.flat());
+    const expected=difference(reserved,this.shafts.near(box));
+    const actual=union(claims.flatMap(claim=>claim.rings)),uncovered=difference(expected,actual);
+    const missing=totalArea(uncovered),outside=totalArea(difference(actual,expected));
+    const unexpectedMissing=uncovered.length?totalArea(difference(uncovered,mappedWidths.near(bounds(uncovered.flat())))):0;
     if(unexpectedMissing>1e-7||outside>1e-7)throw invariant('Native construction does not cover its reserved receiving fields',{ownerId:owner.id,missing,outside});
-    const reach=bounds(actual.flat()),near=this.exclusions.filter(exclusion=>intersects(exclusion.box,reach));
-    const encroachment=totalArea(intersection(actual,near.map(exclusion=>exclusion.ring)));
+    const encroachment=totalArea(intersection(actual,this.exclusions.near(bounds(actual.flat()))));
     if(encroachment>1e-7)throw unsatisfiable('Native construction enters parcel or water exclusion',{ownerId:owner.id,area:encroachment});
     this.seen.add(owner.id);this.cover.reservedArea+=totalArea(reserved);this.cover.excludedArea+=totalArea(reserved)-totalArea(expected);
     this.cover.constructedArea+=totalArea(actual);this.cover.missingArea+=missing;this.cover.outsideArea+=outside;

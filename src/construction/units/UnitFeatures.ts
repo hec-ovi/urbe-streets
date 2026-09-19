@@ -1,7 +1,8 @@
 import type { NativeArchitecture } from '../../architecture/native-schema.ts';
 import type { NativeStreetFeature } from '../../schema/native-result.ts';
 import type { Ring, Vec2 } from '../../geometry/schema.ts';
-import { intersection, totalArea } from '../../geometry/polygons.ts';
+import { bounds, intersection, totalArea } from '../../geometry/polygons.ts';
+import { BoxIndex } from '../../geometry/BoxIndex.ts';
 import { DistrictDetails } from '../district/Details.ts';
 import type { DistrictFeature } from '../district/schema.ts';
 import { FeatureBuilder } from '../features/FeatureBuilder.ts';
@@ -43,6 +44,10 @@ export class UnitFeatures {
         options: f.options, ...(f.cut ? { cut: f.cut } : {}) }));
       builder.dispose();
     }
-    this.items = this.items.filter(f => totalArea(intersection([f.descriptor.footprint, ...(f.cut ? [f.cut.ring] : []), ...(f.panel ? [f.panel] : [])], excluded)) <= 1e-9);
+    const closures = new BoxIndex(excluded, bounds);
+    this.items = this.items.filter(f => {
+      const rings = [f.descriptor.footprint, ...(f.cut ? [f.cut.ring] : []), ...(f.panel ? [f.panel] : [])];
+      return totalArea(intersection(rings, closures.near(bounds(rings.flat())))) <= 1e-9;
+    });
   }
 }

@@ -1,5 +1,7 @@
 # Changelog
 
+0.9.3: placement, coverage, detail and decal checks query a uniform box grid, so a 3 x 3 km plan builds in about nine seconds.
+
 0.9.2: a parking bay holds one to six slots and places one 8 m parking piece per slot on its run.
 
 0.9.1: a parking bay the box cannot build is dropped, its ground keeps the ordinary segment, and `report.degraded` names the bay and the reason.

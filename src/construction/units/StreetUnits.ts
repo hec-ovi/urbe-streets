@@ -1,7 +1,8 @@
 import type { NativeArchitecture, NativeRoad } from '../../architecture/native-schema.ts';
 import type { Ring } from '../../geometry/schema.ts';
 import type { StreetPlacement } from '../../schema/street-kit.ts';
-import { difference, intersection, totalArea, union } from '../../geometry/polygons.ts';
+import { bounds, difference, intersection, totalArea, union } from '../../geometry/polygons.ts';
+import { BoxIndex } from '../../geometry/BoxIndex.ts';
 import { WearField } from '../style/WearField.ts';
 import { invariant } from '../../errors.ts';
 import settings from '../district/settings.json' with { type: 'json' };
@@ -33,10 +34,13 @@ export class StreetUnits {
     const surfaces: NativeArchitecture = { ...a, roads: a.roads.map(r => r.kind === 'highway' ? { ...r, kind: 'road' as const } : r) };
     this.plan = new UnitPlan(surfaces);
     const plainClosures = this.plan.regions.filter(r => r.kind === 'segment' && r.length < 2).flatMap(r => r.mask);
+    const shafts = new BoxIndex(a.shafts.map(s => s.ring), bounds);
+    const receivingGround = new BoxIndex(a.owners.filter(o => o.kind !== 'station').flatMap(o => o.ground.map(g => g.ring)), bounds);
     this.wear = new WearField({ seed, amount, bounds: a.bounds, streets: Math.max(1, new Set(a.roads.filter(r => r.kind !== 'highway').map(r => r.runId)).size) });
     this.features = new UnitFeatures(a, seed, p => this.wear.sample(p), plainClosures);
+    const cuts = new BoxIndex(this.features.items.flatMap(f => f.cut ? [f.cut.ring] : []), bounds);
     const drained = new Set(this.plan.regions.filter(r => r.kind === 'segment'
-      && this.features.items.some(f => f.cut && totalArea(intersection([f.cut.ring], r.mask)) > 1e-9)));
+      && cuts.near(r.box).some(ring => totalArea(intersection([ring], r.mask)) > 1e-9)));
     const parking = new ParkingUnits(surfaces, this.plan.regions, drained);
     const pieces = new Map(this.pieces.map(p => [p.metadata.id, p]));
     const coverage = new UnitCoverage(a);
@@ -51,7 +55,7 @@ export class StreetUnits {
     const mappedRoads = new Set(this.profiles.mappings.map(m => m.roadId));
     const mappedWidths = union(this.plan.regions.filter(r => r.roads.some(road => mappedRoads.has(road.id))).flatMap(r => r.mask));
     for (const region of this.plan.regions) {
-      const expected = difference(intersection(a.owners.filter(o => o.kind !== 'station').flatMap(o => o.ground.map(g => g.ring)), region.mask), a.shafts.map(s => s.ring));
+      const expected = difference(intersection(receivingGround.near(region.box), region.mask), shafts.near(region.box));
       if (!expected.length) continue;
       let p: StreetPlacement;
       if (region.kind === 'segment') {

@@ -1,6 +1,7 @@
-import type { NativeArchitecture, NativeFrontage, NativeOwner } from '../../architecture/native-schema.ts';
-import type { Box2, Ring, Vec2 } from '../../geometry/schema.ts';
-import { bounds, intersects } from '../../geometry/polygons.ts';
+import type { NativeArchitecture, NativeFrontage, NativeOwner, NativeRoad } from '../../architecture/native-schema.ts';
+import type { Ring, Vec2 } from '../../geometry/schema.ts';
+import { bounds } from '../../geometry/polygons.ts';
+import { BoxIndex } from '../../geometry/BoxIndex.ts';
 import { difference, intersection, totalArea } from '../surfaces/Regions.ts';
 import { along, dot, sub } from '../surfaces/Frame.ts';
 import { createHardware, type FurnitureModel, type FurnitureOptions } from '../hardware/index.ts';
@@ -12,15 +13,17 @@ import { invariant } from '../../errors.ts';
 /** Whole pieces on shared two-metre stations, with source clearance checks. */
 export class DistrictDetails {
   readonly features: DistrictFeature[] = [];
-  private readonly boxes: Box2[] = [];
+  private readonly placed = new BoxIndex<Ring>();
   private readonly models = new Map<string, FurnitureModel>();
-  private readonly architecture: NativeArchitecture;
-  private readonly excluded: Ring[];
+  private readonly excluded: BoxIndex<Ring>;
+  private readonly obstacles: BoxIndex<NativeArchitecture['obstaclePoints'][number]>;
 
   constructor(architecture: NativeArchitecture) {
-    this.architecture = architecture;
-    this.excluded = [...architecture.approaches.flatMap(approach => [approach.field, ...approach.landings]),
-      ...architecture.stationBays.map(bay => bay.footprint), ...architecture.shafts.map(shaft => shaft.ring)];
+    this.excluded = new BoxIndex([...architecture.approaches.flatMap(approach => [approach.field, ...approach.landings]),
+      ...architecture.stationBays.map(bay => bay.footprint), ...architecture.shafts.map(shaft => shaft.ring)], bounds);
+    this.obstacles = new BoxIndex(architecture.obstaclePoints, o => ({ min: [o.position[0] - o.clearance, o.position[1] - o.clearance],
+      max: [o.position[0] + o.clearance, o.position[1] + o.clearance] }));
+    const roads = new Map<string, NativeRoad>(architecture.roads.map(road => [road.id, road]));
     for (const owner of architecture.owners) {
       if (owner.kind === 'median') {
         const median = architecture.medians?.find(value => value.id === owner.id), face = owner.frontages[0]!;
@@ -32,7 +35,7 @@ export class DistrictDetails {
       if (owner.kind !== 'block' && owner.kind !== 'perimeter') continue;
       const colors = palette(owner, architecture);
       for (const face of owner.frontages) {
-        if (face.edgeIds.every(id => architecture.roads.find(road => road.id === id)?.kind === 'highway')) continue;
+        if (face.edgeIds.every(id => roads.get(id)?.kind === 'highway')) continue;
         const rim = face.curbWidth + face.gutterWidth;
         for (const [kind, interval, depth] of [['inlet', settings.drainInterval, rim],
           ['marquee', settings.marqueeInterval, face.gutterWidth], ['cable', settings.cableInterval, rim]] as const) {
@@ -78,9 +81,9 @@ export class DistrictDetails {
     const footprint: Ring = [along(face, a, z0), along(face, b, z0), along(face, b, z1), along(face, a, z1)];
     const receiving = owner.ground.filter(field => !['guard', 'tree-grate'].includes(kind) || field.surface === 'sidewalk').map(field => field.ring);
     const box = bounds(footprint);
-    if (totalArea(difference([footprint], receiving)) > 1e-7 || totalArea(intersection([footprint], this.excluded)) > 1e-7
-      || this.features.some((other, index) => intersects(this.boxes[index]!, box) && totalArea(intersection([footprint], [other.descriptor.footprint])) > 1e-7)) return;
-    if (this.architecture.obstaclePoints.some(point => Math.hypot(Math.max(box.min[0] - point.position[0], 0, point.position[0] - box.max[0]),
+    if (totalArea(difference([footprint], receiving)) > 1e-7 || totalArea(intersection([footprint], this.excluded.near(box))) > 1e-7
+      || this.placed.near(box).some(other => totalArea(intersection([footprint], [other])) > 1e-7)) return;
+    if (this.obstacles.near(box).some(point => Math.hypot(Math.max(box.min[0] - point.position[0], 0, point.position[0] - box.max[0]),
       Math.max(box.min[1] - point.position[1], 0, point.position[1] - box.max[1])) < point.clearance)) return;
     const id = `${face.id}:${kind}:${station}:${setback}`;
     const feature: DistrictFeature = { owner, face, station, setback, kind, model,
@@ -92,6 +95,6 @@ export class DistrictDetails {
         ring: [along(face, station), along(face, station + length), along(face, station + length, depth), along(face, station, depth)] };
       feature.panel = [along(face, station, depth), along(face, station + 2, depth), along(face, station + 2, depth + 2), along(face, station, depth + 2)];
     }
-    this.features.push(feature); this.boxes.push(box);
+    this.features.push(feature); this.placed.add(footprint, box);
   }
 }

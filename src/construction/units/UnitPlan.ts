@@ -1,7 +1,8 @@
-import type { NativeArchitecture, NativeRoad } from '../../architecture/native-schema.ts';
-import type { Ring, Vec2 } from '../../geometry/schema.ts';
+import type { NativeApproach, NativeArchitecture, NativeRoad } from '../../architecture/native-schema.ts';
+import type { Box2, Ring, Vec2 } from '../../geometry/schema.ts';
 import type { StreetClass, StreetClosure, StreetKitPiece } from '../../schema/street-kit.ts';
 import { bounds, difference, intersection, rectangle, totalArea, union } from '../../geometry/polygons.ts';
+import { BoxIndex } from '../../geometry/BoxIndex.ts';
 import { direction, distance, dot, sub } from '../surfaces/Frame.ts';
 import { invariant } from '../../errors.ts';
 import { clean, UnitFrame } from './Frame.ts';
@@ -10,6 +11,7 @@ export interface UnitRegion {
   kind: Exclude<StreetKitPiece['kind'], 'prop' | 'overlay'>;
   frame: UnitFrame;
   mask: Ring[];
+  box: Box2;
   roads: NativeRoad[];
   length: number;
   zone: string;
@@ -22,11 +24,18 @@ export class UnitPlan {
   constructor(a: NativeArchitecture) {
     const roads = a.roads.filter((r): r is NativeRoad & { kind: StreetClass } => r.kind !== 'highway');
     const ground = union(a.owners.filter(o => o.kind !== 'station').flatMap(o => o.ground.map(g => g.ring)));
-    const corridors: Ring[] = [];
+    const byEdge = new Map<string, NativeApproach[]>();
+    for (const approach of a.approaches) byEdge.set(approach.edgeId, [...byEdge.get(approach.edgeId) ?? [], approach]);
+    const rims = new Map<string, number>();
+    for (const owner of a.owners) if (owner.kind !== 'median') for (const f of owner.frontages) {
+      const rim = f.pavedWidth + f.curbWidth + f.gutterWidth;
+      for (const edgeId of f.edgeIds) rims.set(edgeId, Math.max(rims.get(edgeId) ?? 0, rim));
+    }
+    const corridors = new BoxIndex<Ring>();
     for (const road of roads) {
       const first = road.path[0]!, last = road.path.at(-1)!, d = direction(first, last), length = distance(first, last);
       if (road.path.some(p => Math.abs(dot(sub(p, first), [-d[1], d[0]])) > 1e-7)) throw invariant('Street units require a straight Atlas edge', { roadId: road.id });
-      const approaches = a.approaches.filter(p => p.edgeId === road.id);
+      const approaches = byEdge.get(road.id) ?? [];
       const crossingStart = clean(Math.max(0, ...approaches.filter(p => p.nodeId === road.from).flatMap(p => p.field.map(v => dot(sub(v, first), d)))));
       const crossingEnd = clean(Math.min(length, ...approaches.filter(p => p.nodeId === road.to).flatMap(p => p.field.map(v => dot(sub(v, first), d)))));
       const arm = crossingEnd - crossingStart >= 16 ? 8 : 0;
@@ -36,18 +45,17 @@ export class UnitPlan {
       const fittedLength = clean(clearLength - units * 2);
       const segments = Math.floor(units / 4), halfSegments = Math.floor(units % 4 / 2), quarterSegments = units % 2;
       if (halfSegments || quarterSegments || fittedLength) this.closures.push({ roadId: road.id, length: clean(length), start, end, clearLength, segments, halfSegments, quarterSegments, fittedLength });
-      const rim = Math.max(0, ...a.owners.flatMap(o => o.frontages.filter(f => f.edgeIds.includes(road.id) && o.kind !== 'median').map(f => f.pavedWidth + f.curbWidth + f.gutterWidth)));
-      const width = road.width / 2 + rim;
+      const width = road.width / 2 + (rims.get(road.id) ?? 0);
       let station = start;
       for (const span of [...Array<number>(segments).fill(8), ...(halfSegments ? [4] : []), ...(quarterSegments ? [2] : []), ...(fittedLength ? [fittedLength] : [])]) {
         const frame = new UnitFrame([first[0] + d[0] * station, first[1] + d[1] * station], d);
         const mask = [rectangle(0, -width, span, width * 2).map(frame.world)];
-        const received = difference(mask, corridors);
-        if (totalArea(received) > 1e-9) this.regions.push({ kind: 'segment', frame, mask: received, roads: [road], length: span, zone: road.districtStyle ?? 'ordinary' });
-        corridors.push(...mask); station = clean(station + span);
+        const box = bounds(mask.flat()), received = difference(mask, corridors.near(box));
+        if (totalArea(received) > 1e-9) this.regions.push(this.region('segment', frame, received, [road], road.districtStyle ?? 'ordinary', span));
+        corridors.add(mask[0]!, box); station = clean(station + span);
       }
     }
-    const remaining = difference(ground, corridors);
+    const remaining = difference(ground, corridors.all);
     const nodes = new Map<string, { point: Vec2; roads: NativeRoad[] }>();
     for (const road of roads) for (const [id, point] of [[road.from, road.path[0]!], [road.to, road.path.at(-1)!]] as const) {
       const entry = nodes.get(id) ?? { point, roads: [] }; entry.roads.push(road); nodes.set(id, entry);
@@ -72,7 +80,7 @@ export class UnitPlan {
       const hx = Math.max(0, ...vertical.map(r => r.width / 2)), hz = Math.max(0, ...horizontal.map(r => r.width / 2));
       const zone = node.roads.some(r => r.districtStyle === 'luxury') ? 'luxury' : node.roads.some(r => r.districtStyle === 'industrial') ? 'industrial' : 'ordinary';
       const center = hx && hz ? intersection(local, [rectangle(-hx, -hz, hx * 2, hz * 2)]) : [];
-      if (totalArea(center) > 1e-8) this.regions.push({ kind: 'junction-center', frame, mask: center.map(r => r.map(frame.world)), roads: node.roads, length: 0, zone });
+      if (totalArea(center) > 1e-8) this.regions.push(this.region('junction-center', frame, center.map(r => r.map(frame.world)), node.roads, zone));
       let arms = difference(local, center);
       const reach = Math.max(...box.min.map(Math.abs), ...box.max.map(Math.abs)) + hx + hz + 1;
       for (const [mask, direction] of [
@@ -84,10 +92,14 @@ export class UnitPlan {
         if (totalArea([mask]) <= 1e-10) continue;
         const part = intersection(arms, [mask]); if (totalArea(part) <= 1e-8) continue;
         arms = difference(arms, part);
-        this.regions.push({ kind: 'junction-arm', frame: new UnitFrame(node.point, direction), mask: part.map(r => r.map(frame.world)), roads: node.roads, length: 0, zone });
+        this.regions.push(this.region('junction-arm', new UnitFrame(node.point, direction), part.map(r => r.map(frame.world)), node.roads, zone));
       }
-      if (totalArea(arms) > 1e-7) this.regions.push({ kind: 'junction-arm', frame, mask: arms.map(r => r.map(frame.world)), roads: node.roads, length: 0, zone });
+      if (totalArea(arms) > 1e-7) this.regions.push(this.region('junction-arm', frame, arms.map(r => r.map(frame.world)), node.roads, zone));
     }
     if (totalArea(unassigned) > 1e-7) throw invariant('Street units leave ground outside every run and junction', { area: totalArea(unassigned) });
+  }
+
+  private region(kind: UnitRegion['kind'], frame: UnitFrame, mask: Ring[], roads: NativeRoad[], zone: string, length = 0): UnitRegion {
+    return { kind, frame, mask, box: bounds(mask.flat()), roads, length, zone };
   }
 }
