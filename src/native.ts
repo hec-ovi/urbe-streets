@@ -30,14 +30,15 @@ export async function buildNative(request: NativeStreetRequest, options: NativeB
     for (const surface of scanAtlas) { catalog.require(surface); surfaces.add(surface); }
     if (options.outDir) output = await Output.create(options.outDir);
     for (const piece of units.pieces) {
-      for (const mesh of piece.geometry.meshes) { catalog.require(mesh.surface); surfaces.add(mesh.surface); }
-      const encoded = await encodeNativePiece(piece.geometry), file = `pieces/${piece.metadata.id}.glb`;
+      const geometry = { ...piece.geometry, meshes: piece.geometry.meshes.map(mesh => ({ ...mesh, surface: catalog.resolve(mesh.surface) })) };
+      for (const mesh of geometry.meshes) surfaces.add(mesh.surface);
+      const encoded = await encodeNativePiece(geometry), file = `pieces/${piece.metadata.id}.glb`;
       if (mode === 'glb') {
         const path = `streets/${file}`;
         if (output) await output.asset(path, encoded.bytes); else assets[path] = encoded.bytes;
       }
       kit.pieces.push({ ...piece.metadata, file, size: encoded.bounds.max.map((v, i) => v - encoded.bounds.min[i]!) as unknown as Vec3,
-        bounds: encoded.bounds, hasCollision: piece.geometry.meshes.some(m => m.collision), surfaces: [...new Set(piece.geometry.meshes.map(m => m.surface))].sort(), triangles: encoded.triangles, bytes: encoded.bytes.length, sha256: hash(encoded.bytes) });
+        bounds: encoded.bounds, hasCollision: geometry.meshes.some(m => m.collision), surfaces: [...new Set(geometry.meshes.map(m => m.surface))].sort(), triangles: encoded.triangles, bytes: encoded.bytes.length, sha256: hash(encoded.bytes) });
     }
     const kitBytes = new TextEncoder().encode(JSON.stringify(kit)), placementBytes = new TextEncoder().encode(JSON.stringify(placements));
     const pieceBytes = kit.pieces.reduce((n, p) => n + p.bytes, 0);

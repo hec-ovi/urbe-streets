@@ -1626,6 +1626,19 @@
         "clamp",
         "clamp"
       ]
+    },
+    "marquee-led-glyphs": {
+      "path": "themes/cyberpunk/assets/letter-atlas/rich/panel/emission.png",
+      "resolution": [
+        1024,
+        768
+      ],
+      "sha256": "68af285d293aeb342e57d31f0c0178d93c2984c070332c7070b64da7341fbf50",
+      "colorSpace": "srgb",
+      "wrap": [
+        "clamp",
+        "clamp"
+      ]
     }
   },
   "surfaces": {
@@ -2921,6 +2934,39 @@
         "roughness": 0.22,
         "metalness": 0,
         "emissionIntensity": 3
+      }
+    },
+    "marquee-led": {
+      "effect": "led-matrix",
+      "maps": {
+        "glyphs": "marquee-led-glyphs"
+      },
+      "uv": {
+        "mode": "metres",
+        "scale": [
+          1,
+          1
+        ]
+      },
+      "parameters": {
+        "faceTint": "#1b1d1e",
+        "faceRoughness": 0.3,
+        "dotTint": "#8e8a82",
+        "dotRoughness": 0.3,
+        "dotPitch": 0.01,
+        "dotRadius": 0.0035,
+        "glyphBand": [
+          0.005,
+          0.225
+        ],
+        "glyphRange": [
+          0.2,
+          0.6
+        ],
+        "glyphAdvance": 0.6,
+        "litTint": "#fff2dc",
+        "brightness": 2.5,
+        "scrollSpeed": 0.8
       }
     }
   },

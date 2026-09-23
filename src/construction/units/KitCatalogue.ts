@@ -2,6 +2,8 @@ import type { NativePieceData } from '../../assets/native-schema.ts';
 import type { StreetKitPiece, StreetProfile } from '../../schema/street-kit.ts';
 import type { FurnitureOptions } from '../hardware/schema.ts';
 import { createHardware } from '../hardware/index.ts';
+import { capSides, marqueeDepth } from '../hardware/Marquee.ts';
+import settings from '../district/settings.json' with { type: 'json' };
 import { SurfaceBatch } from '../surfaces/SurfaceBatch.ts';
 import { invariant } from '../../errors.ts';
 import { constructPiece, pieceGeometry } from './PieceConstruction.ts';
@@ -62,9 +64,11 @@ export class KitCatalogue {
       }
     }
     this.pieces.push(...overlayPieces());
+    const run = settings.marquee;
     const props: FurnitureOptions[] = [
       ...(['inlet', 'cable'] as const).map(kind => ({ kind, length: 2, depth: 0.7, style: 0, damaged: false })),
-      { kind: 'marquee', length: 2, depth: 0.5, style: 0, damaged: false },
+      ...[...new Set(run.segments.flat())].map(length => ({ kind: 'marquee' as const, length, depth: marqueeDepth, style: 0, damaged: false })),
+      ...Object.values(capSides).map(style => ({ kind: 'marquee-cap' as const, length: run.cap, depth: marqueeDepth, style, damaged: false })),
       { kind: 'tree-grate', length: 1.8, depth: 1.8, style: 0, damaged: false },
       ...[2, 4].flatMap(length => Array.from({ length: 6 }, (_, style) => ({ kind: 'guard' as const, length, depth: 0.4, style, damaged: false }))),
       ...Array.from({ length: 3 }, (_, style) => ({ kind: 'inlet' as const, length: 2, depth: 0.5, style, damaged: false })),
@@ -87,6 +91,8 @@ export class KitCatalogue {
   }
 
   static prop(options: FurnitureOptions): string {
+    if (options.kind === 'marquee') return `prop/marquee-run/segment-${options.length}m`;
+    if (options.kind === 'marquee-cap') return `prop/marquee-run/cap-${options.style === capSides.end ? 'end' : 'start'}`;
     return `prop/${options.kind}/${options.length}m-${options.depth}m-${options.style}`;
   }
 
@@ -95,11 +101,6 @@ export class KitCatalogue {
     const batch = new SurfaceBatch({ ownerId: 'prop', groundIds: ['prop'], roadTop: 0, wear: () => 0 });
     try {
       for (const part of model.parts) batch.geometry(part.material, part.geometry, { origin: [0, 0, 0], inward: [0, 1] });
-      if (options.kind === 'marquee') {
-        const at = (x: number, z: number): [number, number, number] => [x, 0.036 + 0.16 * (z - 0.02) / (options.depth - 0.04), z];
-        batch.face('district-marquee', [at(-0.9, 0.03), at(-0.9, options.depth - 0.03), at(0.9, options.depth - 0.03), at(0.9, 0.03)],
-          [[0, 0], [0, 1], [1, 1], [1, 0]], false);
-      }
       const geometry = pieceGeometry(id, [batch.finish()]);
       this.pieces.push({ geometry, metadata: { id, kind: 'prop', classes: [], zone: 'shared', variant: options.kind,
         length: options.length, origin: 'anchor-at-road', footprint: pieceFootprint(geometry) } });

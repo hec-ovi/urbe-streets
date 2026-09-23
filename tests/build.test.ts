@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import { decodePiece, worldPosition } from '../src/assets/decode-fixture.ts';
 import { build, placementFootprint } from '../src/index.ts';
+import { readNativeAtlas } from '../src/architecture/NativeAtlas.ts';
 import type { NativeStreetBuild } from '../src/schema/native-result.ts';
 import type { Ring, Vec2 } from '../src/geometry/schema.ts';
 import kitSchema from '../schemas/street-kit.schema.json' with { type: 'json' };
@@ -363,8 +364,11 @@ it('fits parking slots, kerbs and returns to saved bays and reports unbuildable 
       for (const p of placed) { expect(p.scale).toBeUndefined(); expect(p.rotationY).toBeCloseTo(-Math.atan2(d[1],d[0]), 7); }
       const geometry = (kind: 'floor' | 'paint' | 'curb') => placed.flatMap(p => placementFootprint({footprint:triangles.get(p.piece)![kind]},p)).map(r=>r.map(local));
       const floor = geometry('floor'), paint = geometry('paint'), curb = geometry('curb');
+      // The floor fills the bay's rectangular notch and holds its footprint, square or with 45 degree returns.
+      const notch: Ring = [[bay.start,0],[bay.end,0],[bay.end,2],[bay.start,2]];
+      expect(totalArea(difference([notch],union(floor))),bay.id).toBeLessThan(0.01);
+      expect(totalArea(difference(union(floor),[notch])),bay.id).toBeLessThan(0.01);
       expect(totalArea(difference([bay.footprint.map(local)],union(floor))),bay.id).toBeLessThan(0.01);
-      expect(totalArea(difference(union(floor),[bay.footprint.map(local)])),bay.id).toBeLessThan(0.01);
       expect(totalArea(floor)-totalArea(union(floor)),bay.id).toBeLessThan(0.01);
       for (let i=0;i<=bay.slotCount;i++) {
         const x=bay.start+2+i*6;
@@ -474,6 +478,164 @@ it('bakes one dash phase, approach paint, corner seams and shader ready overlays
   expect(displays.length).toBeGreaterThan(0);
   for (const p of displays) {
     expect(p.text!.every(g => g >= 0 && g < result.kit.glyphs.length)).toBe(true);
-    expect(result.kit.pieces.find(k => k.id === p.piece)!.surfaces).toContain('district-marquee');
+    expect(result.kit.pieces.find(k => k.id === p.piece)!.surfaces).toContain('marquee-led');
   }
+});
+
+/** Decoded triangles of one kit piece as world positions and TEXCOORD_0, keyed by native surface. */
+async function pieceTriangles(built: NativeStreetBuild, id: string) {
+  const piece = built.kit.pieces.find(p => p.id === id)!;
+  const document = await decodePiece(built.assets[`streets/${piece.file}`]!);
+  const surfaces = new Map<string, { p: number[]; uv: number[] }[][]>();
+  for (const node of document.getRoot().listNodes()) for (const primitive of node.getMesh()?.listPrimitives() ?? []) {
+    const surface = String(primitive.getMaterial()!.getExtras().streetNativeSurface), indices = primitive.getIndices()!, uv = primitive.getAttribute('TEXCOORD_0')!;
+    for (let i = 0; i < indices.getCount(); i += 3) (surfaces.get(surface) ?? surfaces.set(surface, []).get(surface)!)
+      .push([0, 1, 2].map(k => ({ p: worldPosition(node, primitive, indices.getScalar(i + k)), uv: uv.getElement(indices.getScalar(i + k), []) })));
+  }
+  return { piece, surfaces };
+}
+
+/** Least plan distance between two rings; zero where they overlap. */
+function ringGap(a: Ring, b: Ring): number {
+  if (totalArea(intersection([a], [b])) > 1e-9) return 0;
+  const toSegment = (p: Vec2, s: Vec2, e: Vec2) => {
+    const d = [e[0] - s[0], e[1] - s[1]], l = d[0]! ** 2 + d[1]! ** 2, t = l ? Math.max(0, Math.min(1, ((p[0] - s[0]) * d[0]! + (p[1] - s[1]) * d[1]!) / l)) : 0;
+    return Math.hypot(p[0] - s[0] - t * d[0]!, p[1] - s[1] - t * d[1]!);
+  };
+  return Math.min(...[[a, b], [b, a]].flatMap(([x, y]) => x!.flatMap(p => y!.map((s, i) => toSegment(p, s, y![(i + 1) % y!.length]!)))));
+}
+
+it('publishes the capped LED run as 2 m and 1 m segments and a mirrored cap pair within their budgets', async () => {
+  const ids = new Set(result.kit.pieces.map(p => p.id));
+  expect(ids.has('prop/marquee/2m-0.5m-0')).toBe(false);
+  expect(result.kit.pieces).toHaveLength(198);
+  const key = (p: number[]) => p.map(n => Math.round(n * 1000) || 0).join();
+  const vertices = (surfaces: Map<string, { p: number[] }[][]>) => [...surfaces.values()].flat(2);
+  for (const [id, length, budget] of [['prop/marquee-run/segment-2m', 2, 150], ['prop/marquee-run/segment-1m', 1, 100],
+    ['prop/marquee-run/cap-start', 0.27, 40], ['prop/marquee-run/cap-end', 0.27, 40]] as const) {
+    const { piece, surfaces } = await pieceTriangles(result, id), cap = id.includes('/cap-');
+    expect(piece.triangles, id).toBeLessThanOrEqual(budget);
+    expect(piece.hasCollision, id).toBe(true);
+    expect(piece.bounds.min[0]).toBeCloseTo(-length / 2, 3); expect(piece.bounds.max[0]).toBeCloseTo(length / 2, 3);
+    expect(piece.bounds.max[1]).toBeCloseTo(0.185, 3); expect(piece.bounds.max[2]).toBeCloseTo(0.5, 3);
+    expect(piece.bounds.min[2]).toBeCloseTo(cap ? 0.065 : 0, 3);
+    if (cap) { expect(piece.surfaces).toHaveLength(1); continue; }
+    const mirrored = new Set(vertices(surfaces).map(v => key([-v.p[0]!, v.p[1]!, v.p[2]!])));
+    expect(vertices(surfaces).every(v => mirrored.has(key(v.p))), id).toBe(true);
+    // The LED field is its own slot; UV metres run left to right seen from the road and road to curb.
+    const field = surfaces.get('marquee-led')!.flat();
+    expect(field).toHaveLength(6);
+    for (const v of field) { expect(v.uv[0]! + v.p[0]!).toBeCloseTo(length / 2 - 0.04, 4); expect(v.uv[1]!).toBeCloseTo(v.p[2]! - 0.165, 4); }
+    expect(Math.max(...field.map(v => v.uv[0]!))).toBeCloseTo(length - 0.08, 4);
+    expect(Math.max(...field.map(v => v.uv[1]!))).toBeCloseTo(0.23, 4);
+    // A channel riser at Z 0.135 closes the 1 cm seam between frames over the full length.
+    const riser = surfaces.get('darkMetal')!.filter(t => t.every(v => Math.abs(v.p[2]! - 0.135) < 1e-4)).flat();
+    expect([Math.min(...riser.map(v => v.p[0]!)), Math.max(...riser.map(v => v.p[0]!))]).toEqual([-length / 2, length / 2].map(n => expect.closeTo(n, 4)));
+    expect([Math.min(...riser.map(v => v.p[1]!)), Math.max(...riser.map(v => v.p[1]!))]).toEqual([expect.closeTo(0.06, 4), expect.closeTo(0.1, 4)]);
+  }
+  // The caps mirror each other in X; each cuts its outer curb-side corner 6 cm in plan and keeps its inner end square.
+  const [start, end] = await Promise.all(['cap-start', 'cap-end'].map(async side => vertices((await pieceTriangles(result, `prop/marquee-run/${side}`)).surfaces)));
+  const ends = new Set(end!.map(v => key(v.p)));
+  expect(start!.every(v => ends.has(key([-v.p[0]!, v.p[1]!, v.p[2]!])))).toBe(true);
+  const curb = start!.filter(v => Math.abs(v.p[2]! - 0.5) < 1e-3).map(v => v.p[0]!);
+  expect([Math.min(...curb), Math.max(...curb)]).toEqual([expect.closeTo(-0.135 + 0.06, 3), expect.closeTo(0.135, 3)]);
+});
+
+it('places capped runs on luxury and industrial-yellow frontages midway between drains or in a bare frontage\'s clear stretch, clear of drains, cables and crossings, one message per run', async () => {
+  const architecture = await readNativeAtlas(blueprint);
+  const owners = new Map(source.streets.construction.reservations.owners.map(o => [o.id, o as { id: string; finish?: string | null }]));
+  const pieces = new Map(result.kit.pieces.map(p => [p.id, p]));
+  const footprint = (index: number) => placementFootprint(pieces.get(result.placements.placements[index]!.piece)!, result.placements.placements[index]!).flat() as Ring;
+  const station = (id: string) => Number(id.split(':').at(-2));
+  const runs: typeof result.features[] = [];
+  for (const frontage of new Set(result.features.map(f => f.frontageId))) {
+    const list = result.features.filter(f => f.frontageId === frontage && f.kind.startsWith('marquee')).sort((a, b) => station(a.id) - station(b.id));
+    for (let i = 0; i < list.length;) { let j = i + 1; while (list[j]!.kind !== 'marquee-cap') j++; runs.push(list.slice(i, j + 1)); i = j + 1; }
+  }
+  expect(runs.length).toBeGreaterThan(20);
+  const drains = result.features.filter(f => f.kind === 'inlet' || f.kind === 'cable');
+  const crossings = architecture.approaches.flatMap(a => [a.field, ...a.landings]);
+  for (const run of runs) {
+    const [first, last] = [run[0]!, run.at(-1)!], segments = run.slice(1, -1);
+    expect([first.kind, last.kind]).toEqual(['marquee-cap', 'marquee-cap']);
+    expect([first, last].map(f => result.placements.placements[f.placement]!.piece)).toEqual(['prop/marquee-run/cap-start', 'prop/marquee-run/cap-end']);
+    expect(segments.every(f => f.kind === 'marquee' && [1, 2].includes(f.length)) && [2, 3].includes(segments.length)).toBe(true);
+    const a = station(first.id), b = station(last.id) + last.length;
+    expect(b - a).toBeGreaterThanOrEqual(4.5);
+    run.forEach((f, i) => i && expect(station(f.id)).toBeCloseTo(station(run[i - 1]!.id) + run[i - 1]!.length, 6));
+    expect(owners.get(first.ownerId)!.finish).toMatch(/^(luxury-(red|blue)|industrial-yellow)$/);
+    // A strip run is centred on its bay, on the bay's gutter. Curb runs are centred midway between two drain stations of the
+    // 24 m grid (8 + 24k), or are the one run of a frontage that grid left bare.
+    const setback = Number(first.id.split(':').at(-1)), alone = runs.filter(other => other[0]!.frontageId === first.frontageId).length === 1;
+    if (setback) {
+      const bay = source.streets.construction.reservations.parking.find(bay => bay.frontageId === first.frontageId)!;
+      expect([setback, (a + b) / 2]).toEqual([bay.depth, expect.closeTo((bay.start + bay.end) / 2, 6)]);
+    } else if (!alone) expect(((a + b) / 2 - 21) % 24).toBeCloseTo(0, 6);
+    const texts = segments.map(f => JSON.stringify(result.placements.placements[f.placement]!.text));
+    expect(new Set(texts).size).toBe(1);
+    expect(texts[0]).toMatch(/^\[\d/);
+    for (const cap of [first, last]) expect(result.placements.placements[cap.placement]!.text).toBeUndefined();
+    for (const f of run) {
+      const ring = footprint(f.placement);
+      for (const drain of drains) expect(ringGap(ring, drain.footprint), `${f.id} ${drain.id}`).toBeGreaterThanOrEqual(4 - 1e-6);
+      for (const crossing of crossings) expect(ringGap(ring, crossing), f.id).toBeGreaterThanOrEqual(6 - 1e-6);
+    }
+  }
+  // Every luxury or industrial-yellow frontage with 16.54 m of clear curb (a 4.54 m run and both 6 m end clearances; no drain,
+  // cable or parking bay on it) carries a run, the grade side of an underpass and the frontages under a highway included.
+  const roads = new Map(architecture.roads.map(road => [road.id, road.kind]));
+  const clear = architecture.owners.filter(owner => /^(luxury-(red|blue)|industrial-yellow)$/.test(owner.finish ?? '') && ['block', 'perimeter', 'underpass'].includes(owner.kind))
+    .flatMap(owner => owner.frontages.filter(face => face.gutterWidth === 0.5 && face.length >= 16.54 - 1e-9
+      && !owner.parking.some(bay => bay.frontageId === face.id) && !drains.some(f => f.frontageId === face.id)));
+  expect(clear.some(face => face.id.startsWith('frontage:underpass:'))).toBe(true);
+  expect(clear.some(face => face.edgeIds.every(id => roads.get(id) === 'highway'))).toBe(true);
+  for (const face of clear) expect(runs.some(run => run[0]!.frontageId === face.id), face.id).toBe(true);
+  // The plan's parking strips carry runs of their own.
+  expect(runs.filter(run => run[0]!.id.endsWith(':2')).length).toBeGreaterThan(0);
+  const again = await build(request, { nativeMaterials, mode: 'manifest' });
+  expect(again.placements).toEqual(result.placements);
+  // A red or yellow parking strip carries one run centred on its slots, on the bay's own gutter.
+  for (const finish of ['luxury-red', 'industrial-yellow']) {
+    const plan = parkingBlueprint();
+    plan.streets.construction.reservations.owners[1]!.finish = finish;
+    const parked = await build({ ...request, blueprint: plan }, { nativeMaterials, mode: 'manifest' });
+    const strip = parked.features.filter(f => f.kind.startsWith('marquee')).sort((x, y) => station(x.id) - station(y.id));
+    expect(strip.map(f => f.kind === 'marquee-cap' ? 'cap' : f.length), finish).toEqual(['cap', 2, 2, 2, 'cap']);
+    expect(strip.every(f => Number(f.id.split(':').at(-1)) === 2)).toBe(true);
+    expect((station(strip[0]!.id) + station(strip.at(-1)!.id) + 0.27) / 2).toBeCloseTo(24, 6);
+  }
+});
+
+it('draws each drain station as one inlet with a flush grate and curb throats under a tread-only overlay', async () => {
+  const overlay = await pieceTriangles(result, 'overlay/drain/0.7m');
+  expect([...overlay.surfaces.keys()]).toEqual(['tread']);
+  expect(overlay.piece.triangles).toBe(2);
+  const uv = overlay.surfaces.get('tread')!.flat(), corner = (u: number, v: number) => uv.some(x => Math.abs(x.uv[0]! - u) < 1e-4 && Math.abs(x.uv[1]! - v) < 1e-4);
+  expect([corner(0, 0), corner(1, 0), corner(0, 1), corner(1, 1)]).toEqual([true, true, true, true]);
+  const inlet = await pieceTriangles(result, 'prop/inlet/2m-0.7m-0');
+  expect(inlet.piece.surfaces).toEqual(['concrete', 'darkMetal', 'metal']);
+  // Bars follow the 6 cm gutter crown 5 mm proud; the insert faces the road with four dark throats.
+  for (const v of inlet.surfaces.get('metal')!.flat()) expect(v.p[1]! - 0.12 * v.p[2]!).toBeCloseTo(0.005, 4);
+  const throats = inlet.surfaces.get('darkMetal')!.filter(t => t.every(v => Math.abs(v.p[2]! - 0.49) < 1e-4));
+  expect(throats).toHaveLength(4);
+  const placed = result.placements.placements;
+  const stations = placed.filter(p => p.piece === 'prop/inlet/2m-0.7m-0'), overlays = placed.filter(p => p.piece === 'overlay/drain/0.7m');
+  expect(overlays.map(p => p.position)).toEqual(stations.map(p => p.position));
+});
+
+it('resolves marquee surfaces through the binding, falling back to existing surfaces when it lacks them, except the LED field', async () => {
+  const surfaces = (built: NativeStreetBuild, id: string) => built.kit.pieces.find(p => p.id === id)!.surfaces;
+  expect(surfaces(result, 'prop/marquee-run/segment-2m')).toEqual(['concrete', 'darkMetal', 'marquee-led', 'ochre']);
+  expect(surfaces(result, 'prop/marquee-run/cap-start')).toEqual(['darkMetal']);
+  const binding = structuredClone(nativeMaterials);
+  for (const [name, like] of [['marquee-channel', 'darkMetal'], ['marquee-frame', 'ochre'], ['marquee-lip', 'concrete'], ['marquee-cap', 'darkMetal']] as const)
+    binding.surfaces[name] = binding.surfaces[like]!;
+  const bound = await build({ ...request, blueprint: fractionalBlueprint() }, { nativeMaterials: binding, mode: 'manifest' });
+  expect(surfaces(bound, 'prop/marquee-run/segment-2m')).toEqual(['marquee-channel', 'marquee-frame', 'marquee-led', 'marquee-lip']);
+  expect(surfaces(bound, 'prop/marquee-run/cap-end')).toEqual(['marquee-cap']);
+  // The LED field has no fallback: a binding without it fails the build and names it.
+  const bare = structuredClone(nativeMaterials);
+  delete bare.surfaces['marquee-led'];
+  await expect(build({ ...request, blueprint: fractionalBlueprint() }, { nativeMaterials: bare, mode: 'manifest' }))
+    .rejects.toMatchObject({ code: 'E_INVALID_PARAMS', details: { surfaceId: 'marquee-led' } });
 });

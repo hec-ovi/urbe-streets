@@ -5,7 +5,9 @@ import type {NativeMaterialCatalog} from '../schema/native-materials.ts';
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const pair=(v:unknown)=>Array.isArray(v)&&v.length===2&&v.every(n=>typeof n==='number'&&Number.isFinite(n));
 const revision='ac7c2fc02095b47d0a8fd7fda535e4ea7ce6452e';
-const effects=new Set(['asphalt','photographed','polished','mineral','metal-panel','hardware','cast-concrete','parking','road-paint','decal','solid','display']);
+const effects=new Set(['asphalt','photographed','polished','mineral','metal-panel','hardware','cast-concrete','parking','road-paint','decal','solid','display','led-matrix']);
+/** Surfaces authored ahead of their Materials entries draw as these existing surfaces until the binding carries them. */
+export const surfaceFallbacks:Readonly<Record<string,string>>={'marquee-channel':'darkMetal','marquee-frame':'ochre','marquee-lip':'concrete','marquee-cap':'darkMetal'};
 
 /** Retains a renderer-neutral snapshot and validates every geometry-facing reference. */
 export class NativeCatalog {
@@ -31,4 +33,9 @@ export class NativeCatalog {
     return new NativeCatalog(JSON.parse(JSON.stringify(input)) as NativeMaterialCatalog);
   }
   require(surface:string):void {if(!Object.hasOwn(this.binding.surfaces,surface))throw invalidParams('nativeMaterials: constructed surface is unavailable',{surfaceId:surface});}
+  /** The binding's own surface, else its fixed fallback; either must exist in the binding. */
+  resolve(surface:string):string {
+    const resolved=Object.hasOwn(this.binding.surfaces,surface)?surface:surfaceFallbacks[surface]??surface;
+    this.require(resolved);return resolved;
+  }
 }

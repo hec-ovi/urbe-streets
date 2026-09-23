@@ -30,8 +30,12 @@ it('retains the original source hardware positions, normals, metre UVs and topol
 
 it('rejects invalid dimensions, styles and unsupported screen-bearing hardware', () => {
   const options: FurnitureOptions = { kind: 'guard', length: 2, depth: 1, style: 0, damaged: false };
-  for (const invalid of [{ length: 0 }, { depth: NaN }, { style: 6 }, { damaged: 'yes' }, { kind: 'ramp' }]) {
+  for (const invalid of [{ length: 0 }, { depth: NaN }, { style: 6 }, { damaged: 'yes' }, { kind: 'ramp' },
+    { kind: 'marquee', depth: 0.5, length: 0.5 }, { kind: 'marquee', length: 2, depth: 0.7 }, { kind: 'marquee-cap', depth: 0.5, length: 0.4 },
+    { kind: 'marquee-cap', depth: 0.5, length: 0.27, style: 2 }]) {
     expect(() => createHardware({ ...options, ...invalid } as FurnitureOptions))
       .toThrowError(expect.objectContaining({ code: 'E_INVALID_PARAMS' }));
   }
+  // The run caps, start (style 0) and end (style 1), are the marquee parts shorter than a metre.
+  for (const style of [0, 1]) createHardware({ kind: 'marquee-cap', length: 0.27, depth: 0.5, style, damaged: false }).dispose();
 });

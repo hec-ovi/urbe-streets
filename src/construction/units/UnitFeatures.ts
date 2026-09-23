@@ -10,7 +10,6 @@ import type { PlacedFeature } from '../features/schema.ts';
 import type { SurfaceCut } from '../surfaces/schema.ts';
 import { along } from '../surfaces/Frame.ts';
 import type { FurnitureOptions } from '../hardware/schema.ts';
-import settings from '../district/settings.json' with { type: 'json' };
 import { UnitFrame } from './Frame.ts';
 
 export interface UnitFeature {
@@ -30,11 +29,9 @@ export class UnitFeatures {
       const details = new DistrictDetails(a);
       this.items = details.features.map(f => {
         const point = along(f.face, f.station + f.descriptor.length / 2, f.setback);
-        const index = details.features.filter(other => other.owner.id === f.owner.id).indexOf(f);
         return { descriptor: f.descriptor, frame: new UnitFrame(point, [f.face.inward[1], -f.face.inward[0]], f.face.roadTop),
-          options: { kind: f.kind, length: f.descriptor.length, depth: f.descriptor.depth, style: 0, damaged: false },
-          ...(f.cut ? { cut: f.cut } : {}), ...(f.panel ? { panel: f.panel } : {}),
-          ...(f.kind === 'marquee' ? { message: settings.messages[index % settings.messages.length]! } : {}) };
+          options: { kind: f.kind, length: f.descriptor.length, depth: f.descriptor.depth, style: f.descriptor.style, damaged: false },
+          ...(f.cut ? { cut: f.cut } : {}), ...(f.panel ? { panel: f.panel } : {}), ...(f.message ? { message: f.message } : {}) };
       });
       details.dispose();
     } else {

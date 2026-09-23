@@ -1,6 +1,6 @@
 # Streets
 
-Version 0.9.4. Builds reusable street units and placements from a saved Atlas blueprint.
+Version 0.10.0. Builds reusable street units and placements from a saved Atlas blueprint.
 
 | Folder | Purpose | Dependencies | Input / output |
 | --- | --- | --- | --- |
@@ -12,7 +12,7 @@ Version 0.9.4. Builds reusable street units and placements from a saved Atlas bl
 | [construction/features](../src/construction/features/CONTRACT.md) | Fits source hardware to reserved street fields and publishes feature bounds. | native architecture, hardware, surfaces, style | [schema](../src/construction/features/schema.ts) |
 | [construction/surfaces](../src/construction/surfaces/CONTRACT.md) | Fits source surface geometry and retains physical coverage and vertex attributes. | geometry, native architecture, style | [schema](../src/construction/surfaces/schema.ts) |
 | [construction/style](../src/construction/style/CONTRACT.md) | Selects source panel rows, palettes and continuous world wear. | Source data, geometry types | [schema](../src/construction/style/schema.ts) |
-| [construction/hardware](../src/construction/hardware/CONTRACT.md) | Builds source guards, inlets and drainage as geometry buffers. | Three.js geometry | [schema](../src/construction/hardware/schema.ts) |
+| [construction/hardware](../src/construction/hardware/CONTRACT.md) | Builds source guards, inlets, drainage and marquee runs as geometry buffers. | Three.js geometry | [schema](../src/construction/hardware/schema.ts) |
 | [architecture](../src/architecture/CONTRACT.md) | Reads Atlas 0.26.0 with planning reservations 2.1.0 and exact ground ownership. | geometry | [schema](../src/architecture/native-schema.ts) |
 | [geometry](../src/geometry/CONTRACT.md) | Provides plan boolean operations, bounds and a box grid for candidate lookups. | clipper2-ts | [schema](../src/geometry/schema.ts) |
 | [finishes](../src/finishes/CONTRACT.md) | Validates native scan binding snapshots. | Materials | [schema](../src/schema/native-materials.ts) |

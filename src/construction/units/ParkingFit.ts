@@ -35,9 +35,13 @@ export function fitParking(a: NativeArchitecture, regions: readonly UnitRegion[]
     if (profiles.select(road).width !== road.width) { reject('Parking road width has no exact catalogue profile'); continue; }
     const runs = byRoad.get(road.id) ?? [];
     const support = rectangle(bay.support.start, 0, bay.support.end - bay.support.start, 4.9).map(frame.world);
-    const expected = rectangle(bay.start, 0, bay.end - bay.start, 2).map(frame.world);
+    // The bay stands in its rectangular notch; its footprint is that notch or, pulled in by the 2 m end runs, its 45 degree return.
+    const notch = rectangle(bay.start, 0, bay.end - bay.start, 2).map(frame.world);
+    const returned: Ring = ([[bay.start, 0], [bay.end, 0], [bay.end - 2, 2], [bay.start + 2, 2]] as Ring).map(frame.world);
     const slots = bay.slots.every((s, i) => sameArea([s], [rectangle(bay.start + 2 + i * 6, 0, 6, 2).map(frame.world)]));
-    if (!sameArea([bay.footprint], [expected]) || !slots) { reject('Parking does not match the rectangular bay and 6 m slot catalogue'); continue; }
+    if ((!sameArea([bay.footprint], [notch]) && !sameArea([bay.footprint], [returned])) || !slots) {
+      reject('Parking does not match the rectangular bay and 6 m slot catalogue'); continue;
+    }
     const fields = [['parking-start', bay.support.start, 4], ['parking-slot', bay.start + 2, bay.slotCount * 6],
       ['parking-end', bay.end - 2, 4]] as const;
     const expectedFields = fields.flatMap(([variant, station, length]) => parkingFields(length, variant).map(f => ({

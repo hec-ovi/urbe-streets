@@ -24,7 +24,7 @@ export type NativeStreetFeature = {
   /** Complete reserved plan footprint, independent of resident asset cells. */
   footprint: Ring;
 } & (
-  | { kind: 'guard' | 'inlet' | 'channel' | 'cable' | 'marquee' | 'tree-grate'; frontageId: string; roadId?: never }
+  | { kind: 'guard' | 'inlet' | 'channel' | 'cable' | 'marquee' | 'marquee-cap' | 'tree-grate'; frontageId: string; roadId?: never }
   | { kind: 'access'; frontageId: null; /** References Atlas streets.edges[].id. */ roadId: string }
 );
 /**

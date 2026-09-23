@@ -1,6 +1,6 @@
 # Urbe Streets
 
-Version 0.9.4. Builds reusable 8 m street GLBs and placements from Atlas 0.26.0 with planning reservations 2.1.0.
+Version 0.10.0. Builds reusable 8 m street GLBs and placements from Atlas 0.26.0 with planning reservations 2.1.0.
 
 ```sh
 npm ci
@@ -21,7 +21,7 @@ console.log(result.statistics);
 npm run generate -- --request request.json --native-materials street-native.json --out new-bundle
 ```
 
-Every city publishes the complete profile catalogue in `streets/kit.json` and identical GLBs, within 200 pieces and 3 MB including kit JSON. `streets/placements.json` contains transforms and shader values for tint, wear, scan UVs and glyph indices. Widths outside the catalogue select the nearest profile and appear in `report.profiles`. A rectangular district parking bay holds one to six slots, places a 6 m strip per slot and two end returns on its saved kerb, and retains its owner finish. Road cores keep lane paint on its original grid. A parking bay the box cannot build leaves the placements, its ground keeps the ordinary segment, and `report.degraded` names the bay and the reason. Fractional remainders scale the plain 2 m closure along its run and appear in `closures`.
+Every city publishes the complete profile catalogue in `streets/kit.json` and identical GLBs, within 200 pieces and 3 MB including kit JSON. `streets/placements.json` contains transforms and shader values for tint, wear, scan UVs and glyph indices. Widths outside the catalogue select the nearest profile and appear in `report.profiles`. A district parking bay in its rectangular notch, square or with 45 degree returns, holds one to six slots, places a 6 m strip per slot and two end returns on its saved kerb, and retains its owner finish. Road cores keep lane paint on its original grid. A parking bay the box cannot build leaves the placements, its ground keeps the ordinary segment, and `report.degraded` names the bay and the reason. Fractional remainders scale the plain 2 m closure along its run and appear in `closures`.
 
 Engine draws whole pieces using complete GLB node transforms, placement scale, rotation and position. Paint, corner seams and zone palettes are baked. [Placement rules](CONTRACT.md) define shared overlays and shader values. Register MeshoptDecoder and bind the native material snapshot. Coverage and collision use complete transformed footprints; `report.overhangs` records accepted boundary and fringe areas. Construction runs in one calling thread.
 

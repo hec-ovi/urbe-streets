@@ -30,14 +30,18 @@ export function overlayPieces(): AuthoredUnit[] {
   }
   for (const depth of [0.5, 0.7]) {
     const target = batch(), gutter = depth - 0.2;
-    // Applied faces cover the existing gutter and curb, so no receiving cut is needed.
-    target.polygon('darkMetal', [rectangle(-1, 0, 2, gutter)], ([, z]) => 0.003 + z / gutter * 0.06, p => p, false);
-    for (let x = -0.94; x < 0.95; x += 0.065) target.polygon('metal', [rectangle(x, 0.04, 0.035, gutter - 0.08)], ([, z]) => 0.005 + z / gutter * 0.06, p => p, false);
-    target.face('darkMetal', [[-0.9, 0.061, gutter - 0.002], [0.9, 0.061, gutter - 0.002], [0.9, 0.13, gutter - 0.002], [-0.9, 0.13, gutter - 0.002]], [[0, 0], [1, 0], [1, 1], [0, 1]], false);
-    for (let x = -0.74; x < 0.85; x += 0.16) target.face('metal',
-      [[x - 0.015, 0.061, gutter - 0.004], [x + 0.015, 0.061, gutter - 0.004], [x + 0.015, 0.13, gutter - 0.004], [x - 0.015, 0.13, gutter - 0.004]],
-      [[0, 0], [1, 0], [1, 1], [0, 1]], false);
-    target.polygon('tread', [rectangle(-1, depth, 2, 2)], 0.201, p => p, false);
+    // Source inlets sit below the gutter, so their overlay draws the grate and curb mouth; district
+    // inlets carry their own flush grate and curb throats and keep only the tread hatch here.
+    if (depth === 0.5) {
+      target.polygon('darkMetal', [rectangle(-1, 0, 2, gutter)], ([, z]) => 0.003 + z / gutter * 0.06, p => p, false);
+      for (let x = -0.94; x < 0.95; x += 0.065) target.polygon('metal', [rectangle(x, 0.04, 0.035, gutter - 0.08)], ([, z]) => 0.005 + z / gutter * 0.06, p => p, false);
+      target.face('darkMetal', [[-0.9, 0.061, gutter - 0.002], [0.9, 0.061, gutter - 0.002], [0.9, 0.13, gutter - 0.002], [-0.9, 0.13, gutter - 0.002]], [[0, 0], [1, 0], [1, 1], [0, 1]], false);
+      for (let x = -0.74; x < 0.85; x += 0.16) target.face('metal',
+        [[x - 0.015, 0.061, gutter - 0.004], [x + 0.015, 0.061, gutter - 0.004], [x + 0.015, 0.13, gutter - 0.004], [x - 0.015, 0.13, gutter - 0.004]],
+        [[0, 0], [1, 0], [1, 1], [0, 1]], false);
+    }
+    // The tread surface is a panel scan: one 0..1 UV square over the 2 x 2 m hatch.
+    target.polygon('tread', [rectangle(-1, depth, 2, 2)], 0.201, ([x, z]) => [(x + 1) / 2, (z - depth) / 2], false);
     add(`overlay/drain/${depth}m`, target, 'drain');
   }
   const quad = batch();

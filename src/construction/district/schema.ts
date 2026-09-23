@@ -9,8 +9,10 @@ export interface DistrictFeature {
   face: NativeFrontage;
   station: number;
   setback: number;
-  kind: 'inlet' | 'marquee' | 'cable' | 'guard' | 'tree-grate';
+  kind: 'inlet' | 'marquee' | 'marquee-cap' | 'cable' | 'guard' | 'tree-grate';
   model: FurnitureModel;
+  /** The message of the run a marquee segment belongs to. */
+  message?: string;
   descriptor: NativeStreetFeature;
   cut?: SurfaceCut;
   panel?: Ring;
