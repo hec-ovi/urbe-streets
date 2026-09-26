@@ -80,7 +80,7 @@ export class CatalogueScene {
     const seam: Ring = [[x0, -half], [x0 + rim + paved, -half - rim - paved], [reach, -half - rim - paved],
       [reach, half + rim + paved], [x0 + rim + paved, half + rim + paved], [x0, half]];
     if (terminal) this.architecture.approaches = [];
-    return { ...this.finish('plain'), edgeOwners, seam, paint: !terminal };
+    return { ...this.finish('plain'), edgeOwners, seam, paint: false };
   }
 
   private medianEnd(p: StreetProfile, start: number, end: number): void {

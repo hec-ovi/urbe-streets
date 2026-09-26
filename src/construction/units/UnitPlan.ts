@@ -36,11 +36,14 @@ export class UnitPlan {
       const first = road.path[0]!, last = road.path.at(-1)!, d = direction(first, last), length = distance(first, last);
       if (road.path.some(p => Math.abs(dot(sub(p, first), [-d[1], d[0]])) > 1e-7)) throw invariant('Street units require a straight Atlas edge', { roadId: road.id });
       const approaches = byEdge.get(road.id) ?? [];
-      const crossingStart = clean(Math.max(0, ...approaches.filter(p => p.nodeId === road.from).flatMap(p => p.field.map(v => dot(sub(v, first), d)))));
-      const crossingEnd = clean(Math.min(length, ...approaches.filter(p => p.nodeId === road.to).flatMap(p => p.field.map(v => dot(sub(v, first), d)))));
-      const arm = crossingEnd - crossingStart >= 16 ? 8 : 0;
-      const start = clean(crossingStart + (approaches.some(p => p.nodeId === road.from) ? arm : 0));
-      const end = clean(crossingEnd - (approaches.some(p => p.nodeId === road.to) ? arm : 0));
+      const handoff = (nodeId: string) => {
+        if (!approaches.some(p => p.nodeId === nodeId)) return 0;
+        const cross = roads.filter(r => (r.from === nodeId || r.to === nodeId)
+          && Math.abs(dot(direction(r.path[0]!, r.path.at(-1)!), d)) < 0.01);
+        return Math.max(0, ...cross.map(r => r.width / 2)) + 18;
+      };
+      const start = clean(handoff(road.from));
+      const end = clean(length - handoff(road.to));
       const clearLength = clean(Math.max(0, end - start)), units = Math.floor(clearLength / 2);
       const fittedLength = clean(clearLength - units * 2);
       const segments = Math.floor(units / 4), halfSegments = Math.floor(units % 4 / 2), quarterSegments = units % 2;
@@ -50,8 +53,9 @@ export class UnitPlan {
       for (const span of [...Array<number>(segments).fill(8), ...(halfSegments ? [4] : []), ...(quarterSegments ? [2] : []), ...(fittedLength ? [fittedLength] : [])]) {
         const frame = new UnitFrame([first[0] + d[0] * station, first[1] + d[1] * station], d);
         const mask = [rectangle(0, -width, span, width * 2).map(frame.world)];
-        const box = bounds(mask.flat()), received = difference(mask, corridors.near(box));
-        if (totalArea(received) > 1e-9) this.regions.push(this.region('segment', frame, received, [road], road.districtStyle ?? 'ordinary', span));
+        const box = bounds(mask.flat());
+        if (totalArea(intersection(mask, corridors.near(box))) > 1e-7) throw invariant('Street run interiors overlap', { roadId: road.id, station });
+        this.regions.push(this.region('segment', frame, mask, [road], road.districtStyle ?? 'ordinary', span));
         corridors.add(mask[0]!, box); station = clean(station + span);
       }
     }

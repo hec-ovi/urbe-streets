@@ -31,9 +31,9 @@ export class DistrictDetails {
   private readonly crossings: BoxIndex<Ring>;
   private readonly obstacles: BoxIndex<NativeArchitecture['obstaclePoints'][number]>;
 
-  constructor(architecture: NativeArchitecture) {
+  constructor(architecture: NativeArchitecture, excluded: Ring[] = []) {
     const crossings = architecture.approaches.flatMap(approach => [approach.field, ...approach.landings]);
-    this.excluded = new BoxIndex([...crossings, ...architecture.stationBays.map(bay => bay.footprint), ...architecture.shafts.map(shaft => shaft.ring)], bounds);
+    this.excluded = new BoxIndex([...excluded, ...crossings, ...architecture.stationBays.map(bay => bay.footprint), ...architecture.shafts.map(shaft => shaft.ring)], bounds);
     this.crossings = new BoxIndex(crossings, bounds);
     this.obstacles = new BoxIndex(architecture.obstaclePoints, o => ({ min: [o.position[0] - o.clearance, o.position[1] - o.clearance],
       max: [o.position[0] + o.clearance, o.position[1] + o.clearance] }));

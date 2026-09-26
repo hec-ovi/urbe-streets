@@ -12,8 +12,10 @@ import { overlayPieces } from './OverlayPieces.ts';
 import { pieceFootprint } from './PieceFootprint.ts';
 import { ProfileCatalogue } from './ProfileCatalogue.ts';
 import { coreId, parkingFinishes, parkingSide } from './ParkingScene.ts';
+import type { NativeGround } from '../../architecture/native-schema.ts';
+import { infillPieces } from './SourceInfill.ts';
 
-export interface AuthoredUnit { geometry: NativePieceData; metadata: Omit<StreetKitPiece, 'file' | 'size' | 'bounds' | 'surfaces' | 'triangles' | 'bytes' | 'sha256' | 'hasCollision'> }
+export interface AuthoredUnit { geometry: NativePieceData; fields?: NativeGround[]; metadata: Omit<StreetKitPiece, 'file' | 'size' | 'bounds' | 'surfaces' | 'triangles' | 'bytes' | 'sha256' | 'hasCollision'> }
 
 /** A closed inventory built entirely from the published Atlas profiles. */
 export class KitCatalogue {
@@ -26,14 +28,14 @@ export class KitCatalogue {
       const built = constructPiece(new CatalogueScene().segment(profile, length, variant));
       const id = `${profile.streetClass}/${profile.id}/${length}m-${variant}`;
       this.panels += built.panels;
-      this.pieces.push({ geometry: { ...built.geometry, id }, metadata: { id, kind: 'segment', classes: [profile.streetClass], zone: profile.zone,
+      this.pieces.push({ geometry: { ...built.geometry, id }, fields: built.fields, metadata: { id, kind: 'segment', classes: [profile.streetClass], zone: profile.zone,
         variant, length, origin: 'run-start-at-road', footprint: built.footprint, profileId: profile.id } });
     }
     for (const profile of this.profiles.filter(p => p.width && !p.medianWidth)) for (const closure of [false, true]) {
       const scene = new CatalogueScene().segment(profile, closure ? 2 : 8, closure ? 'closure' : 'plain');
       scene.architecture.owners = scene.architecture.owners.filter(o => o.kind === 'roadway');
       const built = constructPiece(scene), id = coreId(profile, closure);
-      this.pieces.push({ geometry: { ...built.geometry, id }, metadata: { id, kind: 'segment', classes: [profile.streetClass], zone: profile.zone,
+      this.pieces.push({ geometry: { ...built.geometry, id }, fields: built.fields, metadata: { id, kind: 'segment', classes: [profile.streetClass], zone: profile.zone,
         variant: closure ? 'core-closure' : 'core', length: closure ? 2 : 8, origin: 'run-start-at-road', footprint: built.footprint, profileId: profile.id } });
     }
     for (const finish of parkingFinishes) {
@@ -47,23 +49,25 @@ export class KitCatalogue {
       const built = constructPiece(new CatalogueScene().junction(primary, { ...primary, width: 0 }, false, terminal));
       const id = KitCatalogue.arm(primary, terminal);
       this.panels += built.panels;
-      this.pieces.push({ geometry: { ...built.geometry, id }, metadata: { id, kind: 'junction-arm', classes: [primary.streetClass],
+      this.pieces.push({ geometry: { ...built.geometry, id }, fields: built.fields, metadata: { id, kind: 'junction-arm', classes: [primary.streetClass],
         zone: primary.zone, variant: terminal ? 'return' : 'plain', length: 0, origin: 'junction-at-road', footprint: built.footprint } });
     }
     for (const zone of ['ordinary', 'luxury', 'industrial']) {
       const profiles = this.profiles.filter(p => p.zone === zone);
       for (const [i, primary] of profiles.entries()) for (const cross of profiles.slice(i)) {
+        if (primary.streetClass === 'alley' && cross.streetClass === 'alley') continue;
         const built = constructPiece(new CatalogueScene().junction(primary, cross, true));
         if (zone !== 'ordinary') for (const mesh of built.geometry.meshes) {
           if (mesh.surface === 'asphalt' || mesh.surface === 'district-hex') mesh.surface = `district-junction-${zone === 'luxury' ? 'blue' : 'yellow'}`;
         }
         const id = KitCatalogue.center(primary, cross);
         this.panels += built.panels;
-        this.pieces.push({ geometry: { ...built.geometry, id }, metadata: { id, kind: 'junction-center', classes: [primary.streetClass, cross.streetClass],
+        this.pieces.push({ geometry: { ...built.geometry, id }, fields: built.fields, metadata: { id, kind: 'junction-center', classes: [primary.streetClass, cross.streetClass],
           zone, variant: 'plain', length: 0, origin: 'junction-at-road', footprint: built.footprint } });
       }
     }
     this.pieces.push(...overlayPieces());
+    this.pieces.push(...infillPieces());
     const run = settings.marquee;
     const props: FurnitureOptions[] = [
       ...(['inlet', 'cable'] as const).map(kind => ({ kind, length: 2, depth: 0.7, style: 0, damaged: false })),

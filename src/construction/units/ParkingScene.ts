@@ -37,6 +37,6 @@ export function parkingSide(profile: StreetProfile, finish: ParkingFinish, varia
     built.geometry.meshes.push(...pieceGeometry('slot-line', [batch.finish()]).meshes);
   }
   const id = sideId(finish, variant);
-  return { panels: built.panels, geometry: { ...built.geometry, id }, metadata: { id, kind: 'segment', classes: ['street', 'road'], zone: profile.zone,
+  return { panels: built.panels, geometry: { ...built.geometry, id }, fields: built.fields, metadata: { id, kind: 'segment', classes: ['street', 'road'], zone: profile.zone,
     variant, length, origin: 'run-start-at-road', footprint: built.footprint } };
 }

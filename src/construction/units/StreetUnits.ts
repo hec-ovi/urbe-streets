@@ -16,6 +16,7 @@ import { UnitFrame } from './Frame.ts';
 import { UnitCoverage } from './UnitCoverage.ts';
 import { ParkingUnits } from './ParkingUnits.ts';
 import { placement, turnPlacements } from './UnitOverlays.ts';
+import { crossingPlacements, sourceInfill } from './SourceInfill.ts';
 
 export class StreetUnits {
   readonly catalogue = new KitCatalogue();
@@ -31,8 +32,7 @@ export class StreetUnits {
   readonly panels = this.catalogue.panels;
 
   constructor(a: NativeArchitecture, seed: number, amount: number) {
-    const surfaces: NativeArchitecture = { ...a, roads: a.roads.map(r => r.kind === 'highway' ? { ...r, kind: 'road' as const } : r) };
-    this.plan = new UnitPlan(surfaces);
+    this.plan = new UnitPlan(a);
     const plainClosures = this.plan.regions.filter(r => r.kind === 'segment' && r.length < 2).flatMap(r => r.mask);
     const shafts = new BoxIndex(a.shafts.map(s => s.ring), bounds);
     const receivingGround = new BoxIndex(a.owners.filter(o => o.kind !== 'station').flatMap(o => o.ground.map(g => g.ring)), bounds);
@@ -42,21 +42,22 @@ export class StreetUnits {
     this.features = new UnitFeatures(details, seed, p => this.wear.sample(p), plainClosures);
     const pieces = new Map(this.pieces.map(p => [p.metadata.id, p]));
     const coverage = new UnitCoverage(a);
-    const add = (p: StreetPlacement, receiving?: Ring[]) => {
+    const add = (p: StreetPlacement, receiving?: Ring[], source?: import('../../architecture/native-schema.ts').NativeGround) => {
       const piece = pieces.get(p.piece);
       if (!piece) throw invariant('Placement references an unknown catalogue piece', { piece: p.piece });
       p.wear = this.wear.sample([p.position[0], p.position[2]]);
-      coverage.add(piece, p, this.placements.length, receiving);
+      coverage.add(piece, p, this.placements.length, receiving, source);
       this.placements.push(p);
     };
-    for (const road of surfaces.roads) this.profiles.select(road);
+    const fit = (p: StreetPlacement, receiving?: Ring[]) => { if (coverage.fits(pieces.get(p.piece)!, p)) add(p, receiving); };
+    for (const road of a.roads.filter(r => r.kind !== 'highway')) this.profiles.select(road);
     const mappedRoads = new Set(this.profiles.mappings.map(m => m.roadId));
     const mappedWidths = union(this.plan.regions.filter(r => r.roads.some(road => mappedRoads.has(road.id))).flatMap(r => r.mask));
     for (const region of this.plan.regions) {
       const expected = difference(intersection(receivingGround.near(region.box), region.mask), shafts.near(region.box));
       if (!expected.length) continue;
       const parked = parking.regions.get(region);
-      if (parked) { for (const p of parked) add(p, expected); continue; }
+      if (parked) { for (const p of parked) fit(p, expected); continue; }
       let p: StreetPlacement;
       if (region.kind === 'segment') {
         const profile = this.profiles.select(region.roads[0]!);
@@ -85,15 +86,17 @@ export class StreetUnits {
           }));
           p = placement(KitCatalogue.arm(primary, !incident), new UnitFrame(point, axis), ['roadway']);
         } else {
+          if (primary.streetClass === 'alley' && cross.streetClass === 'alley') continue;
           const ordered = this.profiles.profiles.indexOf(primary) <= this.profiles.profiles.indexOf(cross);
           p = placement(ordered ? KitCatalogue.center(primary, cross) : KitCatalogue.center(cross, primary),
             ordered ? region.frame : new UnitFrame([region.frame.position[0], region.frame.position[2]], [0, 1]), ['roadway']);
         }
       }
-      add(p, expected);
+      fit(p, expected);
     }
-    for (const p of parking.placements) add(p);
-    for (const p of stationPlacements(a, this.profiles.profiles)) add(p);
+    for (const p of parking.placements) fit(p);
+    for (const p of stationPlacements(a, this.profiles.profiles)) fit(p);
+    for (const { placement: p, ground } of sourceInfill(a, g => coverage.remaining(g))) add(p, [ground.ring], ground);
     for (const f of this.features.items) {
       const p = placement(KitCatalogue.prop(f.options), f.frame, [f.descriptor.ownerId]);
       if (f.message) p.text = [...f.message].map(c => settings.glyphs.indexOf(c));
@@ -102,6 +105,7 @@ export class StreetUnits {
       if (f.cut?.kind === 'inlet') add(placement(`overlay/drain/${f.options.depth}m`, f.frame, [f.descriptor.ownerId]));
     }
     for (const p of turnPlacements(a, plainClosures)) add(p);
+    for (const p of crossingPlacements(a)) add(p);
     for (const p of unitDecals(details, seed, p => this.wear.sample(p), plainClosures)) add(p);
     this.ground = coverage.finish(mappedWidths);
     this.overhangs = coverage.report;

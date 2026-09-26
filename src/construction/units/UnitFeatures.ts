@@ -26,7 +26,7 @@ export class UnitFeatures {
   readonly items: UnitFeature[];
   constructor(a: NativeArchitecture, seed: number, wear: (p: Vec2) => number, excluded: Ring[]) {
     if (a.format === 'district') {
-      const details = new DistrictDetails(a);
+      const details = new DistrictDetails(a, excluded);
       this.items = details.features.map(f => {
         const point = along(f.face, f.station + f.descriptor.length / 2, f.setback);
         return { descriptor: f.descriptor, frame: new UnitFrame(point, [f.face.inward[1], -f.face.inward[0]], f.face.roadTop),

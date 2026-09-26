@@ -48,4 +48,5 @@ export interface NativeArchitecture {
   highwayHash: string; stationHash: string; remainingGroundIndices: number[];
   /** Authored reservations dropped because the box cannot build them. */
   degraded: StreetDegradation[];
+  markings?: Ring[];
 }

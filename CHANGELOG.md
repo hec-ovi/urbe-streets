@@ -1,5 +1,7 @@
 # Changelog
 
+0.11.0: grade runs continue through underpasses; whole pieces require matching saved roles and levels, with unpainted source infill for the remainder; junction arms meet run starts, crossing and stop paint follows Atlas, and raised lane intrusion or positive surface overlap fails; capped LED runs respect fitted closures as complete runs.
+
 0.10.0: luxury and industrial-yellow frontages, underpass grade sides and frontages under a highway included, carry capped LED runs (start cap, 2 m or 1 m segments, end cap) midway between drains and on parking strips, or in the middle of the widest clear stretch of a frontage the drain grid leaves bare, clear of drains, cables, access points and crossings; segment LED fields use the `marquee-led` surface with metre UVs; each district drain station is one inlet with a flush grate and curb throats under a tread-only overlay; new marquee surfaces fall back to existing ones until the binding carries them; drain tread inserts publish one 0 to 1 UV square over their 2 x 2 m; a parking bay whose footprint returns 45 degrees inside its rectangular notch (Atlas 0.12.3) is built like a square one.
 
 0.9.4: parking follows saved kerbs with 6 m slots, complete end returns and block finishes.

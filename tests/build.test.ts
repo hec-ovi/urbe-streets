@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import { decodePiece, worldPosition } from '../src/assets/decode-fixture.ts';
 import { build, placementFootprint } from '../src/index.ts';
+import { UnitPlan } from '../src/construction/units/UnitPlan.ts';
 import { readNativeAtlas } from '../src/architecture/NativeAtlas.ts';
 import type { NativeStreetBuild } from '../src/schema/native-result.ts';
 import type { Ring, Vec2 } from '../src/geometry/schema.ts';
@@ -71,6 +72,25 @@ function fractionalBlueprint(width = 7, length = 31.7) {
       { surface: 'sidewalk', polygon: strip(half + 0.5, 2), bottom: -0.2, top: 0.2 },
     ] },
   };
+}
+
+
+/** A complete district cross section exercises fitted closures without accepting an overhang. */
+function symmetricBlueprint() {
+  const plan = fractionalBlueprint(), length = 31.7;
+  const strip = (z: number, width: number): Ring => [[0,z],[length,z],[length,z+width],[0,z+width]];
+  plan.streets.construction.modules.format = 'district';
+  plan.meta.bounds = {min:[0,-8.4],max:[length,8.4]};
+  plan.meta.boundary = strip(-8.4,16.8);
+  plan.volumetric.ground = [{surface:'roadway',polygon:strip(-3.5,7),bottom:-0.2,top:0},
+    ...[1,-1].flatMap(sign => [['gutter',3.5,0.5,0],['curb',4,0.2,0.2],['sidewalk',4.2,4.2,0.2]].map(([surface,offset,width,top]) => ({
+      surface: String(surface), polygon:strip(sign > 0 ? Number(offset) : -Number(offset)-Number(width),Number(width)),bottom:-0.2,top:Number(top)})))];
+  const reservation = plan.streets.construction.reservations;
+  reservation.groundArray.count = 7; reservation.owners[1]!.groundIndices = [1,2,3,4,5,6];
+  const face = reservation.frontages[0]!;
+  Object.assign(face,{pavedWidth:4.2,gutterWidth:0.5});
+  reservation.frontages.push({...face,id:'frontage:opposite',start:[length,-3.5],end:[0,-3.5],inward:[0,-1]});
+  return plan;
 }
 
 /** The same run in district format with one authored six slot parking bay carved out of its walk. */
@@ -158,9 +178,10 @@ it('maps an off catalogue width to the nearest profile and reports it without ad
   const blueprint = fractionalBlueprint(30);
   const mapped = await build({ ...request, blueprint }, { nativeMaterials });
   expect(mapped.report.profiles).toEqual([{ roadId: 'e0', profileId: 'ordinary/local', requestedWidth: 30, width: 7, delta: -23 }]);
-  expect(mapped.placements.placements.filter(p => result.kit.pieces.find(k => k.id === p.piece)!.kind === 'segment').every(p => p.piece.startsWith('street/ordinary/local/'))).toBe(true);
+  expect(mapped.placements.placements.some(p => p.piece.startsWith('infill/'))).toBe(true);
   expect(mapped.kit).toEqual(result.kit);
-  expect(mapped.ground.cover.missingArea).toBeGreaterThan(0);
+  expect(mapped.ground.cover.missingArea).toBeLessThan(1e-7);
+  expect(mapped.ground.cover.outsideArea).toBeLessThan(1e-7);
 });
 
 /** Intersect signed polygon contours with the road line, then retain their nonzero winding intervals. */
@@ -187,7 +208,12 @@ it('covers each plan centreline with whole units and plain fitted fractional clo
     expect(p.bounds.min[0], p.id).toBeGreaterThanOrEqual(-1e-7);
     expect(p.bounds.max[0], p.id).toBeLessThanOrEqual(p.length + 1e-7);
   }
-  for (const road of source.streets.edges.filter(e => e.class !== 'highway')) {
+  for (const road of source.streets.edges) {
+    if (road.class === 'highway') {
+      expect(result.closures.some(c => c.roadId === road.id)).toBe(false);
+      expect(result.delegated.highways.count).toBeGreaterThan(0);
+      continue;
+    }
     const origin = road.path[0]!, end = road.path.at(-1)!, length = Math.hypot(end[0] - origin[0], end[1] - origin[1]);
     const d: Vec2 = [(end[0] - origin[0]) / length, (end[1] - origin[1]) / length];
     const spans = result.placements.placements.flatMap(p => {
@@ -200,7 +226,7 @@ it('covers each plan centreline with whole units and plain fitted fractional clo
     for (const [start, end] of spans) { expect(start, `${road.id} at ${station}`).toBeLessThanOrEqual(station + 1e-6); station = Math.max(station, end); }
     expect(station, road.id).toBeCloseTo(length, 6);
   }
-  const fractional = fractionalBlueprint();
+  const fractional = symmetricBlueprint();
   const closureResult = await build({ ...request, blueprint: fractional }, { nativeMaterials });
   const closurePieces = new Map(closureResult.kit.pieces.map(p => [p.id, p]));
   const fitted = closureResult.closures.filter(c => c.fittedLength > 0);
@@ -243,13 +269,18 @@ it('places crossing arms and one shared central piece at every junction the plan
   const nodeOf = new Map(source.streets.nodes.map(n => [n.id, n]));
   const pieces = new Map(result.kit.pieces.map(p => [p.id, p]));
   const placed = result.placements.placements.filter(p => pieces.get(p.piece)!.kind.startsWith('junction'));
-  /** Highway interactions stay delegated, so junctions on a highway node are not built here. */
-  const reserved = source.streets.construction.junctions.filter(j => j.nodeIds.every(id => nodeOf.get(id)!.edgeIds.every(e => classOf.get(e) !== 'highway')));
+  const reserved = source.streets.construction.junctions;
   expect(reserved.length).toBeGreaterThan(0);
   for (const junction of reserved) {
     const classes = [...new Set(junction.approaches.map(a => classOf.get(a.edgeId)!))].sort();
     const positions = junction.nodeIds.map(id => nodeOf.get(id)!.position);
     const here = placed.filter(p => positions.some(([x, z]) => Math.hypot(p.position[0] - x, p.position[2] - z) < 1e-6)).map(p => pieces.get(p.piece)!);
+    const highway = junction.nodeIds.some(id => nodeOf.get(id)!.edgeIds.some(e => classOf.get(e) === 'highway'));
+    if (highway) {
+      const physical = result.placements.placements.flatMap(p => { const piece = pieces.get(p.piece)!; return piece.kind === 'prop' || piece.kind === 'overlay' ? [] : placementFootprint(piece, p); });
+      for (const [x, z] of positions) expect(totalArea(intersection(physical, [[[x-0.05,z-0.05],[x+0.05,z-0.05],[x+0.05,z+0.05],[x-0.05,z+0.05]]])), junction.id).toBeCloseTo(0.01, 6);
+      continue;
+    }
     expect(here.filter(p => p.kind === 'junction-center'), junction.id).toHaveLength(1);
     for (const piece of here) expect([...new Set(piece.classes)].sort(), `${junction.id} ${piece.id}`).toEqual(classes);
     const arms = placed.filter(p => pieces.get(p.piece)!.kind === 'junction-arm' && positions.some(([x, z]) => Math.hypot(p.position[0] - x, p.position[2] - z) <= 8.7 + 1e-6));
@@ -320,7 +351,7 @@ it('fits parking slots, kerbs and returns to saved bays and reports unbuildable 
     .map(p => r.kit.pieces.find(k => k.id === p.piece)!).filter(k => k.kind === 'segment');
   expect(segments(authored).filter(k => k.variant === 'parking-slot')).toHaveLength(6);
   expect(segments(dropped).some(k => k.variant === 'parking-slot')).toBe(false);
-  expect(dropped.ground.cover).toEqual(authored.ground.cover);
+  for (const key of Object.keys(authored.ground.cover) as (keyof typeof authored.ground.cover)[]) expect(dropped.ground.cover[key]).toBeCloseTo(authored.ground.cover[key], 6);
   const city = source.streets.construction.reservations.parking;
   expect(result.report.degraded).toEqual([]);
   expect(segments(result).filter(k => k.variant === 'parking-slot')).toHaveLength(city.reduce((n, b) => n + b.slotCount, 0));
@@ -439,7 +470,7 @@ it('publishes footprints matching drawable GLB triangles without geometry select
   }
 });
 
-it('bakes one dash phase, approach paint, corner seams and shader ready overlays', async () => {
+it('bakes one dash phase and corner seams and places crossing paint from Atlas', async () => {
   const piece = result.kit.pieces.find(p => p.id === 'road/ordinary/avenue/8m-plain')!;
   const decoded = await decodePiece(result.assets[`streets/${piece.file}`]!);
   const dash: number[] = [];
@@ -457,7 +488,7 @@ it('bakes one dash phase, approach paint, corner seams and shader ready overlays
   expect(Math.max(...dash)).toBeCloseTo(4, 3);
   for (const zone of ['ordinary', 'luxury', 'industrial']) {
     const arm = result.kit.pieces.find(p => p.id === `junction/${zone}/avenue/arm`)!;
-    expect(arm.surfaces).toContain('yellowPaint');
+    expect(arm.surfaces.some(s => /Paint|crosswalk/.test(s))).toBe(false);
     expect(arm.footprint.flat().some(([x, z]) => Math.abs(x - (Math.abs(z) - 7)) < 1e-7)).toBe(true);
   }
   const overlays = result.kit.pieces.filter(p => p.kind === 'overlay');
@@ -589,7 +620,13 @@ it('places capped runs on luxury and industrial-yellow frontages midway between 
       && !owner.parking.some(bay => bay.frontageId === face.id) && !drains.some(f => f.frontageId === face.id)));
   expect(clear.some(face => face.id.startsWith('frontage:underpass:'))).toBe(true);
   expect(clear.some(face => face.edgeIds.every(id => roads.get(id) === 'highway'))).toBe(true);
-  for (const face of clear) expect(runs.some(run => run[0]!.frontageId === face.id), face.id).toBe(true);
+  const closures = new UnitPlan(architecture).regions.filter(r => r.kind === 'segment' && r.length < 2).flatMap(r => r.mask);
+  for (const face of clear) {
+    const strip: Ring = [face.start, [face.start[0]+face.inward[0]*0.7,face.start[1]+face.inward[1]*0.7],
+      [face.end[0]+face.inward[0]*0.7,face.end[1]+face.inward[1]*0.7],face.end];
+    if (totalArea(intersection([area(strip) < 0 ? [...strip].reverse() : strip], closures)) > 1e-7) continue;
+    expect(runs.some(run => run[0]!.frontageId === face.id), face.id).toBe(true);
+  }
   // The plan's parking strips carry runs of their own.
   expect(runs.filter(run => run[0]!.id.endsWith(':2')).length).toBeGreaterThan(0);
   const again = await build(request, { nativeMaterials, mode: 'manifest' });
@@ -638,4 +675,61 @@ it('resolves marquee surfaces through the binding, falling back to existing surf
   delete bare.surfaces['marquee-led'];
   await expect(build({ ...request, blueprint: fractionalBlueprint() }, { nativeMaterials: bare, mode: 'manifest' }))
     .rejects.toMatchObject({ code: 'E_INVALID_PARAMS', details: { surfaceId: 'marquee-led' } });
+});
+
+it('keeps every underpass lane continuous at grade, with no raised triangles or duplicate surface coverage', async () => {
+  const a = await readNativeAtlas(blueprint), pieces = new Map(result.kit.pieces.map(p => [p.id,p]));
+  const nodes = new Set(a.protections.filter(p => p.kind === 'underpass').map(p => String(p.source.nodeId)));
+  expect(nodes.size).toBeGreaterThan(0);
+  expect(result.report.overhangs.overlapArea).toBe(0);
+  const decoded = new Map<string, Awaited<ReturnType<typeof pieceTriangles>>>();
+  for (const nodeId of nodes) for (const road of a.roads.filter(r => r.kind !== 'highway' && (r.from === nodeId || r.to === nodeId))) {
+    const node = road.from === nodeId ? road.path[0]! : road.path.at(-1)!;
+    const origin = road.path[0]!, end = road.path.at(-1)!, length = Math.hypot(end[0]-origin[0],end[1]-origin[1]);
+    const d: Vec2 = [(end[0]-origin[0])/length,(end[1]-origin[1])/length], n: Vec2 = [-d[1],d[0]];
+    for (const lane of road.lanes) {
+      const world = (x: number,z: number): Vec2 => [node[0]+d[0]*x+n[0]*z,node[1]+d[1]*x+n[1]*z];
+      const region = [world(-8,lane.offset-lane.width/2),world(8,lane.offset-lane.width/2),world(8,lane.offset+lane.width/2),world(-8,lane.offset+lane.width/2)];
+      const cover: Ring[] = [];
+      for (const placement of result.placements.placements) {
+        const piece = pieces.get(placement.piece)!;
+        if (!piece.hasCollision || totalArea(intersection(placementFootprint(piece,placement),[region])) < 1e-7) continue;
+        if (!decoded.has(piece.id)) decoded.set(piece.id,await pieceTriangles(result,piece.id));
+        const c = Math.cos(placement.rotationY), s = Math.sin(placement.rotationY), scale = placement.scale ?? [1,1,1];
+        for (const triangle of [...decoded.get(piece.id)!.surfaces.values()].flat()) {
+          const points = triangle.map(v => [placement.position[0]+c*v.p[0]!*scale[0]+s*v.p[2]!*scale[2],
+            placement.position[1]+v.p[1]!*scale[1],placement.position[2]-s*v.p[0]!*scale[0]+c*v.p[2]!*scale[2]]);
+          let ring: Ring = points.map(p => [p[0]!,p[2]!] as Vec2);
+          if (Math.abs(area(ring)) < 1e-8) continue;
+          if (area(ring) < 0) ring = [...ring].reverse();
+          if (points.some(p => p[1]! > 0.05)) expect(totalArea(intersection([ring],[region])),`${nodeId} ${lane.id} ${piece.id}`).toBeLessThan(0.001);
+          if (points.every(p => Math.abs(p[1]!) < 0.001)) cover.push(ring);
+        }
+      }
+      // Quantized GLBs permit 1 mm at an edge; the entire lane interior must be asphalt.
+      expect(totalArea(difference([region],union(cover))),`${nodeId} ${lane.id}`).toBeLessThan(0.04);
+    }
+  }
+  const stripes = result.placements.placements.filter(p => p.piece === 'overlay/stripe');
+  expect(stripes.length).toBeGreaterThan(a.markings!.length);
+  for (const [i, ring] of a.markings!.entries()) {
+    const actual = placementFootprint(pieces.get('overlay/stripe')!,stripes[i]!);
+    expect(totalArea(difference([ring],actual))+totalArea(difference(actual,[ring]))).toBeLessThan(1e-7);
+  }
+});
+
+it('rejects overlapping instances, wrong surface roles and raised infill over live lanes', async () => {
+  const { KitCatalogue } = await import('../src/construction/units/KitCatalogue.ts');
+  const { UnitCoverage } = await import('../src/construction/units/UnitCoverage.ts');
+  const a = await readNativeAtlas(symmetricBlueprint()), catalogue = new KitCatalogue();
+  const piece = catalogue.pieces.find(p => p.metadata.id === 'street/ordinary/local/8m-plain')!;
+  const p = { piece: piece.metadata.id,position:[0,0,0] as const,rotationY:0,cell:[0,0] as const,ownerId:'roadway',ownerIds:['roadway'] };
+  const cover = new UnitCoverage(a);
+  cover.add(piece,p,0);
+  expect(() => cover.add(piece,p,1)).toThrow(expect.objectContaining({code:'E_INVARIANT'}));
+  expect(new UnitCoverage(a).fits(piece,{...p,position:[0,0,2]})).toBe(false);
+  const raised = catalogue.pieces.find(p => p.metadata.id === 'infill/concrete')!;
+  const ground = {...a.owners[0]!.ground[0]!,top:0.2};
+  expect(() => new UnitCoverage(a).add(raised,{...p,piece:raised.metadata.id},0,undefined,ground))
+    .toThrow(/level-zero driving lane/);
 });

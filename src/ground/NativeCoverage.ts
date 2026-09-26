@@ -23,7 +23,7 @@ export class NativeCoverage {
     const actual=union(claims.flatMap(claim=>claim.rings)),uncovered=difference(expected,actual);
     const missing=totalArea(uncovered),outside=totalArea(difference(actual,expected));
     const unexpectedMissing=uncovered.length?totalArea(difference(uncovered,mappedWidths.near(bounds(uncovered.flat())))):0;
-    if(unexpectedMissing>1e-7||outside>1e-7)throw invariant('Native construction does not cover its reserved receiving fields',{ownerId:owner.id,missing,outside});
+    if(unexpectedMissing>1e-7||outside>1e-7)throw invariant('Native construction does not cover its reserved receiving fields',{ownerId:owner.id,missing,outside,uncovered});
     const encroachment=totalArea(intersection(actual,this.exclusions.near(bounds(actual.flat()))));
     if(encroachment>1e-7)throw unsatisfiable('Native construction enters parcel or water exclusion',{ownerId:owner.id,area:encroachment});
     this.seen.add(owner.id);this.cover.reservedArea+=totalArea(reserved);this.cover.excludedArea+=totalArea(reserved)-totalArea(expected);

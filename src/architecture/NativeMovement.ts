@@ -1,7 +1,7 @@
 import { bad, array, number, object, path, point, records, ring, string, indexed, type RecordValue } from './values.ts';
 import type { NativeApproach, NativeLane, NativeRoad, NativeTurn } from './native-schema.ts';
 
-export function nativeMovement(source: RecordValue): { roads: NativeRoad[]; approaches: NativeApproach[]; turns: NativeTurn[] } {
+export function nativeMovement(source: RecordValue): { roads: NativeRoad[]; approaches: NativeApproach[]; turns: NativeTurn[]; markings: import('../geometry/schema.ts').Ring[] } {
   const streets = object(source.streets, 'streets'), construction = object(streets.construction, 'streets.construction');
   const architecture = object(source.architecture, 'architecture');
   if (architecture.version !== '1.0.0') bad('architecture.version', 'Movement architecture 1.0.0 is required');
@@ -68,12 +68,13 @@ export function nativeMovement(source: RecordValue): { roads: NativeRoad[]; appr
     }
   }
   // Keep declared crossing identities readable even though Streets fits its own paint inside their fields.
+  const markings: import('../geometry/schema.ts').Ring[] = [];
   for (const crossing of records(streets.crossings, 'streets.crossings')) {
     if (!nodes.has(string(crossing.nodeId, 'crossing.nodeId'))) bad('streets.crossings', 'Unknown crossing node');
     for (const segment of records(crossing.segments, 'crossing.segments')) {
       if (!edgeRows.has(string(segment.edgeId, 'crossing.edgeId'))) bad('streets.crossings', 'Unknown crossing edge');
-      array(segment.markings, 'crossing.markings').forEach((r, i) => ring(r, `crossing.markings[${i}]`));
+      array(segment.markings, 'crossing.markings').forEach((r, i) => markings.push(ring(r, `crossing.markings[${i}]`)));
     }
   }
-  return { roads, approaches, turns };
+  return { roads, approaches, turns, markings };
 }

@@ -12,8 +12,9 @@ import type { SceneInput } from './UnitScene.ts';
 import { Markings } from '../markings/Markings.ts';
 import { unitBounds } from './UnitBounds.ts';
 import { canonical, clean } from './Frame.ts';
+import type { NativeGround } from '../../architecture/native-schema.ts';
 
-export interface ConstructedPiece { geometry: NativePieceData; footprint: Ring[]; panels: number }
+export interface ConstructedPiece { geometry: NativePieceData; footprint: Ring[]; panels: number; fields: NativeGround[] }
 
 export function pieceGeometry(id: string, surfaces: SurfaceOutput[]): NativePieceData {
   const meshes = new Map<string, NativeMesh>();
@@ -56,5 +57,6 @@ export function constructPiece(scene: SceneInput): ConstructedPiece {
     outputs.push(output);
   }
   const footprint = union(outputs.flatMap(o => o.coverage.flatMap(c => c.rings)));
-  return { geometry: pieceGeometry('unit', outputs), footprint: canonical(scene.seam ? intersection(footprint, [scene.seam]) : footprint), panels };
+  return { geometry: pieceGeometry('unit', outputs), footprint: canonical(scene.seam ? intersection(footprint, [scene.seam]) : footprint), panels,
+    fields: a.owners.flatMap(o => o.ground.flatMap(g => (scene.seam ? intersection([g.ring], [scene.seam]) : [g.ring]).map(ring => ({ ...g, ring })))) };
 }
