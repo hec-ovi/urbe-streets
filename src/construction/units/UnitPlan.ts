@@ -1,6 +1,6 @@
 import type { NativeApproach, NativeArchitecture, NativeRoad } from '../../architecture/native-schema.ts';
 import type { Box2, Ring, Vec2 } from '../../geometry/schema.ts';
-import type { StreetClass, StreetClosure, StreetKitPiece } from '../../schema/street-kit.ts';
+import type { StreetClosure, StreetKitPiece } from '../../schema/street-kit.ts';
 import { bounds, difference, intersection, rectangle, totalArea, union } from '../../geometry/polygons.ts';
 import { BoxIndex } from '../../geometry/BoxIndex.ts';
 import { direction, distance, dot, sub } from '../surfaces/Frame.ts';
@@ -22,7 +22,8 @@ export class UnitPlan {
   readonly regions: UnitRegion[] = [];
   readonly closures: StreetClosure[] = [];
   constructor(a: NativeArchitecture) {
-    const roads = a.roads.filter((r): r is NativeRoad & { kind: StreetClass } => r.kind !== 'highway');
+    // Highway edges are planned by their grade corridor; the deck above them stays delegated.
+    const roads = a.roads;
     const ground = union(a.owners.filter(o => o.kind !== 'station').flatMap(o => o.ground.map(g => g.ring)));
     const byEdge = new Map<string, NativeApproach[]>();
     for (const approach of a.approaches) byEdge.set(approach.edgeId, [...byEdge.get(approach.edgeId) ?? [], approach]);
@@ -31,19 +32,29 @@ export class UnitPlan {
       const rim = f.pavedWidth + f.curbWidth + f.gutterWidth;
       for (const edgeId of f.edgeIds) rims.set(edgeId, Math.max(rims.get(edgeId) ?? 0, rim));
     }
+    // A grade street passing beneath a highway runs through; the highway's grade corridor stops at the underpass kerb.
+    const underpass = new Map<string, [Vec2, Vec2][]>();
+    for (const owner of a.owners) if (owner.kind === 'underpass') for (const f of owner.frontages) for (const id of f.edgeIds) {
+      underpass.set(id, [...underpass.get(id) ?? [], [f.start, f.end] as [Vec2, Vec2]]);
+    }
     const corridors = new BoxIndex<Ring>();
     for (const road of roads) {
       const first = road.path[0]!, last = road.path.at(-1)!, d = direction(first, last), length = distance(first, last);
       if (road.path.some(p => Math.abs(dot(sub(p, first), [-d[1], d[0]])) > 1e-7)) throw invariant('Street units require a straight Atlas edge', { roadId: road.id });
       const approaches = byEdge.get(road.id) ?? [];
-      const handoff = (nodeId: string) => {
-        if (!approaches.some(p => p.nodeId === nodeId)) return 0;
-        const cross = roads.filter(r => (r.from === nodeId || r.to === nodeId)
-          && Math.abs(dot(direction(r.path[0]!, r.path.at(-1)!), d)) < 0.01);
-        return Math.max(0, ...cross.map(r => r.width / 2)) + 18;
+      const handoff = (nodeId: string, far: boolean) => {
+        const cross = roads.filter(r => (r.from === nodeId || r.to === nodeId) && Math.abs(dot(direction(r.path[0]!, r.path.at(-1)!), d)) < 0.01);
+        // A highway enters a grade junction box without an approach of its own, and takes an arm there all the same.
+        const junction = (road.kind === 'highway' ? a.approaches : approaches).some(p => p.nodeId === nodeId);
+        if (junction) return Math.max(0, ...cross.map(r => r.width / 2)) + 18;
+        if (road.kind !== 'highway') return 0;
+        const kerbs = (underpass.get(road.id) ?? []).filter(([p, q]) => Math.abs(dot(direction(p, q), d)) < 0.01)
+          .map(([p]) => dot(sub(p, first), d)).filter(s => far ? s > length / 2 && s < length : s > 0 && s < length / 2);
+        if (kerbs.length) return far ? length - Math.max(...kerbs) : Math.min(...kerbs);
+        return Math.max(0, ...cross.filter(r => r.kind !== 'highway').map(r => r.width / 2 + (rims.get(r.id) ?? 0)));
       };
-      const start = clean(handoff(road.from));
-      const end = clean(length - handoff(road.to));
+      const start = clean(handoff(road.from, false));
+      const end = clean(length - handoff(road.to, true));
       const clearLength = clean(Math.max(0, end - start)), units = Math.floor(clearLength / 2);
       const fittedLength = clean(clearLength - units * 2);
       const segments = Math.floor(units / 4), halfSegments = Math.floor(units % 4 / 2), quarterSegments = units % 2;

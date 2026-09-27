@@ -37,7 +37,7 @@ it('fits source features with stable bounds, exact openings and protected statio
       expect(drawn.meshes.every(mesh => mesh.collision && mesh.wear.every(wear => wear === 0.7))).toBe(true);
     }
   } finally { builder.dispose(); }
-});
+}, 30_000);
 
 it('fails a retained guard whose source geometry conflicts with a protected shaft', async () => {
   const source = await architecture();

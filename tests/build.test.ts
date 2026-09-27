@@ -29,7 +29,7 @@ let source: {
     construction: {
       junctions: { id: string; nodeIds: string[]; approaches: { edgeId: string }[] }[];
       medians: { id: string; edgeId: string; start: number; end: number; footprint: Ring }[];
-      reservations: { owners: { id: string; groundIndices: number[] }[]; frontages: { id: string; start: Vec2; inward: Vec2 }[]; parking: ParkingBay[] };
+      reservations: { owners: { id: string; kind: string; groundIndices: number[] }[]; frontages: { id: string; ownerId: string; start: Vec2; end: Vec2; inward: Vec2 }[]; parking: ParkingBay[] };
     };
   };
   volumetric: { ground: { polygon: Ring }[] };
@@ -212,11 +212,6 @@ it('covers each plan centreline with whole units and plain fitted fractional clo
     expect(p.bounds.max[0], p.id).toBeLessThanOrEqual(p.length + 1e-7);
   }
   for (const road of source.streets.edges) {
-    if (road.class === 'highway') {
-      expect(result.closures.some(c => c.roadId === road.id)).toBe(false);
-      expect(result.delegated.highways.count).toBeGreaterThan(0);
-      continue;
-    }
     const origin = road.path[0]!, end = road.path.at(-1)!, length = Math.hypot(end[0] - origin[0], end[1] - origin[1]);
     const d: Vec2 = [(end[0] - origin[0]) / length, (end[1] - origin[1]) / length];
     const spans = result.placements.placements.flatMap(p => {
@@ -291,16 +286,31 @@ it('places crossing arms and one shared central piece at every junction the plan
   }
 });
 
-it('builds corners, tees and median islands from whole units, leaving only highway corridors to infill', () => {
+it('builds corners, tees, highway corridors and median islands from whole units, leaving only underpass kerb strips to infill', () => {
   const pieces = new Map(result.kit.pieces.map(p => [p.id, p])), placements = result.placements.placements;
   const footprints = (list: typeof placements) => list.flatMap(p => placementFootprint(pieces.get(p.piece)!, p));
-  const highways = new Set(source.streets.edges.filter(e => e.class === 'highway').map(e => e.id));
+  const { owners, frontages } = source.streets.construction.reservations;
   // A tee's far side and a corner's outer side are the crossing street's kerb, built as one far-kerb return.
   expect(placements.filter(p => p.piece.endsWith('/return')).length).toBeGreaterThanOrEqual(8);
+  // Concrete is left only where a highway's grade corridor meets the kerb of a street passing beneath it.
+  const underpass = new Set(owners.filter(o => o.kind === 'underpass').map(o => o.id));
+  const strips: Ring[] = frontages.filter(f => underpass.has(f.ownerId)).map(({ start, end }) => {
+    const [x0, x1] = [Math.min(start[0], end[0]) - 5, Math.max(start[0], end[0]) + 5], [z0, z1] = [Math.min(start[1], end[1]) - 5, Math.max(start[1], end[1]) + 5];
+    return [[x0, z0], [x1, z0], [x1, z1], [x0, z1]];
+  });
+  expect(strips.length).toBeGreaterThan(0);
   const concrete = footprints(placements.filter(p => p.piece === 'infill/concrete'));
-  for (const node of source.streets.nodes.filter(n => !n.edgeIds.some(id => highways.has(id)))) {
-    const [x, z] = node.position, r = 30;
-    expect(totalArea(intersection(concrete, [[[x - r, z - r], [x + r, z - r], [x + r, z + r], [x - r, z + r]]])), node.id).toBe(0);
+  expect(totalArea(concrete)).toBeGreaterThan(0);
+  expect(totalArea(difference(concrete, strips))).toBeLessThan(1e-6);
+  // A highway's grade corridor takes the unpainted closures of its road profile; its deck stays delegated.
+  expect(result.delegated.highways.count).toBeGreaterThan(0);
+  for (const edge of source.streets.edges.filter(e => e.class === 'highway')) {
+    const [a, b] = [edge.path[0]!, edge.path.at(-1)!], length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const along = (p: typeof placements[number]) => Math.abs(Math.cos(p.rotationY) * (b[1] - a[1]) + Math.sin(p.rotationY) * (b[0] - a[0])) / length < 1e-6;
+    const on = placements.filter(p => pieces.get(p.piece)!.kind === 'segment' && !p.piece.startsWith('infill/') && along(p)
+      && Math.abs((p.position[0] - a[0]) * (b[1] - a[1]) - (p.position[2] - a[1]) * (b[0] - a[0])) / length < 1e-6);
+    expect(on.length, edge.id).toBeGreaterThan(0);
+    expect(on.every(p => pieces.get(p.piece)!.variant === 'closure'), edge.id).toBe(true);
   }
   // Each saved island is covered exactly by a nose at either end and whole units between, at its Atlas stations.
   expect(source.streets.construction.medians.length).toBeGreaterThan(0);
@@ -457,7 +467,8 @@ it('reports whole transformed coverage, collision footprints and accepted fringe
   const complete = union(surfaces), report = result.report.overhangs;
   expect(totalArea(difference(complete, result.ground.owners.map(g => g.polygon)))).toBeCloseTo(result.ground.cover.outsideArea, 6);
   expect(totalArea(surfaces) - totalArea(complete)).toBeCloseTo(report.overlapArea, 6);
-  expect(report.accepted.length).toBeGreaterThan(0);
+  // Whole pieces stand only on saved ground, so none reaches past the city boundary.
+  expect(report.boundaryArea).toBe(0);
   expect(report.accepted.reduce((n, r) => n + r.boundaryArea, 0)).toBeCloseTo(report.boundaryArea, 6);
   expect(report.accepted.reduce((n, r) => n + r.fringeArea, 0)).toBeCloseTo(report.fringeArea, 6);
   for (const r of report.accepted) {

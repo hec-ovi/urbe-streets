@@ -11,7 +11,9 @@ export class ProfileCatalogue {
   select(road: NativeRoad): StreetProfile {
     const previous = this.selected.get(road.id);
     if (previous) return previous;
-    const choices = this.profiles.filter(p => p.streetClass === road.kind && p.zone === (road.districtStyle ?? 'ordinary'));
+    // A highway's grade corridor is built from the road profile of its width.
+    const kind = road.kind === 'highway' ? 'road' : road.kind;
+    const choices = this.profiles.filter(p => p.streetClass === kind && p.zone === (road.districtStyle ?? 'ordinary'));
     const profile = choices.reduce((a, b) => Math.abs(b.width - road.width) < Math.abs(a.width - road.width) ? b : a);
     this.selected.set(road.id, profile);
     if (Math.abs(profile.width - road.width) > 1e-7) this.mappings.push({ roadId: road.id, profileId: profile.id,

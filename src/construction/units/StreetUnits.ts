@@ -51,7 +51,7 @@ export class StreetUnits {
       this.placements.push(p);
     };
     const fit = (p: StreetPlacement, receiving?: Ring[]) => { if (coverage.fits(pieces.get(p.piece)!, p)) add(p, receiving); };
-    for (const road of a.roads.filter(r => r.kind !== 'highway')) this.profiles.select(road);
+    for (const road of a.roads) this.profiles.select(road);
     const mappedRoads = new Set(this.profiles.mappings.map(m => m.roadId));
     const mappedWidths = union(this.plan.regions.filter(r => r.roads.some(road => mappedRoads.has(road.id))).flatMap(r => r.mask));
     for (const region of this.plan.regions) {
@@ -63,6 +63,11 @@ export class StreetUnits {
       if (region.kind === 'segment') {
         const profile = this.profiles.select(region.roads[0]!);
         const length = Math.max(2, region.length);
+        // Ground under a highway deck carries no lane paint, so it takes the profile's unpainted closures.
+        if (region.roads[0]!.kind === 'highway' && length === 8) {
+          for (const x of [0, 4]) fit(placement(KitCatalogue.segment(profile, 4, 'closure'), new UnitFrame(region.frame.world([x, 0]), region.frame.d), ['roadway']), expected);
+          continue;
+        }
         const variant = length < 8 ? 'closure' : 'plain';
         p = placement(KitCatalogue.segment(profile, length, variant), region.frame, ['roadway']);
         if (region.length < 2) p.scale = [region.length / 2, 1, 1];
@@ -133,7 +138,7 @@ export class StreetUnits {
   private *islands(a: NativeArchitecture): Generator<StreetPlacement> {
     const roads = new Map(a.roads.map(r => [r.id, r]));
     for (const median of a.medians ?? []) {
-      const road = roads.get(median.edgeId), profile = road && road.kind !== 'highway' ? this.profiles.select(road) : undefined;
+      const road = roads.get(median.edgeId), profile = road && this.profiles.select(road);
       if (!road || !profile?.medianWidth) continue;
       const first = road.path[0]!, d = direction(first, road.path.at(-1)!);
       const frame = (station: number, axis = d) => new UnitFrame([first[0] + d[0] * station, first[1] + d[1] * station], axis);

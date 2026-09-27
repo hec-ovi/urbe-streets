@@ -1,5 +1,7 @@
 # Changelog
 
+0.12.1: a highway's grade corridor is built from the unpainted closures of its road profile, with ordinary arms at grade junction boxes and an end at each saved underpass kerb line, instead of plain concrete infill.
+
 0.12.0: a junction return is the crossing street's far kerb, so tees and outer corners fit their saved ground; median profiles leave the island band open and saved islands are built from 2 m noses and 2 m and 8 m units at their Atlas stations; leftover carriageway infill takes asphalt or district-hex, both world sampled; the piece budget is 216.
 
 0.11.0: grade runs continue through underpasses; whole pieces require matching saved roles and levels, with unpainted source infill for the remainder; junction arms meet run starts, crossing and stop paint follows Atlas, and raised lane intrusion or positive surface overlap fails; capped LED runs respect fitted closures as complete runs.
