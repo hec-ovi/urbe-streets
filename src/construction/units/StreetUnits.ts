@@ -29,7 +29,6 @@ export class StreetUnits {
   readonly features: UnitFeatures;
   readonly featurePlacements: number[] = [];
   readonly ground: ReturnType<UnitCoverage['finish']>;
-  readonly overhangs: UnitCoverage['report'];
   readonly panels = this.catalogue.panels;
 
   constructor(a: NativeArchitecture, seed: number, amount: number) {
@@ -43,29 +42,29 @@ export class StreetUnits {
     this.features = new UnitFeatures(details, seed, p => this.wear.sample(p), plainClosures);
     const pieces = new Map(this.pieces.map(p => [p.metadata.id, p]));
     const coverage = new UnitCoverage(a);
-    const add = (p: StreetPlacement, receiving?: Ring[], source?: NativeGround) => {
+    const add = (p: StreetPlacement, source?: NativeGround) => {
       const piece = pieces.get(p.piece);
       if (!piece) throw invariant('Placement references an unknown catalogue piece', { piece: p.piece });
       p.wear = this.wear.sample([p.position[0], p.position[2]]);
-      coverage.add(piece, p, this.placements.length, receiving, source);
+      coverage.add(piece, p, this.placements.length, source);
       this.placements.push(p);
     };
-    const fit = (p: StreetPlacement, receiving?: Ring[]) => { if (coverage.fits(pieces.get(p.piece)!, p)) add(p, receiving); };
+    const fit = (p: StreetPlacement) => { if (coverage.fits(pieces.get(p.piece)!, p)) add(p); };
     for (const road of a.roads) this.profiles.select(road);
     const mappedRoads = new Set(this.profiles.mappings.map(m => m.roadId));
     const mappedWidths = union(this.plan.regions.filter(r => r.roads.some(road => mappedRoads.has(road.id))).flatMap(r => r.mask));
     for (const region of this.plan.regions) {
-      const expected = difference(intersection(receivingGround.near(region.box), region.mask), shafts.near(region.box));
-      if (!expected.length) continue;
+      // A region with no saved receiving ground left outside station shafts takes no piece.
+      if (!difference(intersection(receivingGround.near(region.box), region.mask), shafts.near(region.box)).length) continue;
       const parked = parking.regions.get(region);
-      if (parked) { for (const p of parked) fit(p, expected); continue; }
+      if (parked) { for (const p of parked) fit(p); continue; }
       let p: StreetPlacement;
       if (region.kind === 'segment') {
         const profile = this.profiles.select(region.roads[0]!);
         const length = Math.max(2, region.length);
         // Ground under a highway deck carries no lane paint, so it takes the profile's unpainted closures.
         if (region.roads[0]!.kind === 'highway' && length === 8) {
-          for (const x of [0, 4]) fit(placement(KitCatalogue.segment(profile, 4, 'closure'), new UnitFrame(region.frame.world([x, 0]), region.frame.d), ['roadway']), expected);
+          for (const x of [0, 4]) fit(placement(KitCatalogue.segment(profile, 4, 'closure'), new UnitFrame(region.frame.world([x, 0]), region.frame.d), ['roadway']));
           continue;
         }
         const variant = length < 8 ? 'closure' : 'plain';
@@ -98,7 +97,7 @@ export class StreetUnits {
             ordered ? region.frame : new UnitFrame([region.frame.position[0], region.frame.position[2]], [0, 1]), ['roadway']);
         }
       }
-      fit(p, expected);
+      fit(p);
     }
     for (const p of parking.placements) fit(p);
     for (const p of stationPlacements(a, this.profiles.profiles)) fit(p);
@@ -119,7 +118,7 @@ export class StreetUnits {
       }
       return zone === 'luxury' ? 'district-hex' : 'asphalt';
     };
-    for (const { placement: p, ground } of sourceInfill(a, g => coverage.remaining(g), surface)) add(p, [ground.ring], ground);
+    for (const { placement: p, ground } of sourceInfill(a, g => coverage.remaining(g), surface)) add(p, ground);
     for (const f of this.features.items) {
       const p = placement(KitCatalogue.prop(f.options), f.frame, [f.descriptor.ownerId]);
       if (f.message) p.text = [...f.message].map(c => settings.glyphs.indexOf(c));
@@ -131,7 +130,6 @@ export class StreetUnits {
     for (const p of crossingPlacements(a)) add(p);
     for (const p of unitDecals(details, seed, p => this.wear.sample(p), plainClosures)) add(p);
     this.ground = coverage.finish(mappedWidths);
-    this.overhangs = coverage.report;
   }
 
   /** Each saved median island as a nose at either end and 8 m and 2 m units between, at its Atlas stations. */

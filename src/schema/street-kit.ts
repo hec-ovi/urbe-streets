@@ -47,13 +47,6 @@ export interface StreetPlacement {
   text?: number[];
 }
 export interface StreetPlacements { version: '1.2.0'; cellSize: 128; placements: StreetPlacement[] }
-export interface StreetOverhang {
-  placement: number; piece: string; boundaryArea: number; fringeArea: number;
-}
-export interface StreetOverhangReport {
-  accepted: StreetOverhang[];
-  boundaryArea: number; fringeArea: number; overlapArea: number;
-}
 export interface StreetClosure {
   roadId: string; length: number; start: number; end: number; clearLength: number;
   segments: number; halfSegments: number; quarterSegments: number;

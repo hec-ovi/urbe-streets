@@ -1,6 +1,6 @@
 import type { NativeArchitecture, NativeGround } from '../../architecture/native-schema.ts';
 import type { Ring } from '../../geometry/schema.ts';
-import type { StreetOverhangReport, StreetPlacement } from '../../schema/street-kit.ts';
+import type { StreetPlacement } from '../../schema/street-kit.ts';
 import { area, bounds, difference, intersection, totalArea, union } from '../../geometry/polygons.ts';
 import { BoxIndex } from '../../geometry/BoxIndex.ts';
 import { NativeCoverage } from '../../ground/NativeCoverage.ts';
@@ -10,7 +10,6 @@ import { placementFootprint } from './PlacementGeometry.ts';
 
 /** Intersections measure ownership only. Rendering and collision keep the whole footprint. */
 export class UnitCoverage {
-  readonly report: StreetOverhangReport = { accepted: [], boundaryArea: 0, fringeArea: 0, overlapArea: 0 };
   private readonly claims: Map<string, Ring[]>;
   private readonly surfaces: Ring[] = [];
   private readonly architecture: NativeArchitecture;
@@ -54,8 +53,8 @@ export class UnitCoverage {
     return difference([g.ring], [...this.occupied.near(bounds(g.ring)), ...this.shafts.near(bounds(g.ring))]);
   }
 
-  add(piece: AuthoredUnit, p: StreetPlacement, index: number, receiving?: Ring[], source?: NativeGround): void {
-    const a = this.architecture, footprint = placementFootprint(piece.metadata, p), box = bounds(footprint.flat());
+  add(piece: AuthoredUnit, p: StreetPlacement, index: number, source?: NativeGround): void {
+    const footprint = placementFootprint(piece.metadata, p), box = bounds(footprint.flat());
     const physical = piece.geometry.meshes.some(m => m.collision);
     if (physical) {
       if (source) {
@@ -79,14 +78,6 @@ export class UnitCoverage {
       return [id];
     });
     if (covered.length) { p.ownerIds = covered; if (!covered.includes(p.ownerId)) p.ownerId = covered[0]!; }
-    const expected = receiving ?? near.map(g => g.ring);
-    const excess = difference(footprint, expected);
-    const boundaryArea = totalArea(difference(excess, [a.boundary]));
-    const fringeArea = totalArea(intersection(excess, [a.boundary]));
-    if (boundaryArea + fringeArea > 1e-7) {
-      this.report.accepted.push({ placement: index, piece: p.piece, boundaryArea, fringeArea });
-      this.report.boundaryArea += boundaryArea; this.report.fringeArea += fringeArea;
-    }
     if (piece.metadata.kind !== 'prop' && physical) for (const ring of footprint) { this.surfaces.push(ring); this.occupied.add(ring, bounds(ring)); }
   }
 
@@ -95,8 +86,8 @@ export class UnitCoverage {
     for (const owner of this.architecture.owners) coverage.add(owner, [{ ownerId: owner.id, rings: this.claims.get(owner.id)! }], mapped);
     const complete = union(this.surfaces);
     // Integer area on the boolean grid avoids cancellation across thousands of instances.
-    this.report.overlapArea = Math.round(Math.max(0, Number(exactArea2(this.surfaces) - exactArea2(complete)) / 2e16) * 1e6) / 1e6;
-    if (this.report.overlapArea > 0) throw invariant('Physical street surfaces overlap', { overlapArea: this.report.overlapArea });
+    const overlapArea = Math.round(Math.max(0, Number(exactArea2(this.surfaces) - exactArea2(complete)) / 2e16) * 1e6) / 1e6;
+    if (overlapArea > 0) throw invariant('Physical street surfaces overlap', { overlapArea });
     const ground = coverage.finish();
     ground.cover.outsideArea = totalArea(difference(complete, this.architecture.owners.flatMap(o => o.ground.map(g => g.ring))));
     return ground;

@@ -29,10 +29,10 @@ let source: {
     construction: {
       junctions: { id: string; nodeIds: string[]; approaches: { edgeId: string }[] }[];
       medians: { id: string; edgeId: string; start: number; end: number; footprint: Ring }[];
-      reservations: { owners: { id: string; kind: string; groundIndices: number[] }[]; frontages: { id: string; ownerId: string; start: Vec2; end: Vec2; inward: Vec2 }[]; parking: ParkingBay[] };
+      reservations: { owners: { id: string; kind: string; groundIndices: number[] }[]; frontages: { id: string; ownerId: string; start: Vec2; end: Vec2; inward: Vec2; pavedWidth: number; gutterWidth: number; curbWidth: number }[]; parking: ParkingBay[] };
     };
   };
-  volumetric: { ground: { polygon: Ring }[] };
+  volumetric: { ground: { surface: string; polygon: Ring }[] };
 };
 beforeAll(async () => { result = await build(request, { nativeMaterials }); source = JSON.parse(await readFile(blueprint, 'utf8')); });
 
@@ -286,22 +286,29 @@ it('places crossing arms and one shared central piece at every junction the plan
   }
 });
 
-it('builds corners, tees, highway corridors and median islands from whole units, leaving only underpass kerb strips to infill', () => {
+it('builds corners, tees, highway corridors and median islands from whole units, with concrete only on the kerb where a highway corridor ends at a street beneath it', () => {
   const pieces = new Map(result.kit.pieces.map(p => [p.id, p])), placements = result.placements.placements;
   const footprints = (list: typeof placements) => list.flatMap(p => placementFootprint(pieces.get(p.piece)!, p));
   const { owners, frontages } = source.streets.construction.reservations;
   // A tee's far side and a corner's outer side are the crossing street's kerb, built as one far-kerb return.
   expect(placements.filter(p => p.piece.endsWith('/return')).length).toBeGreaterThanOrEqual(8);
-  // Concrete is left only where a highway's grade corridor meets the kerb of a street passing beneath it.
+  // A highway's grade corridor ends at the saved kerb line of each street passing beneath it. That kerb's gutter and
+  // curb, across the roadway and both corridor sidewalks, is the only place concrete infill may remain.
   const underpass = new Set(owners.filter(o => o.kind === 'underpass').map(o => o.id));
-  const strips: Ring[] = frontages.filter(f => underpass.has(f.ownerId)).map(({ start, end }) => {
-    const [x0, x1] = [Math.min(start[0], end[0]) - 5, Math.max(start[0], end[0]) + 5], [z0, z1] = [Math.min(start[1], end[1]) - 5, Math.max(start[1], end[1]) + 5];
-    return [[x0, z0], [x1, z0], [x1, z1], [x0, z1]];
+  const kerbs = frontages.filter(f => underpass.has(f.ownerId) && f.id.endsWith(':highway')).map((f): Ring => {
+    const length = Math.hypot(f.end[0] - f.start[0], f.end[1] - f.start[1]), kerb = f.gutterWidth + f.curbWidth, side = f.pavedWidth + kerb;
+    const along = (p: Vec2, x: number, z = 0): Vec2 => [p[0] + (f.end[0] - f.start[0]) / length * x + f.inward[0] * z, p[1] + (f.end[1] - f.start[1]) / length * x + f.inward[1] * z];
+    const ring = [along(f.start, -side), along(f.end, side), along(f.end, side, kerb), along(f.start, -side, kerb)];
+    return area(ring) < 0 ? [...ring].reverse() : ring;
   });
-  expect(strips.length).toBeGreaterThan(0);
+  expect(kerbs.length).toBeGreaterThan(0);
   const concrete = footprints(placements.filter(p => p.piece === 'infill/concrete'));
-  expect(totalArea(concrete)).toBeGreaterThan(0);
-  expect(totalArea(difference(concrete, strips))).toBeLessThan(1e-6);
+  expect(totalArea(difference(concrete, kerbs))).toBeLessThan(1e-6);
+  // 0.7 m by the corridor's 23.8 m at most per side, on gutter, curb and walk, never on the roadway.
+  for (const kerb of kerbs) expect(totalArea(intersection(concrete, [kerb]))).toBeLessThanOrEqual(area(kerb) + 1e-6);
+  expect(Math.max(...kerbs.map(area))).toBeLessThan(17);
+  const roadway = source.volumetric.ground.filter(g => g.surface === 'roadway').map(g => g.polygon);
+  expect(totalArea(intersection(concrete, roadway))).toBeLessThan(1e-6);
   // A highway's grade corridor takes the unpainted closures of its road profile; its deck stays delegated.
   expect(result.delegated.highways.count).toBeGreaterThan(0);
   for (const edge of source.streets.edges.filter(e => e.class === 'highway')) {
@@ -455,7 +462,7 @@ it('fits parking slots, kerbs and returns to saved bays and reports unbuildable 
 
 }, 60_000);
 
-it('reports whole transformed coverage, collision footprints and accepted fringes', () => {
+it('reports whole transformed coverage and collision footprints, every surface on saved ground and none repeated', () => {
   const pieces = new Map(result.kit.pieces.map(p => [p.id, p]));
   const surfaces = result.placements.placements.flatMap(p => {
     const piece = pieces.get(p.piece)!;
@@ -464,17 +471,11 @@ it('reports whole transformed coverage, collision footprints and accepted fringe
     expect(totalArea(intersection(rings, result.ground.exclusions.map(e => e.polygon)))).toBeLessThan(1e-7);
     return piece.kind === 'prop' ? [] : rings;
   });
-  const complete = union(surfaces), report = result.report.overhangs;
+  const complete = union(surfaces);
   expect(totalArea(difference(complete, result.ground.owners.map(g => g.polygon)))).toBeCloseTo(result.ground.cover.outsideArea, 6);
-  expect(totalArea(surfaces) - totalArea(complete)).toBeCloseTo(report.overlapArea, 6);
-  // Whole pieces stand only on saved ground, so none reaches past the city boundary.
-  expect(report.boundaryArea).toBe(0);
-  expect(report.accepted.reduce((n, r) => n + r.boundaryArea, 0)).toBeCloseTo(report.boundaryArea, 6);
-  expect(report.accepted.reduce((n, r) => n + r.fringeArea, 0)).toBeCloseTo(report.fringeArea, 6);
-  for (const r of report.accepted) {
-    expect(result.placements.placements[r.placement]!.piece).toBe(r.piece);
-    expect(r.boundaryArea + r.fringeArea).toBeGreaterThan(1e-7);
-  }
+  expect(result.ground.cover.outsideArea).toBeLessThan(1e-6);
+  expect(totalArea(difference(complete, source.volumetric.ground.map(g => g.polygon)))).toBeLessThan(1e-6);
+  expect(totalArea(surfaces) - totalArea(complete)).toBeLessThan(1e-6);
   const piece = result.kit.pieces.find(p => p.id === 'street/ordinary/local/2m-closure')!;
   const p = { piece: piece.id, position: [19, 3, 7] as const, rotationY: Math.PI / 2, scale: [0.5, 1, 2] as const, cell: [0, 0] as const, ownerId: 'roadway', ownerIds: ['roadway'] };
   const footprint = placementFootprint(piece, p);
@@ -717,11 +718,10 @@ it('resolves marquee surfaces through the binding, falling back to existing surf
     .rejects.toMatchObject({ code: 'E_INVALID_PARAMS', details: { surfaceId: 'marquee-led' } });
 });
 
-it('keeps every underpass lane continuous at grade, with no raised triangles or duplicate surface coverage', async () => {
+it('keeps every underpass lane continuous at grade, with no raised triangles', async () => {
   const a = await readNativeAtlas(blueprint), pieces = new Map(result.kit.pieces.map(p => [p.id,p]));
   const nodes = new Set(a.protections.filter(p => p.kind === 'underpass').map(p => String(p.source.nodeId)));
   expect(nodes.size).toBeGreaterThan(0);
-  expect(result.report.overhangs.overlapArea).toBe(0);
   const decoded = new Map<string, Awaited<ReturnType<typeof pieceTriangles>>>();
   for (const nodeId of nodes) for (const road of a.roads.filter(r => r.kind !== 'highway' && (r.from === nodeId || r.to === nodeId))) {
     const node = road.from === nodeId ? road.path[0]! : road.path.at(-1)!;
@@ -770,6 +770,6 @@ it('rejects overlapping instances, wrong surface roles and raised infill over li
   expect(new UnitCoverage(a).fits(piece,{...p,position:[0,0,2]})).toBe(false);
   const raised = catalogue.pieces.find(p => p.metadata.id === 'infill/concrete')!;
   const ground = {...a.owners[0]!.ground[0]!,top:0.2};
-  expect(() => new UnitCoverage(a).add(raised,{...p,piece:raised.metadata.id},0,undefined,ground))
+  expect(() => new UnitCoverage(a).add(raised,{...p,piece:raised.metadata.id},0,ground))
     .toThrow(/level-zero driving lane/);
 });

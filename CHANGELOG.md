@@ -1,5 +1,7 @@
 # Changelog
 
+0.13.0: the manifest drops `report.overhangs`: every surface piece stands only on saved ground, so its boundary and fringe areas were always zero, and a repeated surface already fails the build.
+
 0.12.1: a highway's grade corridor is built from the unpainted closures of its road profile, with ordinary arms at grade junction boxes and an end at each saved underpass kerb line, instead of plain concrete infill.
 
 0.12.0: a junction return is the crossing street's far kerb, so tees and outer corners fit their saved ground; median profiles leave the island band open and saved islands are built from 2 m noses and 2 m and 8 m units at their Atlas stations; leftover carriageway infill takes asphalt or district-hex, both world sampled; the piece budget is 216.

@@ -1,6 +1,6 @@
 # Streets
 
-Version 0.12.1. Builds reusable street units and placements from a saved Atlas blueprint.
+Version 0.13.0. Builds reusable street units and placements from a saved Atlas blueprint.
 
 | Folder | Purpose | Dependencies | Input / output |
 | --- | --- | --- | --- |
