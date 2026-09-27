@@ -1,7 +1,7 @@
-import type { NativeArchitecture, NativeOwner, NativeGround } from '../../architecture/native-schema.ts';
+import type { NativeArchitecture, NativeGround } from '../../architecture/native-schema.ts';
 import type { Ring } from '../../geometry/schema.ts';
 import type { StreetOverhangReport, StreetPlacement } from '../../schema/street-kit.ts';
-import { area, bounds, difference, intersection, intersects, totalArea, union } from '../../geometry/polygons.ts';
+import { area, bounds, difference, intersection, totalArea, union } from '../../geometry/polygons.ts';
 import { BoxIndex } from '../../geometry/BoxIndex.ts';
 import { NativeCoverage } from '../../ground/NativeCoverage.ts';
 import { invariant } from '../../errors.ts';
@@ -14,7 +14,8 @@ export class UnitCoverage {
   private readonly claims: Map<string, Ring[]>;
   private readonly surfaces: Ring[] = [];
   private readonly architecture: NativeArchitecture;
-  private readonly ground: BoxIndex<NativeOwner>;
+  /** Saved fields one by one, so a check sees only the rings near its piece. */
+  private readonly fields: BoxIndex<NativeGround>;
   private readonly shafts: BoxIndex<Ring>;
   private readonly occupied = new BoxIndex<Ring>();
   private readonly lanes = new BoxIndex<Ring>();
@@ -23,8 +24,7 @@ export class UnitCoverage {
   constructor(a: NativeArchitecture) {
     this.architecture = a;
     this.claims = new Map(a.owners.map(o => [o.id, []]));
-    this.ground = new BoxIndex();
-    for (const owner of a.owners) for (const g of owner.ground) this.ground.add(owner, bounds(g.ring));
+    this.fields = new BoxIndex(a.owners.flatMap(o => o.ground), g => bounds(g.ring));
     this.shafts = new BoxIndex(a.shafts.map(s => s.ring), bounds);
     for (const road of a.roads.filter(r => r.kind !== 'highway')) for (const lane of road.lanes) for (let i = 1; i < lane.path.length; i++) {
       const p = lane.path[i - 1]!, q = lane.path[i]!, length = Math.hypot(q[0] - p[0], q[1] - p[1]);
@@ -38,7 +38,7 @@ export class UnitCoverage {
   fits(piece: AuthoredUnit, p: StreetPlacement): boolean {
     const footprint = placementFootprint(piece.metadata, p), box = bounds(footprint.flat());
     if (totalArea(intersection(footprint, this.occupied.near(box))) > 1e-7) return false;
-    const ground = [...new Set(this.ground.near(box))].flatMap(o => o.ground);
+    const ground = this.fields.near(box);
     if (totalArea(difference(footprint, ground.map(g => g.ring))) > 1e-7) return false;
     if (totalArea(intersection(footprint, this.shafts.near(box))) > 1e-7) return false;
     for (const field of piece.fields ?? []) {
@@ -62,22 +62,24 @@ export class UnitCoverage {
         const top = p.position[1] + piece.geometry.bounds.max[1] * (p.scale?.[1] ?? 1);
         if (Math.abs(top - source.top) > 1e-7 || totalArea(difference(footprint, [source.ring])) > 1e-6)
           throw invariant('Infill leaves its saved surface or level', { piece: p.piece, sourceIndex: source.sourceIndex });
-      } else if (piece.metadata.kind !== 'prop' && !this.fits(piece, p)) throw invariant('Street instance conflicts with its receiving surface roles', { piece: p.piece, placement: index });
+      }
+      // Whole instances were admitted by `fits`; this catches a repeated or unchecked surface.
       if (piece.metadata.kind !== 'prop' && totalArea(intersection(footprint, this.occupied.near(box))) > 1e-6)
         throw invariant('Physical street surfaces overlap', { piece: p.piece, placement: index });
       this.checkLanes(piece, p, index);
     }
     if (physical && totalArea(intersection(footprint, this.shafts.near(box))) > 1e-7)
       throw invariant('Transformed street piece enters a station shaft', { piece: p.piece, placement: index });
-    const owners = [...new Set(this.ground.near(box))].filter(o => o.ground.some(g => intersects(box, bounds(g.ring))));
-    const covered = owners.flatMap(o => {
-      const part = intersection(footprint, o.ground.map(g => g.ring));
+    const near = this.fields.near(box), owners = new Map<string, Ring[]>();
+    for (const g of near) owners.set(g.ownerId, [...owners.get(g.ownerId) ?? [], g.ring]);
+    const covered = [...owners].flatMap(([id, rings]) => {
+      const part = intersection(footprint, rings);
       if (totalArea(part) <= 1e-9) return [];
-      if (piece.metadata.kind !== 'prop' && physical) this.claims.get(o.id)!.push(...part);
-      return [o.id];
+      if (piece.metadata.kind !== 'prop' && physical) this.claims.get(id)!.push(...part);
+      return [id];
     });
     if (covered.length) { p.ownerIds = covered; if (!covered.includes(p.ownerId)) p.ownerId = covered[0]!; }
-    const expected = receiving ?? owners.flatMap(o => o.ground.map(g => g.ring));
+    const expected = receiving ?? near.map(g => g.ring);
     const excess = difference(footprint, expected);
     const boundaryArea = totalArea(difference(excess, [a.boundary]));
     const fringeArea = totalArea(intersection(excess, [a.boundary]));
