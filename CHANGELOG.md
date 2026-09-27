@@ -1,5 +1,7 @@
 # Changelog
 
+0.12.0: a junction return is the crossing street's far kerb, so tees and outer corners fit their saved ground; median profiles leave the island band open and saved islands are built from 2 m noses and 2 m and 8 m units at their Atlas stations; leftover carriageway infill takes asphalt or district-hex, both world sampled; the piece budget is 216.
+
 0.11.0: grade runs continue through underpasses; whole pieces require matching saved roles and levels, with unpainted source infill for the remainder; junction arms meet run starts, crossing and stop paint follows Atlas, and raised lane intrusion or positive surface overlap fails; capped LED runs respect fitted closures as complete runs.
 
 0.10.0: luxury and industrial-yellow frontages, underpass grade sides and frontages under a highway included, carry capped LED runs (start cap, 2 m or 1 m segments, end cap) midway between drains and on parking strips, or in the middle of the widest clear stretch of a frontage the drain grid leaves bare, clear of drains, cables, access points and crossings; segment LED fields use the `marquee-led` surface with metre UVs; each district drain station is one inlet with a flush grate and curb throats under a tread-only overlay; new marquee surfaces fall back to existing ones until the binding carries them; drain tread inserts publish one 0 to 1 UV square over their 2 x 2 m; a parking bay whose footprint returns 45 degrees inside its rectangular notch (Atlas 0.12.3) is built like a square one.

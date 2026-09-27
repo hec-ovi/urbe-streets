@@ -1,6 +1,6 @@
 {
   "name": "urbe-streets",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "private": true,
   "type": "module",
   "description": "Builds reusable 8 m street GLBs and placements from Atlas reservations with exact ground replacement and native material bindings.",

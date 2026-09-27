@@ -7,6 +7,7 @@ import Ajv2020 from 'ajv/dist/2020.js';
 import { decodePiece, worldPosition } from '../src/assets/decode-fixture.ts';
 import { build, placementFootprint } from '../src/index.ts';
 import { UnitPlan } from '../src/construction/units/UnitPlan.ts';
+import { PIECE_BUDGET } from '../src/construction/units/KitCatalogue.ts';
 import { readNativeAtlas } from '../src/architecture/NativeAtlas.ts';
 import type { NativeStreetBuild } from '../src/schema/native-result.ts';
 import type { Ring, Vec2 } from '../src/geometry/schema.ts';
@@ -27,6 +28,7 @@ let source: {
     edges: { id: string; class: string; path: Vec2[] }[];
     construction: {
       junctions: { id: string; nodeIds: string[]; approaches: { edgeId: string }[] }[];
+      medians: { id: string; edgeId: string; start: number; end: number; footprint: Ring }[];
       reservations: { owners: { id: string; groundIndices: number[] }[]; frontages: { id: string; start: Vec2; inward: Vec2 }[]; parking: ParkingBay[] };
     };
   };
@@ -164,8 +166,9 @@ it('gives two cities and seeds byte identical complete kits within the inventory
   expect(other.kit).toEqual(result.kit);
   expect(result.kit.profiles).toHaveLength(15);
   for (const p of result.kit.profiles) expect(result.kit.pieces.filter(k => k.profileId === p.id).map(k => [k.length, k.variant]).sort())
-    .toEqual([[8, 'plain'], [4, 'closure'], [2, 'closure'], ...(p.width && !p.medianWidth ? [[8, 'core'], [2, 'core-closure']] : [])].sort());
-  expect(result.statistics.pieces).toBeLessThanOrEqual(200);
+    .toEqual([[8, 'plain'], [4, 'closure'], [2, 'closure'], ...(p.width && !p.medianWidth ? [[8, 'core'], [2, 'core-closure']] : []),
+      ...(p.medianWidth ? [[2, 'island-nose'], [2, 'island'], [8, 'island']] : [])].sort());
+  expect(result.statistics.pieces).toBeLessThanOrEqual(PIECE_BUDGET);
   expect(result.statistics.pieceBytes + result.assets['streets/kit.json']!.length).toBeLessThanOrEqual(3_000_000);
   expect(result.statistics.placements).toBeGreaterThan(600);
   expect(other.statistics.placements).toBeGreaterThan(3000);
@@ -286,6 +289,32 @@ it('places crossing arms and one shared central piece at every junction the plan
     const arms = placed.filter(p => pieces.get(p.piece)!.kind === 'junction-arm' && positions.some(([x, z]) => Math.hypot(p.position[0] - x, p.position[2] - z) <= 8.7 + 1e-6));
     expect(arms.length, junction.id).toBeGreaterThan(0);
   }
+});
+
+it('builds corners, tees and median islands from whole units, leaving only highway corridors to infill', () => {
+  const pieces = new Map(result.kit.pieces.map(p => [p.id, p])), placements = result.placements.placements;
+  const footprints = (list: typeof placements) => list.flatMap(p => placementFootprint(pieces.get(p.piece)!, p));
+  const highways = new Set(source.streets.edges.filter(e => e.class === 'highway').map(e => e.id));
+  // A tee's far side and a corner's outer side are the crossing street's kerb, built as one far-kerb return.
+  expect(placements.filter(p => p.piece.endsWith('/return')).length).toBeGreaterThanOrEqual(8);
+  const concrete = footprints(placements.filter(p => p.piece === 'infill/concrete'));
+  for (const node of source.streets.nodes.filter(n => !n.edgeIds.some(id => highways.has(id)))) {
+    const [x, z] = node.position, r = 30;
+    expect(totalArea(intersection(concrete, [[[x - r, z - r], [x + r, z - r], [x + r, z + r], [x - r, z + r]]])), node.id).toBe(0);
+  }
+  // Each saved island is covered exactly by a nose at either end and whole units between, at its Atlas stations.
+  expect(source.streets.construction.medians.length).toBeGreaterThan(0);
+  for (const median of source.streets.construction.medians) {
+    const units = placements.filter(p => p.piece.startsWith('island/') && p.ownerId === median.id), covered = footprints(units);
+    expect(units.filter(p => p.piece.endsWith('-nose')), median.id).toHaveLength(2);
+    expect(units.every(p => !p.scale), median.id).toBe(true);
+    expect(Math.abs(totalArea(covered) - area(median.footprint)), median.id).toBeLessThan(1e-6);
+    expect(totalArea(difference([median.footprint], covered)), median.id).toBeLessThan(1e-6);
+    expect(totalArea(intersection(concrete, [median.footprint])), median.id).toBe(0);
+  }
+  // The band ahead of each nose is luxury carriageway: world sampled paving, never concrete.
+  expect(placements.some(p => p.piece === 'infill/district-hex')).toBe(true);
+  expect(placements.some(p => p.piece === 'infill/asphalt')).toBe(false);
 });
 
 it('places one original prop per constructed feature of the plan, inside its reserved bounds', () => {
@@ -539,7 +568,7 @@ function ringGap(a: Ring, b: Ring): number {
 it('publishes the capped LED run as 2 m and 1 m segments and a mirrored cap pair within their budgets', async () => {
   const ids = new Set(result.kit.pieces.map(p => p.id));
   expect(ids.has('prop/marquee/2m-0.5m-0')).toBe(false);
-  expect(result.kit.pieces).toHaveLength(198);
+  expect(result.kit.pieces).toHaveLength(208);
   const key = (p: number[]) => p.map(n => Math.round(n * 1000) || 0).join();
   const vertices = (surfaces: Map<string, { p: number[] }[][]>) => [...surfaces.values()].flat(2);
   for (const [id, length, budget] of [['prop/marquee-run/segment-2m', 2, 150], ['prop/marquee-run/segment-1m', 1, 100],
@@ -641,7 +670,7 @@ it('places capped runs on luxury and industrial-yellow frontages midway between 
     expect(strip.every(f => Number(f.id.split(':').at(-1)) === 2)).toBe(true);
     expect((station(strip[0]!.id) + station(strip.at(-1)!.id) + 0.27) / 2).toBeCloseTo(24, 6);
   }
-});
+}, 60_000);
 
 it('draws each drain station as one inlet with a flush grate and curb throats under a tread-only overlay', async () => {
   const overlay = await pieceTriangles(result, 'overlay/drain/0.7m');

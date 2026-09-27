@@ -15,6 +15,8 @@ import { coreId, parkingFinishes, parkingSide } from './ParkingScene.ts';
 import type { NativeGround } from '../../architecture/native-schema.ts';
 import { infillPieces } from './SourceInfill.ts';
 
+export const PIECE_BUDGET = 216;
+
 export interface AuthoredUnit { geometry: NativePieceData; fields?: NativeGround[]; metadata: Omit<StreetKitPiece, 'file' | 'size' | 'bounds' | 'surfaces' | 'triangles' | 'bytes' | 'sha256' | 'hasCollision'> }
 
 /** A closed inventory built entirely from the published Atlas profiles. */
@@ -37,6 +39,12 @@ export class KitCatalogue {
       const built = constructPiece(scene), id = coreId(profile, closure);
       this.pieces.push({ geometry: { ...built.geometry, id }, fields: built.fields, metadata: { id, kind: 'segment', classes: [profile.streetClass], zone: profile.zone,
         variant: closure ? 'core-closure' : 'core', length: closure ? 2 : 8, origin: 'run-start-at-road', footprint: built.footprint, profileId: profile.id } });
+    }
+    for (const profile of this.profiles.filter(p => p.medianWidth)) for (const [length, nose] of [[2, true], [2, false], [8, false]] as const) {
+      const built = constructPiece(new CatalogueScene().island(profile, length, nose)), id = KitCatalogue.island(profile, length, nose);
+      this.panels += built.panels;
+      this.pieces.push({ geometry: { ...built.geometry, id }, fields: built.fields, metadata: { id, kind: 'segment', classes: [profile.streetClass], zone: profile.zone,
+        variant: nose ? 'island-nose' : 'island', length, origin: 'run-start-at-road', footprint: built.footprint, profileId: profile.id } });
     }
     for (const finish of parkingFinishes) {
       const zone = finish.split('-')[0], profile = this.profiles.find(p => p.zone === zone && p.width === 7)!;
@@ -81,12 +89,16 @@ export class KitCatalogue {
     ];
     for (const options of props) this.prop(options);
     this.pieces.sort((a, b) => a.metadata.id.localeCompare(b.metadata.id, 'en'));
-    if (this.pieces.length > 200) throw invariant('Street catalogue exceeds piece budget', { pieces: this.pieces.length, limit: 200, excessPieces: this.pieces.length - 200, variants: this.pieces.map(p => p.metadata.id) });
+    if (this.pieces.length > PIECE_BUDGET) throw invariant('Street catalogue exceeds piece budget', { pieces: this.pieces.length, limit: PIECE_BUDGET,
+      excessPieces: this.pieces.length - PIECE_BUDGET, variants: this.pieces.map(p => p.metadata.id) });
   }
 
   static segment(profile: StreetProfile, length: number, variant: string): string {
     return `${profile.streetClass}/${profile.id}/${length}m-${variant}`;
   }
+
+  /** One unit of a saved median island; a nose closes its local X 0. */
+  static island(profile: StreetProfile, length: number, nose: boolean): string { return `island/${profile.id}/${length}m-${nose ? 'nose' : 'plain'}`; }
 
   static arm(profile: StreetProfile, terminal = false): string { return `junction/${profile.id}/${terminal ? 'return' : 'arm'}`; }
 

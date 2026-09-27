@@ -9,11 +9,15 @@ import type { AuthoredUnit } from './KitCatalogue.ts';
 import { UnitFrame } from './Frame.ts';
 import { placement } from './UnitOverlays.ts';
 
-/** Two right prisms fit any saved source field without clipping an instance. */
+/** Surfaces a leftover field can take: both carriageway finishes sample world XZ, so a scaled prism shows no stretch. */
+export const INFILL_SURFACES = ['asphalt', 'district-hex', 'concrete'] as const;
+export type InfillSurface = typeof INFILL_SURFACES[number];
+
+/** Right prisms fit any saved source field without clipping an instance. */
 export function infillPieces(): AuthoredUnit[] {
   const footprint: Ring = [[0, 0], [2, 0], [0, 2]];
   const pieces: AuthoredUnit[] = [];
-  for (const surface of ['asphalt', 'concrete']) {
+  for (const surface of INFILL_SURFACES) {
     const id = `infill/${surface}`, batch = new SurfaceBatch({ ownerId: id, groundIds: [id], roadTop: 0, wear: () => 0 });
     batch.polygon(surface, [footprint], 0.2, p => p);
     for (const [i, a] of footprint.entries()) {
@@ -31,7 +35,8 @@ export function infillPieces(): AuthoredUnit[] {
   return pieces;
 }
 
-export function* sourceInfill(a: NativeArchitecture, remaining: (g: NativeGround) => Ring[]): Generator<{ placement: StreetPlacement; ground: NativeGround }> {
+export function* sourceInfill(a: NativeArchitecture, remaining: (g: NativeGround) => Ring[],
+  surface: (g: NativeGround, triangle: Ring) => InfillSurface): Generator<{ placement: StreetPlacement; ground: NativeGround }> {
   for (const owner of a.owners) for (const ground of owner.ground) {
     const rings = remaining(ground), box = bounds(rings.flat());
     const xs = [...new Set(rings.flat().map(p => p[0]))].sort((a, b) => a - b);
@@ -39,9 +44,9 @@ export function* sourceInfill(a: NativeArchitecture, remaining: (g: NativeGround
     const fitted = xs.slice(1).flatMap((x, i) => triangles(intersection(rings,
       [rectangle(xs[i]!, box.min[1], x - xs[i]!, box.max[1] - box.min[1])])));
     for (const tri of fitted) {
+      const piece = `infill/${surface(ground, tri)}`;
       const place = (origin: Vec2, axis: Vec2, width: number, depth: number): StreetPlacement => {
-        const built = placement(`infill/${ground.surface === 'roadway' ? 'asphalt' : 'concrete'}`,
-          new UnitFrame(origin, axis, ground.bottom), [owner.id]);
+        const built = placement(piece, new UnitFrame(origin, axis, ground.bottom), [owner.id]);
         // The two altitude halves share this exact origin; rounding it opens a seam.
         built.position = [origin[0], ground.bottom, origin[1]];
         built.scale = [width / 2, (ground.top - ground.bottom) / 0.2, depth / 2];

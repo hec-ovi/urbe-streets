@@ -1,7 +1,7 @@
-import type { NativeArchitecture, NativeRoad } from '../../architecture/native-schema.ts';
+import type { NativeArchitecture, NativeGround, NativeRoad } from '../../architecture/native-schema.ts';
 import type { Ring } from '../../geometry/schema.ts';
 import type { StreetPlacement } from '../../schema/street-kit.ts';
-import { bounds, difference, intersection, union } from '../../geometry/polygons.ts';
+import { bounds, difference, intersection, totalArea, union } from '../../geometry/polygons.ts';
 import { BoxIndex } from '../../geometry/BoxIndex.ts';
 import { WearField } from '../style/WearField.ts';
 import { invariant } from '../../errors.ts';
@@ -12,11 +12,12 @@ import { UnitFeatures } from './UnitFeatures.ts';
 import { KitCatalogue } from './KitCatalogue.ts';
 import { ProfileCatalogue } from './ProfileCatalogue.ts';
 import { stationPlacements } from './StationPlacements.ts';
-import { UnitFrame } from './Frame.ts';
+import { clean, UnitFrame } from './Frame.ts';
 import { UnitCoverage } from './UnitCoverage.ts';
 import { ParkingUnits } from './ParkingUnits.ts';
 import { placement, turnPlacements } from './UnitOverlays.ts';
-import { crossingPlacements, sourceInfill } from './SourceInfill.ts';
+import { crossingPlacements, sourceInfill, type InfillSurface } from './SourceInfill.ts';
+import { direction } from '../surfaces/Frame.ts';
 
 export class StreetUnits {
   readonly catalogue = new KitCatalogue();
@@ -42,7 +43,7 @@ export class StreetUnits {
     this.features = new UnitFeatures(details, seed, p => this.wear.sample(p), plainClosures);
     const pieces = new Map(this.pieces.map(p => [p.metadata.id, p]));
     const coverage = new UnitCoverage(a);
-    const add = (p: StreetPlacement, receiving?: Ring[], source?: import('../../architecture/native-schema.ts').NativeGround) => {
+    const add = (p: StreetPlacement, receiving?: Ring[], source?: NativeGround) => {
       const piece = pieces.get(p.piece);
       if (!piece) throw invariant('Placement references an unknown catalogue piece', { piece: p.piece });
       p.wear = this.wear.sample([p.position[0], p.position[2]]);
@@ -96,7 +97,24 @@ export class StreetUnits {
     }
     for (const p of parking.placements) fit(p);
     for (const p of stationPlacements(a, this.profiles.profiles)) fit(p);
-    for (const { placement: p, ground } of sourceInfill(a, g => coverage.remaining(g))) add(p, [ground.ring], ground);
+    for (const p of this.islands(a)) fit(p);
+    // Leftover carriageway takes the paving of the road it lies on; anything else is plain concrete.
+    const carriageways = new BoxIndex<{ ring: Ring; zone: string }>();
+    for (const road of a.roads) for (let i = 1; i < road.path.length; i++) {
+      const p = road.path[i - 1]!, q = road.path[i]!, d = direction(p, q), n = [-d[1] * road.width / 2, d[0] * road.width / 2] as const;
+      const ring: Ring = [[p[0] - n[0], p[1] - n[1]], [q[0] - n[0], q[1] - n[1]], [q[0] + n[0], q[1] + n[1]], [p[0] + n[0], p[1] + n[1]]];
+      carriageways.add({ ring, zone: road.districtStyle ?? 'ordinary' }, bounds(ring));
+    }
+    const surface = (g: NativeGround, triangle: Ring): InfillSurface => {
+      if (g.surface !== 'roadway') return 'concrete';
+      let zone = 'ordinary', best = 0;
+      for (const c of carriageways.near(bounds(triangle))) {
+        const shared = totalArea(intersection([triangle], [c.ring]));
+        if (shared > best) { best = shared; zone = c.zone; }
+      }
+      return zone === 'luxury' ? 'district-hex' : 'asphalt';
+    };
+    for (const { placement: p, ground } of sourceInfill(a, g => coverage.remaining(g), surface)) add(p, [ground.ring], ground);
     for (const f of this.features.items) {
       const p = placement(KitCatalogue.prop(f.options), f.frame, [f.descriptor.ownerId]);
       if (f.message) p.text = [...f.message].map(c => settings.glyphs.indexOf(c));
@@ -109,5 +127,23 @@ export class StreetUnits {
     for (const p of unitDecals(details, seed, p => this.wear.sample(p), plainClosures)) add(p);
     this.ground = coverage.finish(mappedWidths);
     this.overhangs = coverage.report;
+  }
+
+  /** Each saved median island as a nose at either end and 8 m and 2 m units between, at its Atlas stations. */
+  private *islands(a: NativeArchitecture): Generator<StreetPlacement> {
+    const roads = new Map(a.roads.map(r => [r.id, r]));
+    for (const median of a.medians ?? []) {
+      const road = roads.get(median.edgeId), profile = road && road.kind !== 'highway' ? this.profiles.select(road) : undefined;
+      if (!road || !profile?.medianWidth) continue;
+      const first = road.path[0]!, d = direction(first, road.path.at(-1)!);
+      const frame = (station: number, axis = d) => new UnitFrame([first[0] + d[0] * station, first[1] + d[1] * station], axis);
+      yield placement(KitCatalogue.island(profile, 2, true), frame(median.start), [median.id]);
+      yield placement(KitCatalogue.island(profile, 2, true), frame(median.end, [-d[0], -d[1]]), [median.id]);
+      for (let station = median.start + 2; station < median.end - 2 - 1e-7;) {
+        const length = median.end - 2 - station >= 8 - 1e-7 ? 8 : 2;
+        yield placement(KitCatalogue.island(profile, length, false), frame(station), [median.id]);
+        station = clean(station + length);
+      }
+    }
   }
 }
