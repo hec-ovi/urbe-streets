@@ -40,8 +40,8 @@ export function overlayPieces(): AuthoredUnit[] {
         [[x - 0.015, 0.061, gutter - 0.004], [x + 0.015, 0.061, gutter - 0.004], [x + 0.015, 0.13, gutter - 0.004], [x - 0.015, 0.13, gutter - 0.004]],
         [[0, 0], [1, 0], [1, 1], [0, 1]], false);
     }
-    // The tread surface is a panel scan: one 0..1 UV square over the 2 x 2 m hatch.
-    target.polygon('tread', [rectangle(-1, depth, 2, 2)], 0.201, ([x, z]) => [(x + 1) / 2, (z - depth) / 2], false);
+    // The hatch is a slotted drain cover with metre UVs over its 2 x 2 m.
+    target.polygon('drainCover', [rectangle(-1, depth, 2, 2)], 0.201, ([x, z]) => [x + 1, z - depth], false);
     add(`overlay/drain/${depth}m`, target, 'drain');
   }
   const quad = batch();

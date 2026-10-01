@@ -172,10 +172,15 @@ export class KitCatalogue {
     const id = KitCatalogue.prop(options), model = createHardware(options);
     const batch = new SurfaceBatch({ ownerId: 'prop', groundIds: ['prop'], roadTop: 0, wear: () => 0 });
     try {
-      for (const part of model.parts) batch.geometry(part.material, part.geometry, { origin: [0, 0, 0], inward: [0, 1] });
+      for (const part of model.parts) batch.geometry(propSurface(options, part.material), part.geometry, { origin: [0, 0, 0], inward: [0, 1] });
       const geometry = pieceGeometry(id, [batch.finish()]);
       this.pieces.push({ geometry, metadata: { id, kind: 'prop', classes: [], zone: 'shared', variant: options.kind,
         length: options.length, origin: 'anchor-at-road', footprint: pieceFootprint(geometry) } });
     } finally { model.dispose(); }
   }
+}
+
+/** The source hardware keeps its own surfaces; an access cassette's perforated plates, set between its solid bars, are slotted drain grates. */
+function propSurface(options: FurnitureOptions, surface: string): string {
+  return options.kind === 'access' && surface === 'perforated' ? 'drainGrate' : surface;
 }

@@ -690,12 +690,14 @@ it('places capped runs on luxury and industrial-yellow frontages midway between 
   }
 }, 60_000);
 
-it('draws each drain station as one inlet with a flush grate and curb throats under a tread-only overlay', async () => {
+it('draws each drain station as one inlet with a flush grate and curb throats under a cover-only overlay', async () => {
   const overlay = await pieceTriangles(result, 'overlay/drain/0.7m');
+  // This binding has no drain cover yet, so the hatch falls back to the tread plate.
   expect([...overlay.surfaces.keys()]).toEqual(['tread']);
   expect(overlay.piece.triangles).toBe(2);
+  // The 2 x 2 m hatch's UVs run in metres.
   const uv = overlay.surfaces.get('tread')!.flat(), corner = (u: number, v: number) => uv.some(x => Math.abs(x.uv[0]! - u) < 1e-4 && Math.abs(x.uv[1]! - v) < 1e-4);
-  expect([corner(0, 0), corner(1, 0), corner(0, 1), corner(1, 1)]).toEqual([true, true, true, true]);
+  expect([corner(0, 0), corner(2, 0), corner(0, 2), corner(2, 2)]).toEqual([true, true, true, true]);
   const inlet = await pieceTriangles(result, 'prop/inlet/2m-0.7m-0');
   expect(inlet.piece.surfaces).toEqual(['concrete', 'darkMetal', 'metal']);
   // Bars follow the 6 cm gutter crown 5 mm proud; the insert faces the road with four dark throats.
@@ -705,6 +707,24 @@ it('draws each drain station as one inlet with a flush grate and curb throats un
   const placed = result.placements.placements;
   const stations = placed.filter(p => p.piece === 'prop/inlet/2m-0.7m-0'), overlays = placed.filter(p => p.piece === 'overlay/drain/0.7m');
   expect(overlays.map(p => p.position)).toEqual(stations.map(p => p.position));
+});
+
+it('binds drain covers and grates and patched infill asphalt where the binding carries them, else their older surfaces', async () => {
+  const surfaces = (built: NativeStreetBuild, id: string) => built.kit.pieces.find(p => p.id === id)!.surfaces;
+  expect(surfaces(result, 'overlay/drain/0.7m')).toEqual(['tread']);
+  expect(surfaces(result, 'infill/asphalt')).toEqual(['asphalt']);
+  const access = result.kit.pieces.filter(p => p.surfaces.includes('perforated') && p.id.includes('access'));
+  expect(access.length).toBeGreaterThan(0);
+  const binding = structuredClone(nativeMaterials);
+  binding.surfaces.drainCover = binding.surfaces.tread!;
+  binding.surfaces.drainGrate = binding.surfaces.perforated!;
+  binding.surfaces['asphalt-patched'] = binding.surfaces.ordinary!;
+  const bound = await build(request, { nativeMaterials: binding, mode: 'manifest' });
+  expect(surfaces(bound, 'overlay/drain/0.7m')).toEqual(['drainCover']);
+  expect(surfaces(bound, 'infill/asphalt')).toEqual(['asphalt-patched']);
+  for (const piece of access) expect(surfaces(bound, piece.id), piece.id).toContain('drainGrate');
+  // The geometry is the same: a binding names finishes, never shapes.
+  expect(bound.kit.pieces.map(p => [p.id, p.triangles])).toEqual(result.kit.pieces.map(p => [p.id, p.triangles]));
 });
 
 it('resolves marquee surfaces through the binding, falling back to existing surfaces when it lacks them, except the LED field', async () => {

@@ -24,11 +24,13 @@ export function infillPieces(): AuthoredUnit[] {
   const footprint: Ring = [[0, 0], [2, 0], [0, 2]];
   const pieces: AuthoredUnit[] = [];
   for (const surface of INFILL_SURFACES) {
-    const id = `infill/${surface}`, batch = new SurfaceBatch({ ownerId: id, groundIds: [id], roadTop: 0, wear: () => 0 });
-    batch.polygon(surface, [footprint], 0.2, p => p);
+    // Leftover carriageway reads as patched asphalt where the binding carries it.
+    const id = `infill/${surface}`, drawn = surface === 'asphalt' ? 'asphalt-patched' : surface;
+    const batch = new SurfaceBatch({ ownerId: id, groundIds: [id], roadTop: 0, wear: () => 0 });
+    batch.polygon(drawn, [footprint], 0.2, p => p);
     for (const [i, a] of footprint.entries()) {
       const b = footprint[(i + 1) % footprint.length]!;
-      batch.face(surface, [[a[0], 0, a[1]], [b[0], 0, b[1]], [b[0], 0.2, b[1]], [a[0], 0.2, a[1]]], [[0, 0], [2, 0], [2, 0.2], [0, 0.2]]);
+      batch.face(drawn, [[a[0], 0, a[1]], [b[0], 0, b[1]], [b[0], 0.2, b[1]], [a[0], 0.2, a[1]]], [[0, 0], [2, 0], [2, 0.2], [0, 0.2]]);
     }
     pieces.push({ geometry: pieceGeometry(id, [batch.finish()]), metadata: { id, kind: 'segment', classes: ['street'], zone: 'shared',
       variant: 'infill', length: 2, origin: 'run-start-at-road', footprint: [footprint] } });
