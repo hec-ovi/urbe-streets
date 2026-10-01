@@ -1,3 +1,4 @@
+import { PAINT_METRES } from '../markings/Paint.ts';
 import type { NativeOwner } from '../../architecture/native-schema.ts';
 import type { StreetProfile } from '../../schema/street-kit.ts';
 import { bounds, rectangle } from '../../geometry/polygons.ts';
@@ -33,7 +34,8 @@ export function parkingSide(profile: StreetProfile, finish: ParkingFinish, varia
   const built = constructPiece({ ...scene, edgeOwners: [owner, context], paint: false });
   if (slot || end) {
     const batch = new SurfaceBatch({ ownerId: owner.id, groundIds: ['parking'], roadTop: 0, wear: () => 0 });
-    batch.polygon('whitePaint', [rectangle(0, 0.1, 0.12, 1.8)], 0.006, p => p, false);
+    // The slot line runs along local Z: the mask's U follows it and V crosses it, both in paint metres.
+    batch.polygon('whitePaint', [rectangle(0, 0.1, 0.12, 1.8)], 0.006, ([x, z]) => [(z - 0.1) / PAINT_METRES, 0.155 + x / PAINT_METRES], false);
     built.geometry.meshes.push(...pieceGeometry('slot-line', [batch.finish()]).meshes);
   }
   const id = sideId(finish, variant);

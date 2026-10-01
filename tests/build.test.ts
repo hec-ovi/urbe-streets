@@ -15,7 +15,7 @@ import kitSchema from '../schemas/street-kit.schema.json' with { type: 'json' };
 import placementSchema from '../schemas/street-placement.schema.json' with { type: 'json' };
 import catalog from './fixtures/native-materials.json' with { type: 'json' };
 import type { NativeMaterialCatalog } from '../src/schema/native-materials.ts';
-import { area, difference, intersection, totalArea, union } from '../src/geometry/polygons.ts';
+import { area, bounds, difference, intersection, totalArea, union } from '../src/geometry/polygons.ts';
 
 const blueprint = fileURLToPath(new URL('../../atlas/samples/city-urbe-tiny.json', import.meta.url));
 const request = { blueprint, seed: 42, design: { version: 'native-1.0.0' as const, wear: 1 } };
@@ -166,8 +166,9 @@ it('gives two cities and seeds byte identical complete kits within the inventory
   expect(other.kit).toEqual(result.kit);
   expect(result.kit.profiles).toHaveLength(15);
   for (const p of result.kit.profiles) expect(result.kit.pieces.filter(k => k.profileId === p.id).map(k => [k.length, k.variant]).sort())
-    .toEqual([[8, 'plain'], [4, 'closure'], [2, 'closure'], ...(p.width && !p.medianWidth ? [[8, 'core'], [2, 'core-closure']] : []),
-      ...(p.medianWidth ? [[2, 'island-nose'], [2, 'island'], [8, 'island']] : [])].sort());
+    .toEqual([[8, 'plain'], [4, 'closure'], [2, 'closure'], ...(p.width ? [[8, 'core'], [2, 'core-closure']] : []),
+      ...(p.medianWidth ? [[2, 'island-nose'], [2, 'island'], [8, 'island']] : []),
+      ...(p.zone === 'ordinary' && p.streetClass === 'road' ? [[8, 'under'], [2, 'under']] : [])].sort());
   expect(result.statistics.pieces).toBeLessThanOrEqual(PIECE_BUDGET);
   expect(result.statistics.pieceBytes + result.assets['streets/kit.json']!.length).toBeLessThanOrEqual(3_000_000);
   expect(result.statistics.placements).toBeGreaterThan(600);
@@ -239,7 +240,8 @@ it('covers each plan centreline with whole units and plain fitted fractional clo
     expect(c.fittedLength).toBeLessThan(2);
     expect(c.fittedLength * 10).toBeCloseTo(Math.round(c.fittedLength * 10), 7);
   }
-  const placements = closureResult.placements.placements.filter(p => p.scale && p.piece.endsWith('/2m-closure'));
+  // A fitted fraction is a 2 m road core and a 2 m kerb walk either side, each scaled to it.
+  const placements = closureResult.placements.placements.filter(p => p.scale && p.piece.endsWith('/2m-core-closure'));
   expect(placements).toHaveLength(fitted.length);
   for (const closure of fitted) {
     const road = fractional.streets.edges.find(r => r.id === closure.roadId)!;
@@ -250,10 +252,12 @@ it('covers each plan centreline with whole units and plain fitted fractional clo
     expect(matching, closure.roadId).toHaveLength(1);
     const p = matching[0]!, piece = closurePieces.get(p.piece)!;
     expect(piece.length).toBe(2);
-    expect(piece.variant).toBe('closure');
+    expect(piece.variant).toBe('core-closure');
     expect(p.scale).toEqual([closure.fittedLength / 2, 1, 1]);
     expect(piece.surfaces.some(s => /Paint|crosswalk/.test(s))).toBe(false);
-    expect(piece.surfaces).toContain('curb');
+    const walks = closureResult.placements.placements.filter(w => w.piece.endsWith('/walk-closure') && w.scale?.[0] === closure.fittedLength / 2);
+    expect(walks, closure.roadId).toHaveLength(2);
+    expect(walks.every(w => closurePieces.get(w.piece)!.surfaces.includes('curb'))).toBe(true);
     const bytes = Buffer.from(closureResult.assets[`streets/${piece.file}`]!);
     const gltf = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)).toString());
     for (const mesh of gltf.meshes) for (const primitive of mesh.primitives) expect(primitive.extras.streetCollision).toBe(true);
@@ -290,8 +294,8 @@ it('builds corners, tees, highway corridors and median islands from whole units,
   const pieces = new Map(result.kit.pieces.map(p => [p.id, p])), placements = result.placements.placements;
   const footprints = (list: typeof placements) => list.flatMap(p => placementFootprint(pieces.get(p.piece)!, p));
   const { owners, frontages } = source.streets.construction.reservations;
-  // A tee's far side and a corner's outer side are the crossing street's kerb, built as one far-kerb return.
-  expect(placements.filter(p => p.piece.endsWith('/return')).length).toBeGreaterThanOrEqual(8);
+  // A tee's far side and a corner's outer side are the crossing street's kerb, built as one far kerb in its block's finish.
+  expect(placements.filter(p => p.piece.startsWith('junction/far-kerb/')).length).toBeGreaterThanOrEqual(8);
   // A highway's grade corridor ends at the saved kerb line of each street passing beneath it. That kerb's gutter and
   // curb, across the roadway and both corridor sidewalks, is the only place concrete infill may remain.
   const underpass = new Set(owners.filter(o => o.kind === 'underpass').map(o => o.id));
@@ -309,7 +313,7 @@ it('builds corners, tees, highway corridors and median islands from whole units,
   expect(Math.max(...kerbs.map(area))).toBeLessThan(17);
   const roadway = source.volumetric.ground.filter(g => g.surface === 'roadway').map(g => g.polygon);
   expect(totalArea(intersection(concrete, roadway))).toBeLessThan(1e-6);
-  // A highway's grade corridor takes the unpainted closures of its road profile; its deck stays delegated.
+  // A highway's grade corridor is a court at road level, never a carriageway; its deck stays delegated.
   expect(result.delegated.highways.count).toBeGreaterThan(0);
   for (const edge of source.streets.edges.filter(e => e.class === 'highway')) {
     const [a, b] = [edge.path[0]!, edge.path.at(-1)!], length = Math.hypot(b[0] - a[0], b[1] - a[1]);
@@ -317,7 +321,9 @@ it('builds corners, tees, highway corridors and median islands from whole units,
     const on = placements.filter(p => pieces.get(p.piece)!.kind === 'segment' && !p.piece.startsWith('infill/') && along(p)
       && Math.abs((p.position[0] - a[0]) * (b[1] - a[1]) - (p.position[2] - a[1]) * (b[0] - a[0])) / length < 1e-6);
     expect(on.length, edge.id).toBeGreaterThan(0);
-    expect(on.every(p => pieces.get(p.piece)!.variant === 'closure'), edge.id).toBe(true);
+    expect(on.every(p => pieces.get(p.piece)!.variant === 'under'), edge.id).toBe(true);
+    const court = 'hex-orange' in nativeMaterials.surfaces ? 'hex-orange' : 'district-hex';
+    expect(on.every(p => pieces.get(p.piece)!.surfaces.join() === court), edge.id).toBe(true);
   }
   // Each saved island is covered exactly by a nose at either end and whole units between, at its Atlas stations.
   expect(source.streets.construction.medians.length).toBeGreaterThan(0);
@@ -580,7 +586,7 @@ function ringGap(a: Ring, b: Ring): number {
 it('publishes the capped LED run as 2 m and 1 m segments and a mirrored cap pair within their budgets', async () => {
   const ids = new Set(result.kit.pieces.map(p => p.id));
   expect(ids.has('prop/marquee/2m-0.5m-0')).toBe(false);
-  expect(result.kit.pieces).toHaveLength(208);
+  expect(result.kit.pieces).toHaveLength(255);
   const key = (p: number[]) => p.map(n => Math.round(n * 1000) || 0).join();
   const vertices = (surfaces: Map<string, { p: number[] }[][]>) => [...surfaces.values()].flat(2);
   for (const [id, length, budget] of [['prop/marquee-run/segment-2m', 2, 150], ['prop/marquee-run/segment-1m', 1, 100],
@@ -750,11 +756,20 @@ it('keeps every underpass lane continuous at grade, with no raised triangles', a
       expect(totalArea(difference([region],union(cover))),`${nodeId} ${lane.id}`).toBeLessThan(0.04);
     }
   }
-  const stripes = result.placements.placements.filter(p => p.piece === 'overlay/stripe');
+  // Each Atlas stripe is whole paint tiles end to end, near one mask turn long each, never one stretched quad.
+  const stripes = result.placements.placements.filter(p => p.piece.startsWith('overlay/stripe/'));
   expect(stripes.length).toBeGreaterThan(a.markings!.length);
-  for (const [i, ring] of a.markings!.entries()) {
-    const actual = placementFootprint(pieces.get('overlay/stripe')!,stripes[i]!);
-    expect(totalArea(difference([ring],actual))+totalArea(difference(actual,[ring]))).toBeLessThan(1e-7);
+  let next = 0;
+  for (const ring of a.markings!) {
+    const box = bounds(ring), length = Math.max(box.max[0] - box.min[0], box.max[1] - box.min[1]);
+    const tiles = stripes.slice(next, next += Math.max(1, Math.round(length / 2.7)));
+    for (const tile of tiles) {
+      expect(tile.scale![0]).toBeGreaterThan(0.66);
+      expect(tile.scale![0]).toBeLessThan(1.5);
+      expect(tile.scale![2]).toBe(1);
+    }
+    const actual = union(tiles.flatMap(tile => placementFootprint(pieces.get(tile.piece)!, tile)));
+    expect(totalArea(difference([ring],actual))+totalArea(difference(actual,[ring]))).toBeLessThan(1e-6);
   }
 });
 
@@ -773,3 +788,61 @@ it('rejects overlapping instances, wrong surface roles and raised infill over li
   expect(() => new UnitCoverage(a).add(raised,{...p,piece:raised.metadata.id},0,ground))
     .toThrow(/level-zero driving lane/);
 });
+
+it('keeps one sidewalk finish all round each block: its kerbs, arm sides and far kerbs, and no whole-street piece on a motor street', () => {
+  const pieces = new Map(result.kit.pieces.map(p => [p.id, p])), placements = result.placements.placements;
+  const owners = new Map((source.streets.construction.reservations.owners as unknown as { id: string; kind: string; finish: string | null }[]).map(o => [o.id, o]));
+  const finishOf = (id: string) => id.startsWith('kerb/') ? id.split('/')[1] : id.startsWith('junction/side/') ? id.split('/')[2]
+    : id.startsWith('junction/far-kerb/') ? id.split('/')[3] : null;
+  const seen = new Map<string, Set<string>>();
+  for (const p of placements) {
+    const finish = finishOf(p.piece);
+    if (!finish) continue;
+    const owner = owners.get(p.ownerId);
+    if (owner?.kind !== 'block') continue;
+    seen.set(owner.id, (seen.get(owner.id) ?? new Set()).add(finish));
+  }
+  expect(seen.size).toBeGreaterThan(0);
+  for (const [id, finishes] of seen) expect([...finishes], id).toEqual([owners.get(id)!.finish]);
+  // Sidewalks along motor streets come only from finished kerbs, so no zone's own walk shows beside a block.
+  const whole = placements.filter(p => /^(street|road)\//.test(p.piece) && /\/(8m-plain|4m-closure|2m-closure)$/.test(p.piece));
+  expect(whole).toEqual([]);
+  expect(placements.filter(p => /^junction\/[a-z]+\/(one-way|local|avenue|median)\/(arm|return)$/.test(p.piece))).toEqual([]);
+  for (const p of placements.filter(p => p.piece.startsWith('junction/side/'))) expect(pieces.get(p.piece)!.surfaces.some(s => /curb|gutter/.test(s))).toBe(true);
+});
+
+it('maps gutters to the curb scan\'s own proportions and paint to one scale along and across, never stretched', async () => {
+  const { KitCatalogue } = await import('../src/construction/units/KitCatalogue.ts');
+  const catalogue = new KitCatalogue();
+  /** Texture units per metre along local X and Z over a flat triangle. */
+  const rates = (positions: number[], uvs: number[], i: number) => {
+    const p = [0, 1, 2].map(k => [positions[(i + k) * 3]!, positions[(i + k) * 3 + 2]!]), t = [0, 1, 2].map(k => [uvs[(i + k) * 2]!, uvs[(i + k) * 2 + 1]!]);
+    const [ax, az] = [p[1]![0]! - p[0]![0]!, p[1]![1]! - p[0]![1]!], [bx, bz] = [p[2]![0]! - p[0]![0]!, p[2]![1]! - p[0]![1]!];
+    const det = ax * bz - az * bx;
+    if (Math.abs(det) < 1e-9) return null;
+    const grad = (c: 0 | 1) => { const da = t[1]![c]! - t[0]![c]!, db = t[2]![c]! - t[0]![c]!; return [(da * bz - db * az) / det, (db * ax - da * bx) / det]; };
+    const [u, v] = [grad(0), grad(1)];
+    return { u: Math.hypot(...u), v: Math.hypot(...v) };
+  };
+  const gutter = catalogue.pieces.find(p => p.metadata.id === 'kerb/luxury-red/walk')!.geometry.meshes.find(m => m.surface === 'district-gutter-red')!;
+  let checked = 0;
+  for (let i = 0; i + 2 < gutter.positions.length / 3; i += 3) {
+    const ys = [0, 1, 2].map(k => gutter.positions[(i + k) * 3 + 1]!);
+    if (Math.max(...ys) - Math.min(...ys) > 0.07) continue;
+    const r = rates(gutter.positions, gutter.uvs, i);
+    if (!r) continue;
+    // A 2048 x 256 band scan: as many pixels per metre along the gutter as across it.
+    expect(r.u * 2048 / (r.v * 256)).toBeCloseTo(1, 1);
+    checked++;
+  }
+  expect(checked).toBeGreaterThan(0);
+  const paint = catalogue.pieces.find(p => p.metadata.id === 'road/luxury/avenue/8m-core')!.geometry.meshes.find(m => m.surface === 'whitePaint')!;
+  for (let i = 0; i + 2 < paint.positions.length / 3; i += 3) {
+    const r = rates(paint.positions, paint.uvs, i);
+    if (r) expect(r.u / r.v).toBeCloseTo(1, 6);
+  }
+  const stripe = catalogue.pieces.find(p => p.metadata.id === 'overlay/stripe/0.5m')!.geometry.meshes[0]!;
+  const r = rates(stripe.positions, stripe.uvs, 0)!;
+  expect(r.u).toBeCloseTo(r.v, 6);
+});
+

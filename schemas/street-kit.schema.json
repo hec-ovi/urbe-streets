@@ -28,7 +28,7 @@
       "items": {
         "$ref": "#/$defs/piece"
       },
-      "maxItems": 216
+      "maxItems": 256
     },
     "profiles": {
       "type": "array",

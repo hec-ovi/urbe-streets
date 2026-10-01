@@ -7,7 +7,7 @@ const pair=(v:unknown)=>Array.isArray(v)&&v.length===2&&v.every(n=>typeof n==='n
 const revision='ac7c2fc02095b47d0a8fd7fda535e4ea7ce6452e';
 const effects=new Set(['asphalt','photographed','polished','mineral','metal-panel','hardware','cast-concrete','parking','road-paint','decal','solid','display','led-matrix']);
 /** Surfaces authored ahead of their Materials entries draw as these existing surfaces until the binding carries them. */
-export const surfaceFallbacks:Readonly<Record<string,string>>={'marquee-channel':'darkMetal','marquee-frame':'ochre','marquee-lip':'concrete','marquee-cap':'darkMetal'};
+export const surfaceFallbacks:Readonly<Record<string,string>>={'marquee-channel':'darkMetal','marquee-frame':'ochre','marquee-lip':'concrete','marquee-cap':'darkMetal','hex-orange':'district-hex'};
 
 /** Retains a renderer-neutral snapshot and validates every geometry-facing reference. */
 export class NativeCatalog {

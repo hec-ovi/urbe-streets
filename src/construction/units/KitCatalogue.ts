@@ -14,8 +14,15 @@ import { ProfileCatalogue } from './ProfileCatalogue.ts';
 import { coreId, parkingFinishes, parkingSide } from './ParkingScene.ts';
 import type { NativeGround } from '../../architecture/native-schema.ts';
 import { infillPieces } from './SourceInfill.ts';
+import { rectangle } from '../../geometry/polygons.ts';
 
-export const PIECE_BUDGET = 216;
+export const PIECE_BUDGET = 256;
+
+/** The finish of the court under a highway deck, sampled in world metres. */
+export const UNDER_SURFACE = 'hex-orange';
+
+/** The profile arm sides are authored on: a 7 m local street, whose half width a placement offsets them from. */
+export const SIDE_HALF = 3.5;
 
 export interface AuthoredUnit { geometry: NativePieceData; fields?: NativeGround[]; metadata: Omit<StreetKitPiece, 'file' | 'size' | 'bounds' | 'surfaces' | 'triangles' | 'bytes' | 'sha256' | 'hasCollision'> }
 
@@ -33,7 +40,7 @@ export class KitCatalogue {
       this.pieces.push({ geometry: { ...built.geometry, id }, fields: built.fields, metadata: { id, kind: 'segment', classes: [profile.streetClass], zone: profile.zone,
         variant, length, origin: 'run-start-at-road', footprint: built.footprint, profileId: profile.id } });
     }
-    for (const profile of this.profiles.filter(p => p.width && !p.medianWidth)) for (const closure of [false, true]) {
+    for (const profile of this.profiles.filter(p => p.width)) for (const closure of [false, true]) {
       const scene = new CatalogueScene().segment(profile, closure ? 2 : 8, closure ? 'closure' : 'plain');
       scene.architecture.owners = scene.architecture.owners.filter(o => o.kind === 'roadway');
       const built = constructPiece(scene), id = coreId(profile, closure);
@@ -60,6 +67,34 @@ export class KitCatalogue {
       this.pieces.push({ geometry: { ...built.geometry, id }, fields: built.fields, metadata: { id, kind: 'junction-arm', classes: [primary.streetClass],
         zone: primary.zone, variant: terminal ? 'return' : 'plain', length: 0, origin: 'junction-at-road', footprint: built.footprint } });
     }
+    // A junction arm splits into its carriageway and its two sides, so each side wears the finish of
+    // the block it borders: the arm core per profile, the sides per finish on either hand, and the
+    // far kerb where a street ends at a T per width and finish.
+    for (const primary of this.profiles.filter(p => p.streetClass !== 'alley')) {
+      const scene = new CatalogueScene().junction(primary, { ...primary, width: 0 }, false, false);
+      scene.architecture.owners = scene.architecture.owners.filter(o => o.kind === 'roadway');
+      const built = constructPiece(scene), id = KitCatalogue.armCore(primary);
+      this.pieces.push({ geometry: { ...built.geometry, id }, fields: built.fields, metadata: { id, kind: 'junction-arm', classes: [primary.streetClass],
+        zone: primary.zone, variant: 'core', length: 0, origin: 'junction-at-road', footprint: built.footprint } });
+    }
+    const local = this.profiles.find(p => p.id === 'ordinary/local')!;
+    for (const finish of parkingFinishes) {
+      for (const side of ['left', 'right'] as const) {
+        const scene = new CatalogueScene(finish).junction(local, { ...local, width: 0 }, false, false);
+        scene.architecture.owners = scene.architecture.owners.filter(o => o.kind === 'perimeter' && o.frontages[0]!.inward[1] === (side === 'left' ? 1 : -1));
+        const built = constructPiece(scene), id = KitCatalogue.side(finish, side);
+        this.panels += built.panels;
+        this.pieces.push({ geometry: { ...built.geometry, id }, fields: built.fields, metadata: { id, kind: 'junction-arm', classes: ['street', 'road'],
+          zone: finish.split('-')[0]!, variant: `side-${side}`, length: 0, origin: 'junction-at-road', footprint: built.footprint } });
+      }
+      for (const primary of this.profiles.filter(p => p.zone === 'ordinary' && p.streetClass !== 'alley')) {
+        const built = constructPiece(new CatalogueScene(finish).junction(primary, { ...primary, width: 0 }, false, true));
+        const id = KitCatalogue.farKerb(primary, finish);
+        this.panels += built.panels;
+        this.pieces.push({ geometry: { ...built.geometry, id }, fields: built.fields, metadata: { id, kind: 'junction-arm', classes: [primary.streetClass],
+          zone: finish.split('-')[0]!, variant: 'far-kerb', length: 0, origin: 'junction-at-road', footprint: built.footprint } });
+      }
+    }
     for (const zone of ['ordinary', 'luxury', 'industrial']) {
       const profiles = this.profiles.filter(p => p.zone === zone);
       for (const [i, primary] of profiles.entries()) for (const cross of profiles.slice(i)) {
@@ -73,6 +108,15 @@ export class KitCatalogue {
         this.pieces.push({ geometry: { ...built.geometry, id }, fields: built.fields, metadata: { id, kind: 'junction-center', classes: [primary.streetClass, cross.streetClass],
           zone, variant: 'plain', length: 0, origin: 'junction-at-road', footprint: built.footprint } });
       }
+    }
+    // Ground under a highway deck is a court at road level, never a carriageway: no lanes, paint or gutters.
+    for (const profile of this.profiles.filter(p => p.zone === 'ordinary' && p.streetClass === 'road')) for (const length of [8, 2]) {
+      const id = KitCatalogue.under(profile, length), ring = rectangle(0, -profile.width / 2, length, profile.width);
+      const batch = new SurfaceBatch({ ownerId: id, groundIds: [id], roadTop: 0, wear: () => 0 });
+      batch.polygon(UNDER_SURFACE, [ring], 0, p => p);
+      const fields: NativeGround[] = [{ id: `${id}:ground`, sourceIndex: 0, ownerId: id, surface: 'roadway', ring, bottom: -0.2, top: 0 }];
+      this.pieces.push({ geometry: pieceGeometry(id, [batch.finish()]), fields, metadata: { id, kind: 'segment', classes: ['road'], zone: 'shared',
+        variant: 'under', length, origin: 'run-start-at-road', footprint: [ring], profileId: profile.id } });
     }
     this.pieces.push(...overlayPieces());
     this.pieces.push(...infillPieces());
@@ -101,6 +145,18 @@ export class KitCatalogue {
   static island(profile: StreetProfile, length: number, nose: boolean): string { return `island/${profile.id}/${length}m-${nose ? 'nose' : 'plain'}`; }
 
   static arm(profile: StreetProfile, terminal = false): string { return `junction/${profile.id}/${terminal ? 'return' : 'arm'}`; }
+
+  /** A stretch of the court under a highway deck, as wide as the road profile of the highway's width. */
+  static under(profile: StreetProfile, length: number): string { return `under/${profile.id.split('/')[1]}/${length}m`; }
+
+  /** An arm's carriageway, without its sides. */
+  static armCore(profile: StreetProfile): string { return `junction/${profile.id}/arm-core`; }
+
+  /** One side of an arm in a kerb finish: `left` lies at the arm's positive local Z. */
+  static side(finish: string, side: 'left' | 'right'): string { return `junction/side/${finish}/${side}`; }
+
+  /** The far kerb a street meets where it ends at a T, as wide as that street, in a kerb finish. */
+  static farKerb(profile: StreetProfile, finish: string): string { return `junction/far-kerb/${profile.id.split('/')[1]}/${finish}`; }
 
   static center(primary: StreetProfile, cross: StreetProfile): string {
     return `junction/${primary.zone}/${primary.id.split('/')[1]}+${cross.id.split('/')[1]}/center`;

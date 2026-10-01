@@ -1,7 +1,7 @@
 import type { NativeTurn } from '../../architecture/native-schema.ts';
 import type { Vec2 } from '../../geometry/schema.ts';
 import { dot, sub } from '../surfaces/Frame.ts';
-import { Paint, at } from './Paint.ts';
+import { PAINT_METRES, Paint, at } from './Paint.ts';
 import type { RoadFrame } from './schema.ts';
 
 /** Original arrow outline, using each arriving Atlas lane's legal exits. */
@@ -19,6 +19,6 @@ export function arrows(paint: Paint, frame: RoadFrame, station: number, nodeId: 
     shape.push([-1.8,0.12]);
     const origin = at(frame, station, lane.offset);
     paint.polygon('whitePaint', shape.map(([x,z]) => at(frame, station + x * sign, lane.offset + z * sign)), frame.top + 0.008,
-      p => [dot(sub(p, origin), frame.d) / 2.7 + station * 0.31, 0.5 + dot(sub(p, origin), frame.n) * 0.18]);
+      p => [dot(sub(p, origin), frame.d) / PAINT_METRES + station * 0.31, 0.5 + dot(sub(p, origin), frame.n) / PAINT_METRES]);
   }
 }

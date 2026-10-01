@@ -7,8 +7,14 @@ import { coreId, sideId } from './ParkingScene.ts';
 import { fitParking, parkingFinish, type ParkingFit } from './ParkingFit.ts';
 import type { ProfileCatalogue } from './ProfileCatalogue.ts';
 import { placement } from './UnitOverlays.ts';
+import { KerbFinishes } from './KerbFinishes.ts';
+import { KitCatalogue } from './KitCatalogue.ts';
 
-/** Road cores retain their paint phase. Independent kerbs follow exact bay stations. */
+/**
+ * Every motor segment is a road core and, on each side, kerb walks in the finish of the block that
+ * side borders, so a block keeps one sidewalk all round. Road cores retain their paint phase;
+ * independent kerbs follow exact bay stations where a block saves parking.
+ */
 export class ParkingUnits {
   readonly regions = new Map<UnitRegion, StreetPlacement[]>();
   readonly placements: StreetPlacement[] = [];
@@ -17,6 +23,7 @@ export class ParkingUnits {
   constructor(a: NativeArchitecture, regions: readonly UnitRegion[], profiles: ProfileCatalogue) {
     const byRoad = new Map<string, ParkingFit[]>();
     const owners = new Map<string, { owner: NativeOwner; inward: Vec2 }[]>();
+    const kerbs = new KerbFinishes(a);
     for (const owner of a.owners) for (const face of owner.frontages) for (const id of face.edgeIds) {
       const sides = owners.get(id) ?? []; sides.push({ owner, inward: face.inward }); owners.set(id, sides);
     }
@@ -33,18 +40,29 @@ export class ParkingUnits {
     for (const region of regions) {
       if (region.kind !== 'segment') continue;
       const road = region.roads[0]!, profile = profiles.select(road);
+      if (road.kind === 'alley' || !profile.width) continue;
+      // Under a highway deck the corridor is a court at road level between the kerbs of the blocks either side.
+      const under = road.kind === 'highway', base = under ? profiles.profiles.find(p => p.zone === 'ordinary' && p.id.split('/')[1] === profile.id.split('/')[1])! : profile;
+      const piece = (closure: boolean) => under ? KitCatalogue.under(base, closure ? 2 : 8) : coreId(profile, closure);
       const nearby = (byRoad.get(road.id) ?? []).map(f => {
         const points = [f.frame.world([f.bay.support.start, 0]), f.frame.world([f.bay.support.end, 0])].map(region.frame.local);
         return { start: Math.min(...points.map(p => p[0])), end: Math.max(...points.map(p => p[0])), side: Math.sign(points[0]![1]) };
       }).filter(f => f.end > 1e-7 && f.start < region.length - 1e-7);
-      if (!nearby.length) continue;
-      const core = placement(coreId(profile, region.length < 8), region.frame, ['roadway']);
-      if (region.length < 8 && region.length !== 2) core.scale = [region.length / 2, 1, 1];
-      const output = [core];
+      const output: StreetPlacement[] = [];
+      // A whole core where the run takes one; shorter runs take 2 m cores end to end, only a last fraction scaled.
+      if (region.length >= 8 - 1e-7) output.push(placement(piece(false), region.frame, ['roadway']));
+      else for (let station = 0; station < region.length - 1e-7; station = clean(station + 2)) {
+        const core = placement(piece(true), new UnitFrame(region.frame.world([station, 0]), region.frame.d, region.frame.position[1]), ['roadway']);
+        const length = Math.min(2, clean(region.length - station));
+        if (length < 2) core.scale = [length / 2, 1, 1];
+        output.push(core);
+      }
       for (const sign of [-1, 1]) {
         const n: Vec2 = [-region.frame.d[1] * sign, region.frame.d[0] * sign];
-        const owner = owners.get(road.id)?.find(f => f.inward[0] * n[0] + f.inward[1] * n[1] > 0.99)?.owner;
-        const finish = parkingFinish(owner, profile.zone);
+        // The block whose sidewalk this side runs along, read where its walking band lies.
+        const found = kerbs.at(region.frame.world([region.length / 2, sign * (profile.width / 2 + 2.8)]), profile.zone);
+        const owner = found.owner ?? owners.get(road.id)?.find(f => f.inward[0] * n[0] + f.inward[1] * n[1] > 0.99)?.owner;
+        const finish = found.owner ? found.finish : parkingFinish(owner, profile.zone);
         const cuts = nearby.filter(f => f.side === sign).sort((a, b) => a.start - b.start);
         let station = 0;
         for (const cut of cuts) {

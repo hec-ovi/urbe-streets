@@ -18,6 +18,8 @@ import { ParkingUnits } from './ParkingUnits.ts';
 import { placement, turnPlacements } from './UnitOverlays.ts';
 import { crossingPlacements, sourceInfill, type InfillSurface } from './SourceInfill.ts';
 import { direction } from '../surfaces/Frame.ts';
+import { KerbFinishes } from './KerbFinishes.ts';
+import { SIDE_HALF } from './KitCatalogue.ts';
 
 export class StreetUnits {
   readonly catalogue = new KitCatalogue();
@@ -42,6 +44,7 @@ export class StreetUnits {
     this.features = new UnitFeatures(details, seed, p => this.wear.sample(p), plainClosures);
     const pieces = new Map(this.pieces.map(p => [p.metadata.id, p]));
     const coverage = new UnitCoverage(a);
+    const kerbs = new KerbFinishes(a);
     const add = (p: StreetPlacement, source?: NativeGround) => {
       const piece = pieces.get(p.piece);
       if (!piece) throw invariant('Placement references an unknown catalogue piece', { piece: p.piece });
@@ -62,11 +65,6 @@ export class StreetUnits {
       if (region.kind === 'segment') {
         const profile = this.profiles.select(region.roads[0]!);
         const length = Math.max(2, region.length);
-        // Ground under a highway deck carries no lane paint, so it takes the profile's unpainted closures.
-        if (region.roads[0]!.kind === 'highway' && length === 8) {
-          for (const x of [0, 4]) fit(placement(KitCatalogue.segment(profile, 4, 'closure'), new UnitFrame(region.frame.world([x, 0]), region.frame.d), ['roadway']));
-          continue;
-        }
         const variant = length < 8 ? 'closure' : 'plain';
         p = placement(KitCatalogue.segment(profile, length, variant), region.frame, ['roadway']);
         if (region.length < 2) p.scale = [region.length / 2, 1, 1];
@@ -82,14 +80,38 @@ export class StreetUnits {
           const selected = this.profiles.select(road);
           return this.profiles.profiles.find(p => p.zone === region.zone && p.id.split('/')[1] === selected.id.split('/')[1])!;
         };
-        const primary = zoneProfile(widest(parallel.length ? parallel : region.roads));
+        const primaryRoad = widest(parallel.length ? parallel : region.roads);
+        const primary = zoneProfile(primaryRoad);
         const cross = zoneProfile(widest(perpendicular.length ? perpendicular : region.roads));
         if (region.kind === 'junction-arm') {
           const point = region.frame.world([perpendicular.length ? cross.width / 2 : 0, 0]);
           const incident = parallel.some(r => r.path.some(point => {
             const local = region.frame.local(point); return local[0] > 1e-7;
           }));
-          p = placement(KitCatalogue.arm(primary, !incident), new UnitFrame(point, axis), ['roadway']);
+          const frame = new UnitFrame(point, axis);
+          if (primary.streetClass === 'alley') p = placement(KitCatalogue.arm(primary, !incident), frame, ['roadway']);
+          else {
+            // Each side of an arm, and the far kerb where the street ends at a T, wears its own block's finish.
+            if (!incident) {
+              const across = kerbs.at(frame.world([2.8, 0]), region.zone);
+              const base = this.profiles.profiles.find(q => q.zone === 'ordinary' && q.id.split('/')[1] === primary.id.split('/')[1])!;
+              fit(placement(KitCatalogue.farKerb(base, across.finish), frame, [across.owner?.id ?? 'roadway']));
+              continue;
+            }
+            // An arm running on under a highway deck is the deck's court, not a carriageway.
+            if (primaryRoad.kind === 'highway') {
+              const base = this.profiles.profiles.find(q => q.zone === 'ordinary' && q.id.split('/')[1] === primary.id.split('/')[1])!;
+              for (const [station, length] of [[0, 8], [8, 8], [16, 2]] as const) {
+                fit(placement(KitCatalogue.under(base, length), new UnitFrame(frame.world([station, 0]), axis), ['roadway']));
+              }
+            } else fit(placement(KitCatalogue.armCore(primary), frame, ['roadway']));
+            for (const side of ['left', 'right'] as const) {
+              const sign = side === 'left' ? 1 : -1, half = primary.width / 2;
+              const block = kerbs.at(frame.world([10, sign * (half + 2.8)]), region.zone);
+              fit(placement(KitCatalogue.side(block.finish, side), new UnitFrame(frame.world([0, sign * (half - SIDE_HALF)]), axis), [block.owner?.id ?? 'roadway']));
+            }
+            continue;
+          }
         } else {
           if (primary.streetClass === 'alley' && cross.streetClass === 'alley') continue;
           const ordered = this.profiles.profiles.indexOf(primary) <= this.profiles.profiles.indexOf(cross);

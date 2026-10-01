@@ -9,7 +9,7 @@ import {Paint} from './Paint.ts';
 import {Crosswalk} from './Crosswalk.ts';
 import {Markings} from './Markings.ts';
 
-it('retains original crossing positions and scan UVs for both source profiles',async()=>{
+it('retains original crossing positions, with paint UVs at one scale along and across, for both source profiles',async()=>{
   const a=await readNativeAtlas(nativeBlueprint());
   for(const expected of fixture){
     const road={...a.roads[0]!,width:expected.lanes*3.5,lanes:Array.from({length:expected.lanes},()=>a.roads[0]!.lanes[0]!)};

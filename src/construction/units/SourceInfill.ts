@@ -8,6 +8,12 @@ import { pieceGeometry } from './PieceConstruction.ts';
 import type { AuthoredUnit } from './KitCatalogue.ts';
 import { UnitFrame } from './Frame.ts';
 import { placement } from './UnitOverlays.ts';
+import { PAINT_METRES } from '../markings/Paint.ts';
+import { clean } from './Frame.ts';
+
+/** The widths of whole stripe tiles: Atlas crossing bars and approach stop lines. */
+export const STRIPE_WIDTHS = [0.3, 0.5] as const;
+export const stripeId = (width: number) => `overlay/stripe/${width}m`;
 
 /** Surfaces a leftover field can take: both carriageway finishes sample world XZ, so a scaled prism shows no stretch. */
 export const INFILL_SURFACES = ['asphalt', 'district-hex', 'concrete'] as const;
@@ -27,11 +33,15 @@ export function infillPieces(): AuthoredUnit[] {
     pieces.push({ geometry: pieceGeometry(id, [batch.finish()]), metadata: { id, kind: 'segment', classes: ['street'], zone: 'shared',
       variant: 'infill', length: 2, origin: 'run-start-at-road', footprint: [footprint] } });
   }
-  const id = 'overlay/stripe', batch = new SurfaceBatch({ ownerId: id, groundIds: [id], roadTop: 0, wear: () => 0 });
-  const stripe = rectangle(0, 0, 1, 1);
-  batch.polygon('whitePaint', [stripe], 0.006, p => p, false);
-  pieces.push({ geometry: pieceGeometry(id, [batch.finish()]), metadata: { id, kind: 'overlay', classes: [], zone: 'shared',
-    variant: 'stripe', length: 0, origin: 'anchor-at-road', footprint: [stripe] } });
+  // One turn of the paint mask long, so tiles laid end to end continue it, and the mask
+  // runs in paint metres both ways: a stripe of any length is tiles, never one stretched quad.
+  for (const width of STRIPE_WIDTHS) {
+    const id = stripeId(width), batch = new SurfaceBatch({ ownerId: id, groundIds: [id], roadTop: 0, wear: () => 0 });
+    const stripe = rectangle(0, 0, PAINT_METRES, width);
+    batch.polygon('whitePaint', [stripe], 0.006, ([x, z]) => [x / PAINT_METRES, 0.155 + z / PAINT_METRES], false);
+    pieces.push({ geometry: pieceGeometry(id, [batch.finish()]), metadata: { id, kind: 'overlay', classes: [], zone: 'shared',
+      variant: 'stripe', length: PAINT_METRES, origin: 'anchor-at-road', footprint: [stripe] } });
+  }
   return pieces;
 }
 
@@ -79,12 +89,31 @@ export function* sourceInfill(a: NativeArchitecture, remaining: (g: NativeGround
   }
 }
 
+/**
+ * A painted rectangle from `origin` along `along` for `length` metres and across `across` for
+ * `width`, as whole stripe tiles of the nearest width: as many as its length holds tiles near one
+ * paint turn long, each scaled to an equal share, so the mask keeps its metre scale.
+ */
+export function stripeTiles(origin: Vec2, along: Vec2, length: number, across: Vec2, width: number): StreetPlacement[] {
+  const nominal = STRIPE_WIDTHS.reduce((best, w) => Math.abs(w - width) < Math.abs(best - width) ? w : best);
+  const count = Math.max(1, Math.round(length / PAINT_METRES)), step = length / count;
+  // A tile's local Z is the frame's left of its X; an across pointing the other way starts the tile from the far edge.
+  const left = across[0] * -along[1] + across[1] * along[0] > 0;
+  const start: Vec2 = left ? origin : [origin[0] + across[0] * width, origin[1] + across[1] * width];
+  const tiles: StreetPlacement[] = [];
+  for (let i = 0; i < count; i++) {
+    const p = placement(stripeId(nominal), new UnitFrame([start[0] + along[0] * step * i, start[1] + along[1] * step * i], along), ['roadway']);
+    p.scale = [clean(step / PAINT_METRES), 1, clean(width / nominal)];
+    tiles.push(p);
+  }
+  return tiles;
+}
+
 /** Atlas stripe polygons retain their exact authored stations. */
 export function crossingPlacements(a: NativeArchitecture): StreetPlacement[] {
-  const result = (a.markings ?? []).map(ring => {
-    const box = bounds(ring), p = placement('overlay/stripe', new UnitFrame(box.min), ['roadway']);
-    p.scale = [box.max[0] - box.min[0], 1, box.max[1] - box.min[1]];
-    return p;
+  const result = (a.markings ?? []).flatMap(ring => {
+    const box = bounds(ring), dx = box.max[0] - box.min[0], dz = box.max[1] - box.min[1];
+    return dx >= dz ? stripeTiles(box.min, [1, 0], dx, [0, 1], dz) : stripeTiles(box.min, [0, 1], dz, [1, 0], dx);
   });
   for (const approach of a.approaches) {
     const road = a.roads.find(r => r.id === approach.edgeId)!;
@@ -93,8 +122,9 @@ export function crossingPlacements(a: NativeArchitecture): StreetPlacement[] {
     const field = bounds(approach.field.map(frame.local));
     for (const lane of road.lanes.filter(l => (l.direction === 'forward' ? road.to : road.from) === approach.nodeId)) {
       const station = lane.direction === 'forward' ? field.min[0] - 1.3 : field.max[0] + 1;
-      const p = placement('overlay/stripe', new UnitFrame(frame.world([station, lane.offset - lane.width / 2 + 0.05]), frame.d), ['roadway']);
-      p.scale = [0.3, 1, lane.width - 0.1]; result.push(p);
+      // A stop line runs across its lane, 0.3 m deep along the road.
+      const n: Vec2 = [-frame.d[1], frame.d[0]];
+      result.push(...stripeTiles(frame.world([station, lane.offset - lane.width / 2 + 0.05]), n, lane.width - 0.1, frame.d, 0.3));
     }
   }
   return result;

@@ -8,8 +8,11 @@ import type { SceneInput } from './UnitScene.ts';
 export class CatalogueScene {
   readonly architecture: NativeArchitecture;
   private counter = 0;
+  /** The kerb finish every owner of this scene takes, instead of its zone's own. */
+  private readonly kerbFinish: string | null;
 
-  constructor() {
+  constructor(kerbFinish: string | null = null) {
+    this.kerbFinish = kerbFinish;
     this.architecture = { format: 'district', version: '0.26.0', reservationVersion: '2.1.0', identity: { hash: '', encoding: 'json-stringify-utf8' },
       bounds: { min: [0, 0], max: [1, 1] }, boundary: [], groundArrayCount: 0, owners: [], roads: [], approaches: [], turns: [], medians: [],
       shafts: [], stationBays: [], protections: [], obstaclePoints: [], exclusions: [], highwayHash: '', stationHash: '', remainingGroundIndices: [], degraded: [] };
@@ -140,7 +143,7 @@ export class CatalogueScene {
 
   private owner(kind: NativeOwner['kind'], p: StreetProfile, fields: { surface: NativeGround['surface']; ring: Ring }[], frontages: NativeFrontage[] = []): NativeOwner {
     const id = `o${this.counter++}`;
-    const owner: NativeOwner = { id, kind, finish: p.zone === 'luxury' ? 'luxury-blue' : p.zone === 'industrial' ? 'industrial-yellow' : 'ordinary',
+    const owner: NativeOwner = { id, kind, finish: this.kerbFinish ?? (p.zone === 'luxury' ? 'luxury-blue' : p.zone === 'industrial' ? 'industrial-yellow' : 'ordinary'),
       ground: fields.filter(f => totalArea([f.ring]) > 1e-9).map((f, i) => ({ ...f, id: `${id}:g${i}`, sourceIndex: 0, ownerId: id, bottom: -0.2,
         top: f.surface === 'curb' || f.surface === 'sidewalk' ? 0.2 : 0 })), frontages, interiors: [], excludedParcelIds: [], corners: [], parking: [], guards: [] };
     for (const f of frontages) f.ownerId = id;

@@ -6,6 +6,9 @@ import { SurfaceBatch } from '../surfaces/SurfaceBatch.ts';
 import type { RoadFrame } from './schema.ts';
 export const at = (frame: RoadFrame, station: number, offset = 0): Vec2 => [frame.start[0] + frame.d[0] * station + frame.n[0] * offset, frame.start[1] + frame.d[1] * station + frame.n[1] * offset];
 
+/** Metres one turn of the paint mask covers, along a mark and across it alike, so no mark stretches it. */
+export const PAINT_METRES = 2.7;
+
 /** Source paint dimensions and scan phase, clipped only to its retained road owner. */
 export class Paint {
   private readonly batch: SurfaceBatch;
@@ -21,12 +24,12 @@ export class Paint {
     if (end <= start) return;
     const origin = at(frame, start, offset - width / 2), phase = random(this.seed, `${frame.road.id}:${start}:${offset}:paint`) * 17;
     this.polygon(surface, [origin, at(frame, end, offset - width / 2), at(frame, end, offset + width / 2), at(frame, start, offset + width / 2)], frame.top + 0.006,
-      p => [dot(sub(p, origin), frame.d) / 2.7 + phase, 0.155 + dot(sub(p, origin), frame.n) / width * 0.69]);
+      p => [dot(sub(p, origin), frame.d) / PAINT_METRES + phase, 0.155 + dot(sub(p, origin), frame.n) / PAINT_METRES]);
   }
   bar(frame: RoadFrame, station: number, first: number, last: number, width: number, surface: string): void {
     if (last <= first) return;
     const origin = at(frame, station, first);
     this.polygon(surface, [origin, at(frame, station + width, first), at(frame, station + width, last), at(frame, station, last)], frame.top + 0.007,
-      p => [dot(sub(p, origin), frame.n) / 2.7 + station * 0.17, 0.155 + dot(sub(p, origin), frame.d) / width * 0.69]);
+      p => [dot(sub(p, origin), frame.n) / PAINT_METRES + station * 0.17, 0.155 + dot(sub(p, origin), frame.d) / PAINT_METRES]);
   }
 }

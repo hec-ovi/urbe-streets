@@ -11,6 +11,9 @@ type Edge = BoundarySegment & { previous?: BoundarySegment; next?: BoundarySegme
 const key = (p: Vec2) => `${p[0].toFixed(8)}:${p[1].toFixed(8)}`;
 const move = (p: Vec2, d: Vec2, distance: number): Vec2 => [p[0] + d[0] * distance, p[1] + d[1] * distance];
 
+/** A curb-band scan is eight times as long as it is wide: 2 m along a 0.25 m band. */
+const BAND_ASPECT = 8;
+
 /** Source EdgeRing profile and two-metre scan stations, fitted to actual road/gutter/curb contacts. */
 export class EdgeRing {
   private readonly road: BoundaryIndex;
@@ -65,8 +68,17 @@ export class EdgeRing {
             if (!Number.isFinite(width) || width <= 0) throw invariant('Gutter lacks its two physical interfaces', { ownerId: owner.id, point: p });
             return r / width;
           };
-          batch.polygon('gutter', channel, p => road + transverse(p) * 0.06,
-            p => [((p[0] - edge.a[0]) * edge.d[0] + (p[1] - edge.a[1]) * edge.d[1] - start) / 2, transverse(p)]);
+          // The scan spans the gutter's whole width, so it runs as many times that width along it and
+          // keeps its own proportions; each stretch starts its turn where a whole turn of it begins.
+          const period = BAND_ASPECT * datum.gutterWidth;
+          for (let turn = Math.floor(start / period); turn * period < end - 1e-9; turn++) {
+            const from = Math.max(start, turn * period), to = Math.min(end, (turn + 1) * period);
+            if (to - from < 1e-9) continue;
+            const part = intersection(channel, [this.mask(edge, from, to, 0)]);
+            if (totalArea(part) <= 1e-12) continue;
+            batch.polygon('gutter', part, p => road + transverse(p) * 0.06,
+              p => [((p[0] - edge.a[0]) * edge.d[0] + (p[1] - edge.a[1]) * edge.d[1] - turn * period) / period, transverse(p)]);
+          }
           remainingGutter = difference(remainingGutter, [mask]);
         }
         const claim = intersection(remainingCurb, [mask]);
