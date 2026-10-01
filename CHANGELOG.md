@@ -1,5 +1,7 @@
 # Changelog
 
+0.14.0: a block keeps one sidewalk finish all round, blue, red, yellow or ordinary: every motor run is a road core with kerb walks in the finish of the block each side borders, every junction arm is a carriageway core with the bordering blocks' own finished sides, and a street's far kerb at a T takes the block across. Ground under a highway deck is a road-level court of orange hex sampled in world metres, never a carriageway, between the blocks' own kerbs. Gutters and road paint keep their textures' proportions: a gutter maps the curb band scan at its own 8:1 shape, paint runs one 2.7 m mask scale along and across every mark, and crossing bars and stop lines are tiles of their own width instead of one stretched quad. Median profiles supply road cores; the inventory is 255 pieces within a 256 piece budget.
+
 0.13.0: the manifest drops `report.overhangs`: every surface piece stands only on saved ground, so its boundary and fringe areas were always zero, and a repeated surface already fails the build.
 
 0.12.1: a highway's grade corridor is built from the unpainted closures of its road profile, with ordinary arms at grade junction boxes and an end at each saved underpass kerb line, instead of plain concrete infill.
