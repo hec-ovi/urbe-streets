@@ -35,12 +35,16 @@ export interface NativeMedian {
 }
 export interface NativeApproach { id: string; nodeId: string; edgeId: string; distance: number; station: Vec2; field: Ring; landings: Ring[] }
 export interface NativeTurn { nodeId: string; fromLaneId: string; toLaneId: string; kind: 'through' | 'left' | 'right' | 'u-turn'; level: number }
+/** An elevated highway structure: its centreline from ramp foot to ramp foot, its deck width and the edges it carries. */
+export interface NativeDeck { id: string; edgeIds: string[]; path: Ring; width: number }
 export interface NativeStationBay { id: string; stationId: string; edgeId: string; footprint: Ring; shaft: Ring; approach: Ring }
 export interface NativeShaft { id: string; stationId: string; ring: Ring }
 export interface NativeProtection { kind: 'highway' | 'underpass' | 'station-bay' | 'station-shaft'; source: Record<string, unknown> }
 export interface NativeArchitecture {
   format?: 'source' | 'district';
   medians?: NativeMedian[];
+  /** Delegated highway decks; the ground beneath them is the court. */
+  decks?: NativeDeck[];
   version: '0.26.0'; reservationVersion: '2.1.0'; identity: NativeIdentity; bounds: Box2; boundary: Ring;
   groundArrayCount: number; owners: NativeOwner[]; roads: NativeRoad[]; approaches: NativeApproach[]; turns: NativeTurn[];
   shafts: NativeShaft[]; stationBays: NativeStationBay[]; protections: NativeProtection[];

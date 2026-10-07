@@ -59,6 +59,13 @@ export async function readNativeAtlas(input: unknown): Promise<NativeArchitectur
     });
   }
   const highways = records(streets.highwayStructures, 'streets.highwayStructures');
+  const decks = highways.map((h, i) => {
+    const field = `streets.highwayStructures[${i}]`, width = number(h.width, `${field}.width`);
+    if (width <= 0) bad(`${field}.width`, 'Expected a positive deck width');
+    const edgeIds = strings(h.edgeIds, `${field}.edgeIds`);
+    if (edgeIds.some(id => !roadIds.has(id))) bad(`${field}.edgeIds`, 'Unknown highway edge');
+    return { id: `highway:${i}`, edgeIds, path: path(h.path, `${field}.path`), width };
+  });
   const protectionIds = new Set<string>();
   const nodeIds = new Set(records(streets.nodes, 'streets.nodes').map(node => string(node.id, 'node.id')));
   const protections: NativeProtection[] = records(reservation.protected, 'reservations.protected').map(value => {
@@ -98,7 +105,7 @@ export async function readNativeAtlas(input: unknown): Promise<NativeArchitectur
     exclusions.push(...array(body.surfaces, 'water.surfaces').map((r, i) => ring(r, `water.surfaces[${i}]`)));
   }
   const medians = nativeMedians(construction.medians, owners, movement.roads);
-  return { version: meta.version, reservationVersion: planning.version, format, medians, identity, bounds, boundary, groundArrayCount: count, owners, ...movement,
+  return { version: meta.version, reservationVersion: planning.version, format, medians, decks, identity, bounds, boundary, groundArrayCount: count, owners, ...movement,
     shafts, stationBays, protections, obstaclePoints, exclusions, highwayHash: digest(JSON.stringify(streets.highwayStructures)),
     stationHash: digest(JSON.stringify(transit.subwayStations)), remainingGroundIndices: remaining, degraded };
 }
