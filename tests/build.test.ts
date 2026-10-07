@@ -410,8 +410,16 @@ it('stops each street passing beneath a deck at the deck edge on both sides and 
       const node = road.from === nodeId ? road.path[0]! : road.path.at(-1)!, far = road.from === nodeId ? road.path.at(-1)! : road.path[0]!;
       const length = Math.hypot(far[0] - node[0], far[1] - node[1]), d: Vec2 = [(far[0] - node[0]) / length, (far[1] - node[1]) / length];
       const runs = plan.regions.filter(r => r.kind === 'segment' && r.roads[0] === road);
-      const reach = Math.min(...runs.flatMap(r => r.mask.flat().map(p => (p[0] - node[0]) * d[0] + (p[1] - node[1]) * d[1])));
+      const station = (r: (typeof runs)[number]) => Math.min(...r.mask.flat().map(p => (p[0] - node[0]) * d[0] + (p[1] - node[1]) * d[1]));
+      const reach = Math.min(...runs.map(station));
       expect(reach, `${nodeId} ${road.id}`).toBeCloseTo(half, 6);
+      // Its lane paint runs right up to the court on either side: the unpainted closures keep to its other end.
+      if (runs.reduce((sum, r) => sum + r.length, 0) < 8) continue;
+      expect(runs.find(r => Math.abs(station(r) - reach) < 1e-6)!.length, `${nodeId} ${road.id}`).toBe(8);
+      // A probe on a lane half a metre out from the deck edge, clear of any median band.
+      const [x, z] = [node[0] + d[0] * (half + 0.5) - d[1] * road.width / 4, node[1] + d[1] * (half + 0.5) + d[0] * road.width / 4], probe: Ring = [[x - 0.1, z - 0.1], [x + 0.1, z - 0.1], [x + 0.1, z + 0.1], [x - 0.1, z + 0.1]];
+      const there = placements.filter(p => pieces.get(p.piece)!.kind === 'segment' && totalArea(intersection(placementFootprint(pieces.get(p.piece)!, p), [probe])) > 1e-6);
+      expect(there.map(p => [p.piece.split('/').at(-1), pieces.get(p.piece)!.surfaces.includes('whitePaint')]), `${nodeId} ${road.id}`).toEqual([['8m-core', true]]);
     }
     // One crossing region spans the corridor between the highway's two runs, both streets with it.
     const under = plan.regions.filter(r => r.kind === 'underpass' && crossing.every(c => r.roads.includes(c)));

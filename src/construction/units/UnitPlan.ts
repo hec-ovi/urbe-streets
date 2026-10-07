@@ -49,12 +49,18 @@ export class UnitPlan {
       const first = road.path[0]!, last = road.path.at(-1)!, d = direction(first, last), length = distance(first, last);
       if (road.path.some(p => Math.abs(dot(sub(p, first), [-d[1], d[0]])) > 1e-7)) throw invariant('Street units require a straight Atlas edge', { roadId: road.id });
       const approaches = byEdge.get(road.id) ?? [];
+      // Which ends of a grade street, its start and its end, stop at the edge of a deck it passes beneath.
+      const decked = [false, false];
       const handoff = (nodeId: string, far: boolean) => {
         const cross = roads.filter(r => (r.from === nodeId || r.to === nodeId) && Math.abs(dot(direction(r.path[0]!, r.path.at(-1)!), d)) < 0.01);
         // A highway enters a grade junction box without an approach of its own, and takes an arm there all the same.
         const junction = (road.kind === 'highway' ? a.approaches : approaches).some(p => p.nodeId === nodeId);
         if (junction) return Math.max(0, ...cross.map(r => r.width / 2)) + 18;
-        if (road.kind !== 'highway') return decks.covers(far ? last : first) ? Math.max(0, ...cross.filter(r => r.kind === 'highway').map(r => r.width / 2)) : 0;
+        if (road.kind !== 'highway') {
+          if (!decks.covers(far ? last : first)) return 0;
+          decked[far ? 1 : 0] = true;
+          return Math.max(0, ...cross.filter(r => r.kind === 'highway').map(r => r.width / 2));
+        }
         const kerbs = (underpass.get(road.id) ?? []).filter(([p, q]) => Math.abs(dot(direction(p, q), d)) < 0.01)
           .map(([p]) => dot(sub(p, first), d)).filter(s => far ? s > length / 2 && s < length : s > 0 && s < length / 2);
         const reach = kerbs.length ? far ? length - Math.max(...kerbs) : Math.min(...kerbs)
@@ -71,8 +77,11 @@ export class UnitPlan {
       const segments = Math.floor(units / 4), halfSegments = Math.floor(units % 4 / 2), quarterSegments = units % 2;
       if (halfSegments || quarterSegments || fittedLength) this.closures.push({ roadId: road.id, length: clean(length), start, end, clearLength, segments, halfSegments, quarterSegments, fittedLength });
       const width = road.width / 2 + (rims.get(road.id) ?? 0);
+      const spans = [...Array<number>(segments).fill(8), ...(halfSegments ? [4] : []), ...(quarterSegments ? [2] : []), ...(fittedLength ? [fittedLength] : [])];
+      // Unpainted closures go to the end away from a deck, so a street's paint runs up to the court on both sides of it.
+      if (decked[1] && !decked[0]) spans.reverse();
       let station = start;
-      for (const span of [...Array<number>(segments).fill(8), ...(halfSegments ? [4] : []), ...(quarterSegments ? [2] : []), ...(fittedLength ? [fittedLength] : [])]) {
+      for (const span of spans) {
         const frame = new UnitFrame([first[0] + d[0] * station, first[1] + d[1] * station], d);
         const mask = [rectangle(0, -width, span, width * 2).map(frame.world)];
         const box = bounds(mask.flat());
