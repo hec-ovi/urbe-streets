@@ -447,7 +447,7 @@ it('stops each street passing beneath a deck at the deck edge on both sides and 
   }
 });
 
-it('stands every kerb prop on the kerb band, sidewalk, curb or gutter, never on a carriageway or the court beneath a deck', () => {
+it('stands every kerb prop on the kerb band, sidewalk, curb or gutter, never on a carriageway, and beneath a deck only on the raised walks and kerbs of its court', () => {
   const pieces = new Map(result.kit.pieces.map(p => [p.id, p]));
   const kerb = source.volumetric.ground.filter(g => g.surface !== 'roadway').map(g => g.polygon);
   const props = result.placements.placements.filter(p => pieces.get(p.piece)!.kind === 'prop');
