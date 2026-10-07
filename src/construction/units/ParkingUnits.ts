@@ -8,7 +8,7 @@ import { fitParking, parkingFinish, type ParkingFit } from './ParkingFit.ts';
 import type { ProfileCatalogue } from './ProfileCatalogue.ts';
 import { placement } from './UnitOverlays.ts';
 import { KerbFinishes } from './KerbFinishes.ts';
-import { KitCatalogue } from './KitCatalogue.ts';
+import type { Decks } from './Decks.ts';
 
 /**
  * Every motor segment is a road core and, on each side, kerb walks in the finish of the block that
@@ -20,7 +20,7 @@ export class ParkingUnits {
   readonly placements: StreetPlacement[] = [];
   readonly bays = new Set<NativeParking>();
 
-  constructor(a: NativeArchitecture, regions: readonly UnitRegion[], profiles: ProfileCatalogue) {
+  constructor(a: NativeArchitecture, regions: readonly UnitRegion[], profiles: ProfileCatalogue, decks: Decks) {
     const byRoad = new Map<string, ParkingFit[]>();
     const owners = new Map<string, { owner: NativeOwner; inward: Vec2 }[]>();
     const kerbs = new KerbFinishes(a);
@@ -41,18 +41,19 @@ export class ParkingUnits {
       if (region.kind !== 'segment') continue;
       const road = region.roads[0]!, profile = profiles.select(road);
       if (road.kind === 'alley' || !profile.width) continue;
-      // Under a highway deck the corridor is a court at road level between the kerbs of the blocks either side.
-      const under = road.kind === 'highway', base = under ? profiles.profiles.find(p => p.zone === 'ordinary' && p.id.split('/')[1] === profile.id.split('/')[1])! : profile;
-      const piece = (closure: boolean) => under ? KitCatalogue.under(base, closure ? 2 : 8) : coreId(profile, closure);
       const nearby = (byRoad.get(road.id) ?? []).map(f => {
         const points = [f.frame.world([f.bay.support.start, 0]), f.frame.world([f.bay.support.end, 0])].map(region.frame.local);
         return { start: Math.min(...points.map(p => p[0])), end: Math.max(...points.map(p => p[0])), side: Math.sign(points[0]![1]) };
       }).filter(f => f.end > 1e-7 && f.start < region.length - 1e-7);
       const output: StreetPlacement[] = [];
       // A whole core where the run takes one; shorter runs take 2 m cores end to end, only a last fraction scaled.
-      if (region.length >= 8 - 1e-7) output.push(placement(piece(false), region.frame, ['roadway']));
+      // Under a highway deck the corridor is a court at road level between the kerbs of the blocks either side;
+      // beyond a ramp foot it is the highway's unpainted grade core. Both are the ordinary profile of its width.
+      if (road.kind === 'highway') output.push(...decks.corridor(region.frame, 0, region.length,
+        profiles.profiles.find(p => p.zone === 'ordinary' && p.id.split('/')[1] === profile.id.split('/')[1])!));
+      else if (region.length >= 8 - 1e-7) output.push(placement(coreId(profile, false), region.frame, ['roadway']));
       else for (let station = 0; station < region.length - 1e-7; station = clean(station + 2)) {
-        const core = placement(piece(true), new UnitFrame(region.frame.world([station, 0]), region.frame.d, region.frame.position[1]), ['roadway']);
+        const core = placement(coreId(profile, true), new UnitFrame(region.frame.world([station, 0]), region.frame.d, region.frame.position[1]), ['roadway']);
         const length = Math.min(2, clean(region.length - station));
         if (length < 2) core.scale = [length / 2, 1, 1];
         output.push(core);

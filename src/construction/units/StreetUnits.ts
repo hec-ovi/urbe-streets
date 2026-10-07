@@ -39,7 +39,7 @@ export class StreetUnits {
     const shafts = new BoxIndex(a.shafts.map(s => s.ring), bounds);
     const receivingGround = new BoxIndex(a.owners.filter(o => o.kind !== 'station').flatMap(o => o.ground.map(g => g.ring)), bounds);
     this.wear = new WearField({ seed, amount, bounds: a.bounds, streets: Math.max(1, new Set(a.roads.filter(r => r.kind !== 'highway').map(r => r.runId)).size) });
-    const parking = new ParkingUnits(a, this.plan.regions, this.profiles);
+    const parking = new ParkingUnits(a, this.plan.regions, this.profiles, this.plan.decks);
     const details = { ...a, owners: a.owners.map(o => ({ ...o, parking: o.parking.filter(b => parking.bays.has(b)) })) };
     this.features = new UnitFeatures(details, seed, p => this.wear.sample(p), plainClosures);
     const pieces = new Map(this.pieces.map(p => [p.metadata.id, p]));
@@ -61,6 +61,20 @@ export class StreetUnits {
       if (!difference(intersection(receivingGround.near(region.box), region.mask), shafts.near(region.box)).length) continue;
       const parked = parking.regions.get(region);
       if (parked) { for (const p of parked) fit(p); continue; }
+      if (region.kind === 'underpass') {
+        // Beneath a highway deck a crossing street's carriageway is the court, the corridor wide, laid along the highway;
+        // its kerbs and sidewalks there take the court's infill at their own levels.
+        const base = this.courtProfile(region.roads[0]!), halves = new Map<number, number>();
+        // The streets either side of the node share one centreline; the wider sets the carriageway.
+        for (const road of region.roads.slice(1)) {
+          const centre = clean(region.frame.local(road.path[0]!)[0]);
+          halves.set(centre, Math.max(halves.get(centre) ?? 0, road.width / 2));
+        }
+        for (const [centre, half] of halves) {
+          for (const p of this.plan.decks.corridor(region.frame, Math.max(0, centre - half), Math.min(region.length, centre + half), base)) fit(p);
+        }
+        continue;
+      }
       let p: StreetPlacement;
       if (region.kind === 'segment') {
         const profile = this.profiles.select(region.roads[0]!);
@@ -98,13 +112,10 @@ export class StreetUnits {
               fit(placement(KitCatalogue.farKerb(base, across.finish), frame, [across.owner?.id ?? 'roadway']));
               continue;
             }
-            // An arm running on under a highway deck is the deck's court, not a carriageway.
-            if (primaryRoad.kind === 'highway') {
-              const base = this.profiles.profiles.find(q => q.zone === 'ordinary' && q.id.split('/')[1] === primary.id.split('/')[1])!;
-              for (const [station, length] of [[0, 8], [8, 8], [16, 2]] as const) {
-                fit(placement(KitCatalogue.under(base, length), new UnitFrame(frame.world([station, 0]), axis), ['roadway']));
-              }
-            } else fit(placement(KitCatalogue.armCore(primary), frame, ['roadway']));
+            // An arm running on under a highway deck is the deck's court, not a carriageway; short of the ramp foot the
+            // highway still runs at grade, on an unpainted road core under the highway's own lane paint.
+            if (primaryRoad.kind === 'highway') for (const p of this.plan.decks.corridor(frame, 0, 18, this.courtProfile(primaryRoad))) fit(p);
+            else fit(placement(KitCatalogue.armCore(primary), frame, ['roadway']));
             for (const side of ['left', 'right'] as const) {
               const sign = side === 'left' ? 1 : -1, half = primary.width / 2;
               const block = kerbs.at(frame.world([10, sign * (half + 2.8)]), region.zone);
@@ -132,6 +143,8 @@ export class StreetUnits {
       carriageways.add({ ring, zone: road.districtStyle ?? 'ordinary' }, bounds(ring));
     }
     const surface = (g: NativeGround, triangle: Ring): InfillSurface => {
+      // Whatever is left beneath a highway deck, at any level, is the deck's court.
+      if (this.plan.decks.holds(triangle)) return 'court';
       if (g.surface !== 'roadway') return 'concrete';
       let zone = 'ordinary', best = 0;
       for (const c of carriageways.near(bounds(triangle))) {
@@ -140,7 +153,7 @@ export class StreetUnits {
       }
       return zone === 'luxury' ? 'district-hex' : 'asphalt';
     };
-    for (const { placement: p, ground } of sourceInfill(a, g => coverage.remaining(g), surface)) add(p, ground);
+    for (const { placement: p, ground } of sourceInfill(a, g => coverage.remaining(g), surface, rings => this.plan.decks.split(rings))) add(p, ground);
     for (const f of this.features.items) {
       const p = placement(KitCatalogue.prop(f.options), f.frame, [f.descriptor.ownerId]);
       if (f.message) p.text = [...f.message].map(c => settings.glyphs.indexOf(c));
@@ -150,8 +163,15 @@ export class StreetUnits {
     }
     for (const p of turnPlacements(a, plainClosures)) add(p);
     for (const p of crossingPlacements(a)) add(p);
-    for (const p of unitDecals(details, seed, p => this.wear.sample(p), plainClosures)) add(p);
+    // Carriageway scans are asphalt wear; the court beneath a deck takes none.
+    for (const p of unitDecals(details, seed, p => this.wear.sample(p), [...plainClosures, ...this.plan.decks.footprint])) add(p);
     this.ground = coverage.finish(mappedWidths);
+  }
+
+  /** The ordinary road profile of a highway's width: its court and its unpainted grade core. */
+  private courtProfile(highway: NativeRoad) {
+    const selected = this.profiles.select(highway);
+    return this.profiles.profiles.find(q => q.zone === 'ordinary' && q.id.split('/')[1] === selected.id.split('/')[1])!;
   }
 
   /** Each saved median island as a nose at either end and 8 m and 2 m units between, at its Atlas stations. */

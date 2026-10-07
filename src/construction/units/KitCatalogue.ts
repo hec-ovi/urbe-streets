@@ -13,13 +13,12 @@ import { pieceFootprint } from './PieceFootprint.ts';
 import { ProfileCatalogue } from './ProfileCatalogue.ts';
 import { coreId, parkingFinishes, parkingSide } from './ParkingScene.ts';
 import type { NativeGround } from '../../architecture/native-schema.ts';
-import { infillPieces } from './SourceInfill.ts';
+import { infillPieces, UNDER_SURFACE } from './SourceInfill.ts';
 import { rectangle } from '../../geometry/polygons.ts';
 
 export const PIECE_BUDGET = 256;
 
-/** The finish of the court under a highway deck, sampled in world metres. */
-export const UNDER_SURFACE = 'hex-orange';
+export { UNDER_SURFACE };
 
 /** The profile arm sides are authored on: a 7 m local street, whose half width a placement offsets them from. */
 export const SIDE_HALF = 3.5;

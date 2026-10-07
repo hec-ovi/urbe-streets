@@ -15,8 +15,14 @@ import { clean } from './Frame.ts';
 export const STRIPE_WIDTHS = [0.3, 0.5] as const;
 export const stripeId = (width: number) => `overlay/stripe/${width}m`;
 
-/** Surfaces a leftover field can take: both carriageway finishes sample world XZ, so a scaled prism shows no stretch. */
-export const INFILL_SURFACES = ['asphalt', 'district-hex', 'concrete'] as const;
+/** The finish of the court under a highway deck, sampled in world metres. */
+export const UNDER_SURFACE = 'hex-orange';
+
+/**
+ * Surfaces a leftover field can take: both carriageway finishes and the court sample world XZ, so a scaled prism
+ * shows no stretch. The court is whatever a highway deck leaves beneath it, its raised walks and kerbs included.
+ */
+export const INFILL_SURFACES = ['asphalt', 'district-hex', 'concrete', 'court'] as const;
 export type InfillSurface = typeof INFILL_SURFACES[number];
 
 /** Right prisms fit any saved source field without clipping an instance. */
@@ -25,7 +31,7 @@ export function infillPieces(): AuthoredUnit[] {
   const pieces: AuthoredUnit[] = [];
   for (const surface of INFILL_SURFACES) {
     // Leftover carriageway reads as patched asphalt where the binding carries it.
-    const id = `infill/${surface}`, drawn = surface === 'asphalt' ? 'asphalt-patched' : surface;
+    const id = `infill/${surface}`, drawn = surface === 'asphalt' ? 'asphalt-patched' : surface === 'court' ? UNDER_SURFACE : surface;
     const batch = new SurfaceBatch({ ownerId: id, groundIds: [id], roadTop: 0, wear: () => 0 });
     batch.polygon(drawn, [footprint], 0.2, p => p);
     for (const [i, a] of footprint.entries()) {
@@ -47,10 +53,14 @@ export function infillPieces(): AuthoredUnit[] {
   return pieces;
 }
 
+/**
+ * Fits right prisms to every saved field's uncovered remainder. `split` parts a remainder first, so each part's
+ * triangles keep to it: a field reaching out from under a highway deck is fitted inside and outside separately.
+ */
 export function* sourceInfill(a: NativeArchitecture, remaining: (g: NativeGround) => Ring[],
-  surface: (g: NativeGround, triangle: Ring) => InfillSurface): Generator<{ placement: StreetPlacement; ground: NativeGround }> {
-  for (const owner of a.owners) for (const ground of owner.ground) {
-    const rings = remaining(ground), box = bounds(rings.flat());
+  surface: (g: NativeGround, triangle: Ring) => InfillSurface, split: (rings: Ring[]) => Ring[][] = rings => [rings]): Generator<{ placement: StreetPlacement; ground: NativeGround }> {
+  for (const owner of a.owners) for (const ground of owner.ground) for (const rings of split(remaining(ground))) {
+    const box = bounds(rings.flat());
     const xs = [...new Set(rings.flat().map(p => p[0]))].sort((a, b) => a - b);
     // Vertical strips preserve the source's rectangular and 45 degree corners.
     const fitted = xs.slice(1).flatMap((x, i) => triangles(intersection(rings,

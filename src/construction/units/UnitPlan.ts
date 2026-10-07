@@ -6,9 +6,11 @@ import { BoxIndex } from '../../geometry/BoxIndex.ts';
 import { direction, distance, dot, sub } from '../surfaces/Frame.ts';
 import { invariant } from '../../errors.ts';
 import { clean, UnitFrame } from './Frame.ts';
+import { Decks } from './Decks.ts';
 
 export interface UnitRegion {
-  kind: Exclude<StreetKitPiece['kind'], 'prop' | 'overlay'>;
+  /** `underpass`: where grade streets cross beneath a highway deck, between the highway's grade corridor runs. */
+  kind: Exclude<StreetKitPiece['kind'], 'prop' | 'overlay'> | 'underpass';
   frame: UnitFrame;
   mask: Ring[];
   box: Box2;
@@ -21,9 +23,13 @@ export interface UnitRegion {
 export class UnitPlan {
   readonly regions: UnitRegion[] = [];
   readonly closures: StreetClosure[] = [];
+  readonly decks: Decks;
   constructor(a: NativeArchitecture) {
     // Highway edges are planned by their grade corridor; the deck above them stays delegated.
     const roads = a.roads;
+    const decks = this.decks = new Decks(a);
+    // Where a highway's grade corridor stops for streets passing beneath its deck: the highway and how far its run stops short of the node.
+    const crossings = new Map<string, { road: NativeRoad; away: Vec2; reach: number }[]>();
     const ground = union(a.owners.filter(o => o.kind !== 'station').flatMap(o => o.ground.map(g => g.ring)));
     const byEdge = new Map<string, NativeApproach[]>();
     for (const approach of a.approaches) byEdge.set(approach.edgeId, [...byEdge.get(approach.edgeId) ?? [], approach]);
@@ -32,7 +38,8 @@ export class UnitPlan {
       const rim = f.pavedWidth + f.curbWidth + f.gutterWidth;
       for (const edgeId of f.edgeIds) rims.set(edgeId, Math.max(rims.get(edgeId) ?? 0, rim));
     }
-    // A grade street passing beneath a highway runs through; the highway's grade corridor stops at the underpass kerb.
+    // A grade street passing beneath a highway deck stops at the deck's edge; the highway's grade corridor stops at
+    // the underpass kerb. The crossing between them is the deck's court, never a street.
     const underpass = new Map<string, [Vec2, Vec2][]>();
     for (const owner of a.owners) if (owner.kind === 'underpass') for (const f of owner.frontages) for (const id of f.edgeIds) {
       underpass.set(id, [...underpass.get(id) ?? [], [f.start, f.end] as [Vec2, Vec2]]);
@@ -47,11 +54,15 @@ export class UnitPlan {
         // A highway enters a grade junction box without an approach of its own, and takes an arm there all the same.
         const junction = (road.kind === 'highway' ? a.approaches : approaches).some(p => p.nodeId === nodeId);
         if (junction) return Math.max(0, ...cross.map(r => r.width / 2)) + 18;
-        if (road.kind !== 'highway') return 0;
+        if (road.kind !== 'highway') return decks.covers(far ? last : first) ? Math.max(0, ...cross.filter(r => r.kind === 'highway').map(r => r.width / 2)) : 0;
         const kerbs = (underpass.get(road.id) ?? []).filter(([p, q]) => Math.abs(dot(direction(p, q), d)) < 0.01)
           .map(([p]) => dot(sub(p, first), d)).filter(s => far ? s > length / 2 && s < length : s > 0 && s < length / 2);
-        if (kerbs.length) return far ? length - Math.max(...kerbs) : Math.min(...kerbs);
-        return Math.max(0, ...cross.filter(r => r.kind !== 'highway').map(r => r.width / 2 + (rims.get(r.id) ?? 0)));
+        const reach = kerbs.length ? far ? length - Math.max(...kerbs) : Math.min(...kerbs)
+          : Math.max(0, ...cross.filter(r => r.kind !== 'highway').map(r => r.width / 2 + (rims.get(r.id) ?? 0)));
+        if (reach > 1e-7 && cross.some(r => r.kind !== 'highway') && decks.covers(far ? last : first)) {
+          crossings.set(nodeId, [...crossings.get(nodeId) ?? [], { road, away: far ? [-d[0], -d[1]] : d, reach }]);
+        }
+        return reach;
       };
       const start = clean(handoff(road.from, false));
       const end = clean(length - handoff(road.to, true));
@@ -69,6 +80,18 @@ export class UnitPlan {
         this.regions.push(this.region('segment', frame, mask, [road], road.districtStyle ?? 'ordinary', span));
         corridors.add(mask[0]!, box); station = clean(station + span);
       }
+    }
+    for (const [nodeId, [near, far, ...more]] of crossings) {
+      // Both of the highway's runs stop short of the node: the crossing beneath the deck runs from one to the other, the corridor wide.
+      if (!near || !far || more.length || Math.abs(dot(near.away, far.away) + 1) > 1e-7) continue;
+      const point = near.road.from === nodeId ? near.road.path[0]! : near.road.path.at(-1)!;
+      const frame = new UnitFrame([point[0] + near.away[0] * near.reach, point[1] + near.away[1] * near.reach], far.away);
+      const length = clean(near.reach + far.reach), width = Math.max(near.road.width, far.road.width);
+      const mask = [rectangle(0, -width / 2, length, width).map(frame.world)], box = bounds(mask.flat());
+      if (totalArea(intersection(mask, corridors.near(box))) > 1e-7) throw invariant('Street run interiors overlap', { nodeId });
+      const beneath = roads.filter(r => r.kind !== 'highway' && (r.from === nodeId || r.to === nodeId));
+      this.regions.push(this.region('underpass', frame, mask, [near.road, ...beneath], near.road.districtStyle ?? 'ordinary', length));
+      corridors.add(mask[0]!, box);
     }
     const remaining = difference(ground, corridors.all);
     const nodes = new Map<string, { point: Vec2; roads: NativeRoad[] }>();

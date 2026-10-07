@@ -313,18 +313,31 @@ it('builds corners, tees, highway corridors and median islands from whole units,
   expect(Math.max(...kerbs.map(area))).toBeLessThan(17);
   const roadway = source.volumetric.ground.filter(g => g.surface === 'roadway').map(g => g.polygon);
   expect(totalArea(intersection(concrete, roadway))).toBeLessThan(1e-6);
-  // A highway's grade corridor is a court at road level, never a carriageway; its deck stays delegated.
+  // Beneath a deck that kerb is the court's, so concrete keeps to its ends beyond the deck.
+  expect(totalArea(intersection(concrete, deckFootprints(source)))).toBeLessThan(1e-6);
+  // A highway's grade corridor is a court at road level beneath its deck, never a carriageway; its deck stays delegated.
+  // Beyond a ramp foot the highway runs at grade on an unpainted road core, under the lane paint the deck's owner draws.
   expect(result.delegated.highways.count).toBeGreaterThan(0);
+  const deck = deckFootprints(source), court = 'hex-orange' in nativeMaterials.surfaces ? 'hex-orange' : 'district-hex';
+  let grade = 0;
   for (const edge of source.streets.edges.filter(e => e.class === 'highway')) {
     const [a, b] = [edge.path[0]!, edge.path.at(-1)!], length = Math.hypot(b[0] - a[0], b[1] - a[1]);
     const along = (p: typeof placements[number]) => Math.abs(Math.cos(p.rotationY) * (b[1] - a[1]) + Math.sin(p.rotationY) * (b[0] - a[0])) / length < 1e-6;
     const on = placements.filter(p => pieces.get(p.piece)!.kind === 'segment' && !p.piece.startsWith('infill/') && along(p)
       && Math.abs((p.position[0] - a[0]) * (b[1] - a[1]) - (p.position[2] - a[1]) * (b[0] - a[0])) / length < 1e-6);
     expect(on.length, edge.id).toBeGreaterThan(0);
-    expect(on.every(p => pieces.get(p.piece)!.variant === 'under'), edge.id).toBe(true);
-    const court = 'hex-orange' in nativeMaterials.surfaces ? 'hex-orange' : 'district-hex';
-    expect(on.every(p => pieces.get(p.piece)!.surfaces.join() === court), edge.id).toBe(true);
+    for (const p of on) {
+      const piece = pieces.get(p.piece)!, footprint = placementFootprint(piece, p);
+      if (totalArea(difference(footprint, deck)) < 1e-6) {
+        expect([piece.variant, piece.surfaces.join()], `${edge.id} ${p.piece}`).toEqual(['under', court]);
+        continue;
+      }
+      expect(totalArea(intersection(footprint, deck)), `${edge.id} ${p.piece}`).toBeLessThan(1e-6);
+      expect([piece.id, piece.surfaces.join()], edge.id).toEqual([expect.stringMatching(/^road\/ordinary\/[a-z]+\/2m-core-closure$/), 'asphalt']);
+      grade++;
+    }
   }
+  expect(grade).toBeGreaterThan(0);
   // Each saved island is covered exactly by a nose at either end and whole units between, at its Atlas stations.
   expect(source.streets.construction.medians.length).toBeGreaterThan(0);
   for (const median of source.streets.construction.medians) {
@@ -338,6 +351,102 @@ it('builds corners, tees, highway corridors and median islands from whole units,
   // The band ahead of each nose is luxury carriageway: world sampled paving, never concrete.
   expect(placements.some(p => p.piece === 'infill/district-hex')).toBe(true);
   expect(placements.some(p => p.piece === 'infill/asphalt')).toBe(false);
+});
+
+/** Each saved highway structure's ground beneath its deck: its path from ramp foot to ramp foot, swept across its deck width. */
+function deckFootprints(plan: typeof source): Ring[] {
+  const structures = (plan.streets as unknown as { highwayStructures: { path: Vec2[]; width: number }[] }).highwayStructures;
+  return union(structures.flatMap(h => h.path.slice(1).map((q, i): Ring => {
+    const p = h.path[i]!, l = Math.hypot(q[0] - p[0], q[1] - p[1]), n: Vec2 = [-(q[1] - p[1]) / l * h.width / 2, (q[0] - p[0]) / l * h.width / 2];
+    const ring: Ring = [[p[0] - n[0], p[1] - n[1]], [q[0] - n[0], q[1] - n[1]], [q[0] + n[0], q[1] + n[1]], [p[0] + n[0], p[1] + n[1]]];
+    return area(ring) < 0 ? [...ring].reverse() : ring;
+  })));
+}
+
+it('lays nothing but the court beneath a highway deck, the streets crossing under it included, and none of it beyond the deck', () => {
+  const pieces = new Map(result.kit.pieces.map(p => [p.id, p])), placements = result.placements.placements;
+  const deck = deckFootprints(source), court = (id: string) => id.startsWith('under/') || id === 'infill/court';
+  expect(totalArea(deck)).toBeGreaterThan(1000);
+  const owned = source.streets.construction.reservations.owners.filter(o => o.kind !== 'station').flatMap(o => o.groundIndices.map(i => source.volumetric.ground[i]!));
+  const beneath = owned.filter(g => totalArea(intersection([g.polygon], deck)) > 1e-6);
+  // Underpass sidewalks, kerbs and gutters lie under the deck as well as the crossing carriageways.
+  expect(new Set(beneath.map(g => g.surface))).toEqual(new Set(['roadway', 'sidewalk', 'curb', 'gutter']));
+  const covered: Ring[] = [];
+  for (const p of placements) {
+    const piece = pieces.get(p.piece)!;
+    if (piece.kind === 'prop') continue;
+    const inside = intersection(placementFootprint(piece, p), deck);
+    if (totalArea(inside) < 1e-6) continue;
+    // No lane paint, crossing bar, arrow or asphalt scan; a drain hatch over a kerb inlet is the only overlay.
+    if (piece.kind === 'overlay') { expect(p.piece, `${p.position}`).toMatch(/^overlay\/drain\//); continue; }
+    expect(court(p.piece), `${p.piece} at ${p.position}`).toBe(true);
+    covered.push(...inside);
+  }
+  // The court covers all the deck's saved ground, raised walks and kerbs at their own levels.
+  expect(totalArea(difference(intersection(beneath.map(g => g.polygon), deck), union(covered)))).toBeLessThan(1e-6);
+  for (const p of placements.filter(p => p.piece === 'infill/court')) {
+    const footprint = placementFootprint(pieces.get(p.piece)!, p);
+    const levels = beneath.filter(g => totalArea(intersection(footprint, [g.polygon])) > 1e-9).map(g => (g as unknown as { top: number }).top);
+    expect(levels.length).toBeGreaterThan(0);
+    expect(p.position[1] + 0.2 * p.scale![1]!, `${p.position}`).toBeCloseTo(levels[0]!, 6);
+  }
+  expect(placements.some(p => p.piece === 'infill/court' && p.position[1] + 0.2 * p.scale![1]! > 0.1)).toBe(true);
+  // Beyond a ramp foot the highway runs at grade, so no court lies outside a deck.
+  for (const p of placements.filter(p => court(p.piece))) expect(totalArea(difference(placementFootprint(pieces.get(p.piece)!, p), deck)), `${p.piece} at ${p.position}`).toBeLessThan(1e-6);
+});
+
+it('stops each street passing beneath a deck at the deck edge on both sides and lays the highway at grade as carriageway up to each ramp foot', async () => {
+  const a = await readNativeAtlas(blueprint), plan = new UnitPlan(a);
+  const pieces = new Map(result.kit.pieces.map(p => [p.id, p])), placements = result.placements.placements;
+  const nodes = new Set(a.protections.filter(p => p.kind === 'underpass').map(p => String(p.source.nodeId)));
+  expect(nodes.size).toBeGreaterThan(0);
+  for (const nodeId of nodes) {
+    const at = (r: (typeof a.roads)[number]) => r.from === nodeId || r.to === nodeId;
+    const highways = a.roads.filter(r => r.kind === 'highway' && at(r)), crossing = a.roads.filter(r => r.kind !== 'highway' && at(r));
+    expect([highways.length, crossing.length], nodeId).toEqual([2, 2]);
+    const half = highways[0]!.width / 2;
+    for (const road of crossing) {
+      // The street's run stops at the deck edge on either side, so its lanes and paint never reach beneath it.
+      const node = road.from === nodeId ? road.path[0]! : road.path.at(-1)!, far = road.from === nodeId ? road.path.at(-1)! : road.path[0]!;
+      const length = Math.hypot(far[0] - node[0], far[1] - node[1]), d: Vec2 = [(far[0] - node[0]) / length, (far[1] - node[1]) / length];
+      const runs = plan.regions.filter(r => r.kind === 'segment' && r.roads[0] === road);
+      const reach = Math.min(...runs.flatMap(r => r.mask.flat().map(p => (p[0] - node[0]) * d[0] + (p[1] - node[1]) * d[1])));
+      expect(reach, `${nodeId} ${road.id}`).toBeCloseTo(half, 6);
+    }
+    // One crossing region spans the corridor between the highway's two runs, both streets with it.
+    const under = plan.regions.filter(r => r.kind === 'underpass' && crossing.every(c => r.roads.includes(c)));
+    expect(under, nodeId).toHaveLength(1);
+    expect(totalArea(under[0]!.mask), nodeId).toBeCloseTo(half * 2 * under[0]!.length, 6);
+  }
+  // Each ramp foot ends a stretch at grade: one metre beyond it the corridor is the highway's unpainted core, and the
+  // court starts at the foot. The lane paint there is the delegated highway's.
+  const structures = (source.streets as unknown as { highwayStructures: { path: Vec2[]; width: number; approaches: { start: number; end: number } }[] }).highwayStructures;
+  expect(structures.length).toBeGreaterThan(0);
+  for (const h of structures) for (const [foot, next, approach] of [[h.path[0]!, h.path[1]!, h.approaches.start], [h.path.at(-1)!, h.path.at(-2)!, h.approaches.end]] as const) {
+    const l = Math.hypot(foot[0] - next[0], foot[1] - next[1]), d: Vec2 = [(foot[0] - next[0]) / l, (foot[1] - next[1]) / l], n: Vec2 = [-d[1], d[0]];
+    expect(approach).toBeGreaterThan(1);
+    const strip = (from: number, to: number): Ring => {
+      const w = h.width / 2 - 0.05, ring: Ring = [[foot[0] + d[0] * from - n[0] * w, foot[1] + d[1] * from - n[1] * w], [foot[0] + d[0] * to - n[0] * w, foot[1] + d[1] * to - n[1] * w],
+        [foot[0] + d[0] * to + n[0] * w, foot[1] + d[1] * to + n[1] * w], [foot[0] + d[0] * from + n[0] * w, foot[1] + d[1] * from + n[1] * w]];
+      return area(ring) < 0 ? [...ring].reverse() : ring;
+    };
+    for (const [ring, expected] of [[strip(0, 1), /^road\/ordinary\/[a-z]+\/2m-core-closure$/], [strip(-1, 0), /^under\//]] as const) {
+      const touching = placements.filter(p => !['prop', 'overlay'].includes(pieces.get(p.piece)!.kind) && totalArea(intersection(placementFootprint(pieces.get(p.piece)!, p), [ring])) > 1e-6);
+      expect(touching.length, `${foot}`).toBeGreaterThan(0);
+      for (const p of touching) expect(p.piece, `${foot}`).toMatch(expected);
+      expect(totalArea(difference([ring], touching.flatMap(p => placementFootprint(pieces.get(p.piece)!, p)))), `${foot}`).toBeLessThan(1e-6);
+    }
+  }
+});
+
+it('stands every kerb prop on the kerb band, sidewalk, curb or gutter, never on a carriageway or the court beneath a deck', () => {
+  const pieces = new Map(result.kit.pieces.map(p => [p.id, p]));
+  const kerb = source.volumetric.ground.filter(g => g.surface !== 'roadway').map(g => g.polygon);
+  const props = result.placements.placements.filter(p => pieces.get(p.piece)!.kind === 'prop');
+  expect(props.length).toBeGreaterThan(100);
+  for (const p of props) expect(totalArea(difference(placementFootprint(pieces.get(p.piece)!, p), kerb)), `${p.piece} at ${p.position}`).toBeLessThan(1e-6);
+  // Props stand beneath the deck too, on the court's raised walks and kerbs.
+  expect(props.some(p => totalArea(intersection(placementFootprint(pieces.get(p.piece)!, p), deckFootprints(source))) > 1e-6)).toBe(true);
 });
 
 it('places one original prop per constructed feature of the plan, inside its reserved bounds', () => {
@@ -586,7 +695,7 @@ function ringGap(a: Ring, b: Ring): number {
 it('publishes the capped LED run as 2 m and 1 m segments and a mirrored cap pair within their budgets', async () => {
   const ids = new Set(result.kit.pieces.map(p => p.id));
   expect(ids.has('prop/marquee/2m-0.5m-0')).toBe(false);
-  expect(result.kit.pieces).toHaveLength(255);
+  expect(result.kit.pieces).toHaveLength(256);
   const key = (p: number[]) => p.map(n => Math.round(n * 1000) || 0).join();
   const vertices = (surfaces: Map<string, { p: number[] }[][]>) => [...surfaces.values()].flat(2);
   for (const [id, length, budget] of [['prop/marquee-run/segment-2m', 2, 150], ['prop/marquee-run/segment-1m', 1, 100],
@@ -713,15 +822,19 @@ it('binds drain covers and grates and patched infill asphalt where the binding c
   const surfaces = (built: NativeStreetBuild, id: string) => built.kit.pieces.find(p => p.id === id)!.surfaces;
   expect(surfaces(result, 'overlay/drain/0.7m')).toEqual(['tread']);
   expect(surfaces(result, 'infill/asphalt')).toEqual(['asphalt']);
+  expect(surfaces(result, 'infill/court')).toEqual(surfaces(result, 'under/avenue/8m'));
+  expect(surfaces(result, 'infill/court')).toEqual(['district-hex']);
   const access = result.kit.pieces.filter(p => p.surfaces.includes('perforated') && p.id.includes('access'));
   expect(access.length).toBeGreaterThan(0);
   const binding = structuredClone(nativeMaterials);
   binding.surfaces.drainCover = binding.surfaces.tread!;
   binding.surfaces.drainGrate = binding.surfaces.perforated!;
   binding.surfaces['asphalt-patched'] = binding.surfaces.ordinary!;
+  binding.surfaces['hex-orange'] = binding.surfaces['district-hex']!;
   const bound = await build(request, { nativeMaterials: binding, mode: 'manifest' });
   expect(surfaces(bound, 'overlay/drain/0.7m')).toEqual(['drainCover']);
   expect(surfaces(bound, 'infill/asphalt')).toEqual(['asphalt-patched']);
+  expect(surfaces(bound, 'infill/court')).toEqual(['hex-orange']);
   for (const piece of access) expect(surfaces(bound, piece.id), piece.id).toContain('drainGrate');
   // The geometry is the same: a binding names finishes, never shapes.
   expect(bound.kit.pieces.map(p => [p.id, p.triangles])).toEqual(result.kit.pieces.map(p => [p.id, p.triangles]));
@@ -772,7 +885,7 @@ it('keeps every underpass lane continuous at grade, with no raised triangles', a
           if (points.every(p => Math.abs(p[1]!) < 0.001)) cover.push(ring);
         }
       }
-      // Quantized GLBs permit 1 mm at an edge; the entire lane interior must be asphalt.
+      // Quantized GLBs permit 1 mm at an edge; the entire lane interior stays at grade, beneath a deck on the court.
       expect(totalArea(difference([region],union(cover))),`${nodeId} ${lane.id}`).toBeLessThan(0.04);
     }
   }
